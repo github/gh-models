@@ -1,0 +1,16 @@
+#!/bin/bash
+
+TAG=$1
+if [ -z $TAG ]; then
+    echo "Must specify the tag of the release"
+    echo
+    echo "USAGE: $0 TAG"
+    echo
+    echo "Example: $0 v0.0.1"
+    exit 1
+fi
+shift
+
+BINARIES="gh-models-darwin-amd64 gh-models-darwin-arm64 gh-models-linux-amd64 gh-models-windows-amd64.exe"
+
+gh release upload $* $TAG $BINARIES
