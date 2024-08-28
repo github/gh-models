@@ -2,4 +2,26 @@
 
 ROOT=$(cd $(dirname $0)/..; pwd)
 
-go build -o ${ROOT}/gh-models ${ROOT}/main.go
+function build {
+    local BINARY
+    BINARY=gh-models
+
+    if [[ -n "${GOOS}" && -n "${GOARCH}" ]]; then
+        BINARY=${BINARY}-${GOOS}-${GOARCH}
+    fi
+
+    if [ "${GOOS}" == "windows" ]; then
+        BINARY=${BINARY}.exe
+    fi
+
+    echo "Building extension (GOOS=$GOOS GOARCH=$GOARCH)"
+    echo "Output: ${BINARY}"
+
+    go build -o ${ROOT}/${BINARY} ${ROOT}/main.go    
+}
+
+GOOS=windows GOARCH=amd64 build
+GOOS=linux GOARCH=amd64 build
+GOOS=darwin GOARCH=amd64 build
+GOOS=darwin GOARCH=arm64 build
+build

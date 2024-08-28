@@ -1,2 +1,5 @@
 /gh-models
 /gh-models.exe
+/gh-models-darwin-*
+/gh-models-linux-*
+/gh-models-windows-*
