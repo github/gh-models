@@ -3,6 +3,12 @@ on:
   push:
     tags:
       - "v*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag"
+        required: true
+
 permissions:
   contents: write
 
@@ -14,3 +20,4 @@ jobs:
       - uses: cli/gh-extension-precompile@v1
         with:
           go_version: "1.22"
+          release_tag: ${{ github.event.inputs.release_tag || '' }}
