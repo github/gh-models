@@ -20,8 +20,20 @@ function build {
     go build -o ${ROOT}/${BINARY} ${ROOT}/main.go    
 }
 
-GOOS=windows GOARCH=amd64 build
-GOOS=linux GOARCH=amd64 build
-GOOS=darwin GOARCH=amd64 build
-GOOS=darwin GOARCH=arm64 build
+OS=$1
+
+if [[ "$OS" == "windows" || "$OS" == "all" ]]; then
+    GOOS=windows GOARCH=amd64 build
+fi
+
+if [[ "$OS" == "linux" || "$OS" == "all" ]]; then
+    GOOS=linux GOARCH=amd64 build
+fi
+
+if [[ "$OS" == "darwin" || "$OS" == "all" ]]; then
+    GOOS=darwin GOARCH=amd64 build
+    GOOS=darwin GOARCH=arm64 build
+fi
+
+# Always build the "local" version, which defaults to the current OS/arch
 build
