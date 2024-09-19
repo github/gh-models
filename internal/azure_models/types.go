@@ -1,6 +1,10 @@
 package azure_models
 
-import "github.com/github/gh-models/internal/sse"
+import (
+	"encoding/json"
+
+	"github.com/github/gh-models/internal/sse"
+)
 
 type ChatMessageRole string
 
@@ -47,6 +51,21 @@ type ChatCompletion struct {
 
 type ChatCompletionResponse struct {
 	Reader *sse.EventReader[ChatCompletion]
+}
+
+type modelCatalogSearchResponse struct {
+	Summaries []modelCatalogSearchSummary `json:"summaries"`
+}
+
+type modelCatalogSearchSummary struct {
+	AssetID        string      `json:"assetId"`
+	DisplayName    string      `json:"displayName"`
+	InferenceTasks []string    `json:"inferenceTasks"`
+	Name           string      `json:"name"`
+	Popularity     json.Number `json:"popularity"`
+	Publisher      string      `json:"publisher"`
+	RegistryName   string      `json:"registryName"`
+	Summary        string      `json:"summary"`
 }
 
 type ModelSummary struct {

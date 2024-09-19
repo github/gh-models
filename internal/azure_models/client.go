@@ -19,7 +19,7 @@ type Client struct {
 
 const (
 	prodInferenceURL = "https://models.inference.ai.azure.com/chat/completions"
-	prodModelsURL    = "https://models.inference.ai.azure.com/models"
+	prodModelsURL    = "https://api.catalog.azureml.ms/asset-gallery/v1.0/models"
 )
 
 func NewClient(authToken string) *Client {
@@ -66,10 +66,24 @@ func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatComple
 }
 
 func (c *Client) ListModels() ([]*ModelSummary, error) {
-	httpReq, err := http.NewRequest("GET", prodModelsURL, http.NoBody)
+	body := bytes.NewReader([]byte(`
+		{
+			"filters": [
+				{ "field": "freePlayground", "values": ["true"], "operator": "eq"},
+				{ "field": "labels", "values": ["latest"], "operator": "eq"}
+			],
+			"order": [
+				{ "field": "displayName", "direction": "asc" }
+			]
+		}
+	`))
+
+	httpReq, err := http.NewRequest("POST", prodModelsURL, body)
 	if err != nil {
 		return nil, err
 	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.client.Do(httpReq)
 	if err != nil {
@@ -80,10 +94,30 @@ func (c *Client) ListModels() ([]*ModelSummary, error) {
 		return nil, c.handleHTTPError(resp)
 	}
 
-	var models []*ModelSummary
-	err = json.NewDecoder(resp.Body).Decode(&models)
+	decoder := json.NewDecoder(resp.Body)
+	decoder.UseNumber()
+
+	var searchResponse modelCatalogSearchResponse
+	err = decoder.Decode(&searchResponse)
 	if err != nil {
 		return nil, err
+	}
+
+	models := make([]*ModelSummary, 0, len(searchResponse.Summaries))
+	for _, summary := range searchResponse.Summaries {
+		inferenceTask := ""
+		if len(summary.InferenceTasks) > 0 {
+			inferenceTask = summary.InferenceTasks[0]
+		}
+
+		models = append(models, &ModelSummary{
+			ID:           summary.AssetID,
+			Name:         summary.Name,
+			FriendlyName: summary.DisplayName,
+			Task:         inferenceTask,
+			Publisher:    summary.Publisher,
+			Summary:      summary.Summary,
+		})
 	}
 
 	return models, nil

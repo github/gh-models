@@ -3,6 +3,7 @@ package ux
 import (
 	"slices"
 	"sort"
+	"strings"
 
 	"github.com/github/gh-models/internal/azure_models"
 )
@@ -22,11 +23,12 @@ func SortModels(models []*azure_models.ModelSummary) {
 		} else if !isFeaturedI && isFeaturedJ {
 			return false
 		} else {
-			// Otherwise, sort by publisher and then friendly name
-			if models[i].Publisher == models[j].Publisher {
-				return models[i].FriendlyName < models[j].FriendlyName
-			}
-			return models[i].Publisher < models[j].Publisher
+			// Otherwise, sort by friendly name
+			// Note: sometimes the casing returned by the API is inconsistent, so sort using lowercase values.
+			friendlyNameI := strings.ToLower(models[i].FriendlyName)
+			friendlyNameJ := strings.ToLower(models[j].FriendlyName)
+
+			return friendlyNameI < friendlyNameJ
 		}
 	})
 }

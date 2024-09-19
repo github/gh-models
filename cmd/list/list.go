@@ -1,6 +1,7 @@
 package list
 
 import (
+	"fmt"
 	"io"
 
 	"github.com/cli/go-gh/v2/pkg/auth"
@@ -8,7 +9,12 @@ import (
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azure_models"
 	"github.com/github/gh-models/internal/ux"
+	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
+)
+
+var (
+	lightGrayUnderline = ansi.ColorFunc("white+du")
 )
 
 func NewListCommand() *cobra.Command {
@@ -33,22 +39,28 @@ func NewListCommand() *cobra.Command {
 				return err
 			}
 
+			// For now, filter to just chat models.
+			// Once other tasks are supported (like embeddings), update the list to show all models, with the task as a column.
+			models = ux.FilterToChatModels(models)
 			ux.SortModels(models)
 
-			width, _, _ := terminal.Size()
-			printer := tableprinter.New(out, terminal.IsTerminalOutput(), width)
+			isTTY := terminal.IsTerminalOutput()
 
-			printer.AddHeader([]string{"Name", "Friendly Name", "Publisher"})
+			if isTTY {
+				io.WriteString(out, "\n")
+				io.WriteString(out, fmt.Sprintf("Showing %d available chat models\n", len(models)))
+				io.WriteString(out, "\n")
+			}
+
+			width, _, _ := terminal.Size()
+			printer := tableprinter.New(out, isTTY, width)
+
+			printer.AddHeader([]string{"Display Name", "Model Name"}, tableprinter.WithColor(lightGrayUnderline))
 			printer.EndRow()
 
 			for _, model := range models {
-				if !ux.IsChatModel(model) {
-					continue
-				}
-
-				printer.AddField(model.Name)
 				printer.AddField(model.FriendlyName)
-				printer.AddField(model.Publisher)
+				printer.AddField(model.Name)
 				printer.EndRow()
 			}
 
