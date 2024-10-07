@@ -11,8 +11,8 @@ import (
 )
 
 type EventReaderInterface[T any] interface {
-    Read() (T, error)
-    Close() error
+	Read() (T, error)
+	Close() error
 }
 
 // Reader is an interface for reading events from an SSE stream.
