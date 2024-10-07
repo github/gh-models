@@ -59,6 +59,7 @@ func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatComple
 	}
 
 	if resp.StatusCode != http.StatusOK {
+		// If we aren't going to return an SSE stream, then ensure the response body is closed.
 		defer resp.Body.Close()
 		return nil, c.handleHTTPError(resp)
 	}
@@ -69,8 +70,6 @@ func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatComple
 		// Handle streamed response
 		chatCompletionResponse.Reader = sse.NewEventReader[ChatCompletion](resp.Body)
 	} else {
-		// Handle non-streamed response
-		defer resp.Body.Close()
 		var completion ChatCompletion
 		if err := json.NewDecoder(resp.Body).Decode(&completion); err != nil {
 			return nil, err
