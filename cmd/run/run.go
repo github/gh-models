@@ -391,18 +391,19 @@ func NewRunCommand() *cobra.Command {
 					sp.Stop()
 
 					for _, choice := range completion.Choices {
-						if choice.Delta != nil {
-							if choice.Delta.Content == nil {
-								continue
-							}
+						if choice.Delta != nil && choice.Delta.Content != nil {
+							content := choice.Delta.Content
+							messageBuilder.WriteString(*content)
+							io.WriteString(out, *content)
+						} else if choice.Message != nil && choice.Message.Content != nil {
+							content := choice.Message.Content
+							messageBuilder.WriteString(*content)
+							io.WriteString(out, *content)
+						}
 
-							messageBuilder.WriteString(*choice.Delta.Content)
-							io.WriteString(out, *choice.Delta.Content)
-
-							// Introduce a small delay in between response tokens to better simulate a conversation
-							if terminal.IsTerminalOutput() {
-								time.Sleep(10 * time.Millisecond)
-							}
+						// Introduce a small delay in between response tokens to better simulate a conversation
+						if terminal.IsTerminalOutput() {
+							time.Sleep(10 * time.Millisecond)
 						}
 					}
 				}

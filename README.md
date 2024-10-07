@@ -62,4 +62,15 @@ cat README.md | gh models run gpt-4o-mini "summarize this text"
 
 ### Building
 
-Run `script/build`.
+Run `script/build`. Now you can run the binary locally, e.g. `./gh-models list`
+
+### Releasing
+
+`gh extension upgrade github/gh-models` or `gh extension install github/gh-models` will pull the latest release, not the latest commit, so all changes require cutting a new release:
+
+```shell
+git tag v0.0.x main
+git push origin tag v0.0.x
+```
+
+This will trigger the `release` action that runs the actual production build.
