@@ -31,7 +31,12 @@ func NewClient(authToken string) *Client {
 }
 
 func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatCompletionResponse, error) {
-	req.Stream = true
+	// Check if the model name is `o1-mini` or `o1-preview`
+	if req.Model == "o1-mini" || req.Model == "o1-preview" {
+		req.Stream = false
+	} else {
+		req.Stream = true
+	}
 
 	bodyBytes, err := json.Marshal(req)
 	if err != nil {
@@ -60,7 +65,20 @@ func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatComple
 	}
 
 	var chatCompletionResponse ChatCompletionResponse
-	chatCompletionResponse.Reader = sse.NewEventReader[ChatCompletion](resp.Body)
+
+	if req.Stream {
+		// Handle streamed response
+		chatCompletionResponse.Reader = sse.NewEventReader[ChatCompletion](resp.Body)
+	} else {
+		var completion ChatCompletion
+		if err := json.NewDecoder(resp.Body).Decode(&completion); err != nil {
+			return nil, err
+		}
+
+		// Create a mock reader that returns the decoded completion
+		mockReader := sse.NewMockEventReader([]ChatCompletion{completion})
+		chatCompletionResponse.Reader = mockReader
+	}
 
 	return &chatCompletionResponse, nil
 }
