@@ -391,6 +391,8 @@ func NewRunCommand() *cobra.Command {
 					sp.Stop()
 
 					for _, choice := range completion.Choices {
+						// Streamed responses from the OpenAI API have their data in `.Delta`, while
+						// non-streamed responses use `.Message`, so let's support both
 						if choice.Delta != nil && choice.Delta.Content != nil {
 							content := choice.Delta.Content
 							messageBuilder.WriteString(*content)
