@@ -10,11 +10,6 @@ import (
 	"strings"
 )
 
-type EventReaderInterface[T any] interface {
-	Read() (T, error)
-	Close() error
-}
-
 // Reader is an interface for reading events from an SSE stream.
 type Reader[T any] interface {
 	// Read reads the next event from the stream.

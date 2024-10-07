@@ -50,7 +50,7 @@ type ChatCompletion struct {
 }
 
 type ChatCompletionResponse struct {
-	Reader sse.EventReaderInterface[ChatCompletion]
+	Reader sse.Reader[ChatCompletion]
 }
 
 type modelCatalogSearchResponse struct {
