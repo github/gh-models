@@ -65,6 +65,7 @@ type modelCatalogSearchSummary struct {
 	Popularity     json.Number `json:"popularity"`
 	Publisher      string      `json:"publisher"`
 	RegistryName   string      `json:"registryName"`
+	Version        string      `json:"version"`
 	Summary        string      `json:"summary"`
 }
 
@@ -75,6 +76,8 @@ type ModelSummary struct {
 	Task         string `json:"task"`
 	Publisher    string `json:"publisher"`
 	Summary      string `json:"summary"`
+	Version      string `json:"version"`
+	RegistryName string `json:"registry_name"`
 }
 
 func Ptr[T any](value T) *T {

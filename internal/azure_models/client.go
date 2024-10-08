@@ -160,6 +160,8 @@ func (c *Client) ListModels() ([]*ModelSummary, error) {
 			Task:         inferenceTask,
 			Publisher:    summary.Publisher,
 			Summary:      summary.Summary,
+			Version:      summary.Version,
+			RegistryName: summary.RegistryName,
 		})
 	}
 
