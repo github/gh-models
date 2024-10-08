@@ -1,15 +1,15 @@
 package view
 
 import (
-	"errors"
+	"fmt"
 	"io"
-	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azure_models"
 	"github.com/github/gh-models/internal/ux"
+	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -62,15 +62,11 @@ func NewViewCommand() *cobra.Command {
 				modelName = args[0]
 			}
 
-			for _, model := range models {
-				if strings.EqualFold(model.FriendlyName, modelName) || strings.EqualFold(model.Name, modelName) {
-					modelName = model.Name
-					break
-				}
-			}
-
-			if modelName == "" {
-				return errors.New("the specified model name is not supported")
+			validModelName := util.GetValidModelName(modelName, models)
+			if validModelName == nil {
+				return fmt.Errorf("the specified model name is not supported: %s", modelName)
+			} else {
+				modelName = *validModelName
 			}
 
 			io.WriteString(out, "You selected: "+modelName+"\n")
