@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -82,6 +83,29 @@ func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatComple
 	}
 
 	return &chatCompletionResponse, nil
+}
+
+func (c *Client) GetModelDetails(registry string, modelName string, version string) error {
+	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", azureAiStudioURL, registry, modelName, version)
+	httpReq, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.client.Do(httpReq)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return c.handleHTTPError(resp)
+	}
+
+	fmt.Println(resp.Body)
+
+	return nil
 }
 
 func (c *Client) ListModels() ([]*ModelSummary, error) {
