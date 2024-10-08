@@ -19,8 +19,10 @@ func newModelPrinter(model *azure_models.ModelSummary, terminal term.Term) model
 }
 
 func (p *modelPrinter) render() error {
-	p.addLabeledValue("Display Name", p.model.FriendlyName)
-	p.addLabeledValue("Model Name", p.model.Name)
+	p.addLabeledValue("Display name:", p.model.FriendlyName)
+	p.addLabeledValue("Model name:", p.model.Name)
+	p.addLabeledValue("Publisher:", p.model.Publisher)
+	p.addLabeledValue("Summary:", p.model.Summary)
 
 	err := p.printer.Render()
 	if err != nil {
