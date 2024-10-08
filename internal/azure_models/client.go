@@ -103,11 +103,16 @@ func (c *Client) GetModelDetails(registry string, modelName string, version stri
 		return c.handleHTTPError(resp)
 	}
 
-	bodyBytes, err := io.ReadAll(resp.Body)
+	decoder := json.NewDecoder(resp.Body)
+	decoder.UseNumber()
+
+	var detailsResponse modelCatalogDetailsResponse
+	err = decoder.Decode(&detailsResponse)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(bodyBytes))
+
+	fmt.Println(detailsResponse.AssetID)
 
 	return nil
 }

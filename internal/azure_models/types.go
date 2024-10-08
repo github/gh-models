@@ -80,6 +80,36 @@ type ModelSummary struct {
 	RegistryName string `json:"registry_name"`
 }
 
+type modelCatalogDetailsResponse struct {
+	AssetID            string   `json:"assetId"`
+	Name               string   `json:"name"`
+	DisplayName        string   `json:"displayName"`
+	Publisher          string   `json:"publisher"`
+	Version            string   `json:"version"`
+	RegistryName       string   `json:"registryName"`
+	Evaluation         string   `json:"evaluation"`
+	Summary            string   `json:"summary"`
+	Description        string   `json:"description"`
+	License            string   `json:"license"`
+	LicenseDescription string   `json:"licenseDescription"`
+	Notes              string   `json:"notes"`
+	Keywords           []string `json:"keywords"`
+	InferenceTasks     []string `json:"inferenceTasks"`
+	FineTuningTasks    []string `json:"fineTuningTasks"`
+	Labels             []string `json:"labels"`
+	TradeRestricted    bool     `json:"tradeRestricted"`
+	CreatedTime        string   `json:"createdTime"`
+	ModelLimits        struct {
+		SupportedLanguages []string `json:"supportedLanguages"`
+		TextLimits         struct {
+			MaxOutputTokens    int `json:"maxOutputTokens"`
+			InputContextWindow int `json:"inputContextWindow"`
+		} `json:"textLimits"`
+		SupportedInputModalities  []string `json:"supportedInputModalities"`
+		SupportedOutputModalities []string `json:"supportedOutputModalities"`
+	} `json:"modelLimits"`
+}
+
 func Ptr[T any](value T) *T {
 	return &value
 }
