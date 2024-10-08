@@ -226,6 +226,11 @@ func NewRunCommand() *cobra.Command {
 				modelName = args[0]
 			}
 
+			noMatchErrorMessage := "The specified model name is not found. Run 'gh models list' to see available models or 'gh models run' to select interactively."
+			if modelName == "" {
+				return errors.New(noMatchErrorMessage)
+			}
+
 			foundMatch := false
 			for _, model := range models {
 				if strings.EqualFold(model.FriendlyName, modelName) || strings.EqualFold(model.Name, modelName) {
@@ -235,8 +240,8 @@ func NewRunCommand() *cobra.Command {
 				}
 			}
 
-			if !foundMatch || modelName == "" {
-				return errors.New("The specified model name is not found. Run 'gh models list' to see available models or 'gh models run' to select interactively.")
+			if !foundMatch {
+				return errors.New(noMatchErrorMessage)
 			}
 
 			initialPrompt := ""
