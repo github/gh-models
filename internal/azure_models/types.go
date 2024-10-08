@@ -110,6 +110,10 @@ type modelCatalogDetailsResponse struct {
 	} `json:"modelLimits"`
 }
 
+type ModelDetails struct {
+	Description string `json:"description"`
+}
+
 func Ptr[T any](value T) *T {
 	return &value
 }

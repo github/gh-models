@@ -85,22 +85,22 @@ func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatComple
 	return &chatCompletionResponse, nil
 }
 
-func (c *Client) GetModelDetails(registry string, modelName string, version string) error {
+func (c *Client) GetModelDetails(registry string, modelName string, version string) (*ModelDetails, error) {
 	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", azureAiStudioURL, registry, modelName, version)
 	httpReq, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	httpReq.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.client.Do(httpReq)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return c.handleHTTPError(resp)
+		return nil, c.handleHTTPError(resp)
 	}
 
 	decoder := json.NewDecoder(resp.Body)
@@ -109,12 +109,12 @@ func (c *Client) GetModelDetails(registry string, modelName string, version stri
 	var detailsResponse modelCatalogDetailsResponse
 	err = decoder.Decode(&detailsResponse)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	fmt.Println(detailsResponse.AssetID)
-
-	return nil
+	return &ModelDetails{
+		Description: detailsResponse.Description,
+	}, nil
 }
 
 func (c *Client) ListModels() ([]*ModelSummary, error) {

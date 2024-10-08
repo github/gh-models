@@ -60,19 +60,19 @@ func NewViewCommand() *cobra.Command {
 				modelName = args[0]
 			}
 
-			model, err := util.GetModelByName(modelName, models)
+			modelSummary, err := util.GetModelByName(modelName, models)
 			if err != nil {
 				return err
 			}
 
-			modelPrinter := newModelPrinter(model, terminal)
+			modelDetails, err := client.GetModelDetails(modelSummary.RegistryName, modelSummary.Name, modelSummary.Version)
+			if err != nil {
+				return err
+			}
+
+			modelPrinter := newModelPrinter(modelSummary, modelDetails, terminal)
 
 			err = modelPrinter.render()
-			if err != nil {
-				return err
-			}
-
-			err = client.GetModelDetails(model.RegistryName, model.Name, model.Version)
 			if err != nil {
 				return err
 			}

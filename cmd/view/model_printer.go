@@ -8,21 +8,32 @@ import (
 )
 
 type modelPrinter struct {
-	model   *azure_models.ModelSummary
-	printer tableprinter.TablePrinter
+	modelSummary *azure_models.ModelSummary
+	modelDetails *azure_models.ModelDetails
+	printer      tableprinter.TablePrinter
 }
 
-func newModelPrinter(model *azure_models.ModelSummary, terminal term.Term) modelPrinter {
+func newModelPrinter(summary *azure_models.ModelSummary, details *azure_models.ModelDetails, terminal term.Term) modelPrinter {
 	width, _, _ := terminal.Size()
 	printer := tableprinter.New(terminal.Out(), terminal.IsTerminalOutput(), width)
-	return modelPrinter{model: model, printer: printer}
+	return modelPrinter{modelSummary: summary, modelDetails: details, printer: printer}
 }
 
 func (p *modelPrinter) render() error {
-	p.addLabeledValue("Display name:", p.model.FriendlyName)
-	p.addLabeledValue("Model name:", p.model.Name)
-	p.addLabeledValue("Publisher:", p.model.Publisher)
-	p.addLabeledValue("Summary:", p.model.Summary)
+	modelSummary := p.modelSummary
+	if modelSummary != nil {
+		p.addLabeledValue("Display name:", modelSummary.FriendlyName)
+		p.addLabeledValue("Summary name:", modelSummary.Name)
+		p.addLabeledValue("Publisher:", modelSummary.Publisher)
+		p.addLabeledValue("Summary:", modelSummary.Summary)
+	}
+
+	modelDetails := p.modelDetails
+	if modelDetails != nil {
+		p.addLabel("Description:")
+		p.printer.AddField(modelDetails.Description, tableprinter.WithTruncate(nil))
+		p.printer.EndRow()
+	}
 
 	err := p.printer.Render()
 	if err != nil {
@@ -32,8 +43,12 @@ func (p *modelPrinter) render() error {
 	return nil
 }
 
+func (p *modelPrinter) addLabel(label string) {
+	p.printer.AddField(label, tableprinter.WithTruncate(nil), tableprinter.WithColor(util.LightGrayUnderline))
+}
+
 func (p *modelPrinter) addLabeledValue(label string, value string) {
-	p.printer.AddField(label, tableprinter.WithColor(util.LightGrayUnderline))
+	p.addLabel(label)
 	p.printer.AddField(value)
 	p.printer.EndRow()
 }
