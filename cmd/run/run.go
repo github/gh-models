@@ -226,15 +226,17 @@ func NewRunCommand() *cobra.Command {
 				modelName = args[0]
 			}
 
+			foundMatch := false
 			for _, model := range models {
 				if strings.EqualFold(model.FriendlyName, modelName) || strings.EqualFold(model.Name, modelName) {
 					modelName = model.Name
+					foundMatch = true
 					break
 				}
 			}
 
-			if modelName == "" {
-				return errors.New("the specified model name is not supported")
+			if !foundMatch || modelName == "" {
+				return errors.New("The specified model name is not found. Run 'gh models list' to see available models or 'gh models run' to select interactively.")
 			}
 
 			initialPrompt := ""
