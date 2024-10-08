@@ -19,11 +19,10 @@ func NewViewCommand() *cobra.Command {
 		Args:  cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			terminal := term.FromEnv()
-			out := terminal.Out()
 
 			token, _ := auth.TokenForHost("github.com")
 			if token == "" {
-				io.WriteString(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
+				io.WriteString(terminal.Out(), "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
 				return nil
 			}
 
@@ -66,7 +65,13 @@ func NewViewCommand() *cobra.Command {
 				return err
 			}
 
-			io.WriteString(out, "You selected: "+model.FriendlyName+"\n")
+			modelPrinter := newModelPrinter(model, terminal)
+
+			err = modelPrinter.render()
+			if err != nil {
+				return err
+			}
+
 			return nil
 		},
 	}
