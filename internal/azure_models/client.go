@@ -103,7 +103,11 @@ func (c *Client) GetModelDetails(registry string, modelName string, version stri
 		return c.handleHTTPError(resp)
 	}
 
-	fmt.Println(resp.Body)
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(bodyBytes))
 
 	return nil
 }

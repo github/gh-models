@@ -72,6 +72,11 @@ func NewViewCommand() *cobra.Command {
 				return err
 			}
 
+			err = client.GetModelDetails(model.RegistryName, model.Name, model.Version)
+			if err != nil {
+				return err
+			}
+
 			return nil
 		},
 	}
