@@ -227,11 +227,9 @@ func NewRunCommand() *cobra.Command {
 				modelName = args[0]
 			}
 
-			validModelName := util.GetValidModelName(modelName, models)
-			if validModelName == nil {
-				return fmt.Errorf("the specified model name is not supported: %s", modelName)
-			} else {
-				modelName = *validModelName
+			modelName, err = util.ValidateModelName(modelName, models)
+			if err != nil {
+				return err
 			}
 
 			initialPrompt := ""
