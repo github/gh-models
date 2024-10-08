@@ -19,7 +19,8 @@ type Client struct {
 
 const (
 	prodInferenceURL = "https://models.inference.ai.azure.com/chat/completions"
-	prodModelsURL    = "https://api.catalog.azureml.ms/asset-gallery/v1.0/models"
+	azureAiStudioURL = "https://api.catalog.azureml.ms"
+	prodModelsURL    = azureAiStudioURL + "/asset-gallery/v1.0/models"
 )
 
 func NewClient(authToken string) *Client {
