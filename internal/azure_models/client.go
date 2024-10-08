@@ -113,7 +113,9 @@ func (c *Client) GetModelDetails(registry string, modelName string, version stri
 	}
 
 	return &ModelDetails{
-		Description: detailsResponse.Description,
+		Description:        detailsResponse.Description,
+		License:            detailsResponse.License,
+		LicenseDescription: detailsResponse.LicenseDescription,
 	}, nil
 }
 

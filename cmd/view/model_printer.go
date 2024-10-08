@@ -22,17 +22,17 @@ func newModelPrinter(summary *azure_models.ModelSummary, details *azure_models.M
 func (p *modelPrinter) render() error {
 	modelSummary := p.modelSummary
 	if modelSummary != nil {
-		p.addLabeledValue("Display name:", modelSummary.FriendlyName)
-		p.addLabeledValue("Summary name:", modelSummary.Name)
-		p.addLabeledValue("Publisher:", modelSummary.Publisher)
-		p.addLabeledValue("Summary:", modelSummary.Summary)
+		p.printLabelledLine("Display name:", modelSummary.FriendlyName)
+		p.printLabelledLine("Summary name:", modelSummary.Name)
+		p.printLabelledLine("Publisher:", modelSummary.Publisher)
+		p.printLabelledLine("Summary:", modelSummary.Summary)
 	}
 
 	modelDetails := p.modelDetails
 	if modelDetails != nil {
-		p.addLabel("Description:")
-		p.printer.AddField(modelDetails.Description, tableprinter.WithTruncate(nil))
-		p.printer.EndRow()
+		p.printLabelledLine("License:", modelDetails.License)
+		p.printMultipleLinesWithLabel("License description:", modelDetails.LicenseDescription)
+		p.printMultipleLinesWithLabel("Description:", modelDetails.Description)
 	}
 
 	err := p.printer.Render()
@@ -43,12 +43,18 @@ func (p *modelPrinter) render() error {
 	return nil
 }
 
-func (p *modelPrinter) addLabel(label string) {
-	p.printer.AddField(label, tableprinter.WithTruncate(nil), tableprinter.WithColor(util.LightGrayUnderline))
-}
-
-func (p *modelPrinter) addLabeledValue(label string, value string) {
+func (p *modelPrinter) printLabelledLine(label string, value string) {
 	p.addLabel(label)
 	p.printer.AddField(value)
 	p.printer.EndRow()
+}
+
+func (p *modelPrinter) printMultipleLinesWithLabel(label string, value string) {
+	p.addLabel(label)
+	p.printer.AddField(value, tableprinter.WithTruncate(nil))
+	p.printer.EndRow()
+}
+
+func (p *modelPrinter) addLabel(label string) {
+	p.printer.AddField(label, tableprinter.WithTruncate(nil), tableprinter.WithColor(util.LightGrayUnderline))
 }
