@@ -61,12 +61,12 @@ func NewViewCommand() *cobra.Command {
 				modelName = args[0]
 			}
 
-			modelName, err = util.ValidateModelName(modelName, models)
+			model, err := util.GetModelByName(modelName, models)
 			if err != nil {
 				return err
 			}
 
-			io.WriteString(out, "You selected: "+modelName+"\n")
+			io.WriteString(out, "You selected: "+model.FriendlyName+"\n")
 			return nil
 		},
 	}

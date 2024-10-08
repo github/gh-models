@@ -227,10 +227,11 @@ func NewRunCommand() *cobra.Command {
 				modelName = args[0]
 			}
 
-			modelName, err = util.ValidateModelName(modelName, models)
+			model, err := util.GetModelByName(modelName, models)
 			if err != nil {
 				return err
 			}
+			modelName = model.Name
 
 			initialPrompt := ""
 			singleShot := false
