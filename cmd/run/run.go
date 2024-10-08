@@ -227,6 +227,7 @@ func NewRunCommand() *cobra.Command {
 			}
 
 			noMatchErrorMessage := "The specified model name is not found. Run 'gh models list' to see available models or 'gh models run' to select interactively."
+
 			if modelName == "" {
 				return errors.New(noMatchErrorMessage)
 			}
