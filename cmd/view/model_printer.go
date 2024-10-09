@@ -52,12 +52,18 @@ func (p *modelPrinter) render() error {
 }
 
 func (p *modelPrinter) printLabelledLine(label string, value string) {
+	if value == "" {
+		return
+	}
 	p.addLabel(label)
 	p.printer.AddField(value)
 	p.printer.EndRow()
 }
 
 func (p *modelPrinter) printMultipleLinesWithLabel(label string, value string) {
+	if value == "" {
+		return
+	}
 	p.addLabel(label)
 	p.printer.AddField(value, tableprinter.WithTruncate(nil))
 	p.printer.EndRow()
