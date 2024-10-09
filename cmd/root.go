@@ -3,6 +3,7 @@ package cmd
 import (
 	"github.com/github/gh-models/cmd/list"
 	"github.com/github/gh-models/cmd/run"
+	"github.com/github/gh-models/cmd/view"
 	"github.com/spf13/cobra"
 )
 
@@ -14,6 +15,7 @@ func NewRootCommand() *cobra.Command {
 
 	cmd.AddCommand(list.NewListCommand())
 	cmd.AddCommand(run.NewRunCommand())
+	cmd.AddCommand(view.NewViewCommand())
 
 	return cmd
 }

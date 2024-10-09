@@ -2,6 +2,8 @@ package azure_models
 
 import (
 	"encoding/json"
+	"fmt"
+	"strings"
 
 	"github.com/github/gh-models/internal/sse"
 )
@@ -65,6 +67,7 @@ type modelCatalogSearchSummary struct {
 	Popularity     json.Number `json:"popularity"`
 	Publisher      string      `json:"publisher"`
 	RegistryName   string      `json:"registryName"`
+	Version        string      `json:"version"`
 	Summary        string      `json:"summary"`
 }
 
@@ -75,6 +78,64 @@ type ModelSummary struct {
 	Task         string `json:"task"`
 	Publisher    string `json:"publisher"`
 	Summary      string `json:"summary"`
+	Version      string `json:"version"`
+	RegistryName string `json:"registry_name"`
+}
+
+func (m *ModelSummary) HasName(name string) bool {
+	return strings.EqualFold(m.FriendlyName, name) || strings.EqualFold(m.Name, name)
+}
+
+type modelCatalogDetailsResponse struct {
+	AssetID            string   `json:"assetId"`
+	Name               string   `json:"name"`
+	DisplayName        string   `json:"displayName"`
+	Publisher          string   `json:"publisher"`
+	Version            string   `json:"version"`
+	RegistryName       string   `json:"registryName"`
+	Evaluation         string   `json:"evaluation"`
+	Summary            string   `json:"summary"`
+	Description        string   `json:"description"`
+	License            string   `json:"license"`
+	LicenseDescription string   `json:"licenseDescription"`
+	Notes              string   `json:"notes"`
+	Keywords           []string `json:"keywords"`
+	InferenceTasks     []string `json:"inferenceTasks"`
+	FineTuningTasks    []string `json:"fineTuningTasks"`
+	Labels             []string `json:"labels"`
+	TradeRestricted    bool     `json:"tradeRestricted"`
+	CreatedTime        string   `json:"createdTime"`
+	PlaygroundLimits   *struct {
+		RateLimitTier string `json:"rateLimitTier"`
+	} `json:"playgroundLimits"`
+	ModelLimits *struct {
+		SupportedLanguages []string `json:"supportedLanguages"`
+		TextLimits         *struct {
+			MaxOutputTokens    int `json:"maxOutputTokens"`
+			InputContextWindow int `json:"inputContextWindow"`
+		} `json:"textLimits"`
+		SupportedInputModalities  []string `json:"supportedInputModalities"`
+		SupportedOutputModalities []string `json:"supportedOutputModalities"`
+	} `json:"modelLimits"`
+}
+
+type ModelDetails struct {
+	Description               string   `json:"description"`
+	Evaluation                string   `json:"evaluation"`
+	License                   string   `json:"license"`
+	LicenseDescription        string   `json:"license_description"`
+	Notes                     string   `json:"notes"`
+	Tags                      []string `json:"tags"`
+	SupportedInputModalities  []string `json:"supported_input_modalities"`
+	SupportedOutputModalities []string `json:"supported_output_modalities"`
+	SupportedLanguages        []string `json:"supported_languages"`
+	MaxOutputTokens           int      `json:"max_output_tokens"`
+	MaxInputTokens            int      `json:"max_input_tokens"`
+	RateLimitTier             string   `json:"rateLimitTier"`
+}
+
+func (m *ModelDetails) ContextLimits() string {
+	return fmt.Sprintf("up to %d input tokens and %d output tokens", m.MaxInputTokens, m.MaxOutputTokens)
 }
 
 func Ptr[T any](value T) *T {
