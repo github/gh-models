@@ -8,7 +8,7 @@ import (
 
 func NewRootCommand() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "gh models",
+		Use:   "models",
 		Short: "GitHub Models extension",
 	}
 
