@@ -16,7 +16,6 @@ import (
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azure_models"
 	"github.com/github/gh-models/internal/ux"
-	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -227,11 +226,24 @@ func NewRunCommand() *cobra.Command {
 				modelName = args[0]
 			}
 
-			model, err := util.GetModelByName(modelName, models)
-			if err != nil {
-				return err
+			noMatchErrorMessage := "The specified model name is not found. Run 'gh models list' to see available models or 'gh models run' to select interactively."
+
+			if modelName == "" {
+				return errors.New(noMatchErrorMessage)
 			}
-			modelName = model.Name
+
+			foundMatch := false
+			for _, model := range models {
+				if strings.EqualFold(model.FriendlyName, modelName) || strings.EqualFold(model.Name, modelName) {
+					modelName = model.Name
+					foundMatch = true
+					break
+				}
+			}
+
+			if !foundMatch {
+				return errors.New(noMatchErrorMessage)
+			}
 
 			initialPrompt := ""
 			singleShot := false

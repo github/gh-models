@@ -51,7 +51,7 @@ func NewListCommand() *cobra.Command {
 			width, _, _ := terminal.Size()
 			printer := tableprinter.New(out, isTTY, width)
 
-			printer.AddHeader([]string{"Display Name", "Model Name"}, tableprinter.WithColor(util.LightGrayUnderline))
+			printer.AddHeader([]string{"DISPLAY NAME", "MODEL NAME"}, tableprinter.WithColor(util.LightGrayUnderline))
 			printer.EndRow()
 
 			for _, model := range models {
