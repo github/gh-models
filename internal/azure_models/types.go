@@ -2,6 +2,7 @@ package azure_models
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/github/gh-models/internal/sse"
 )
@@ -78,6 +79,10 @@ type ModelSummary struct {
 	Summary      string `json:"summary"`
 	Version      string `json:"version"`
 	RegistryName string `json:"registry_name"`
+}
+
+func (m *ModelSummary) HasName(name string) bool {
+	return strings.EqualFold(m.FriendlyName, name) || strings.EqualFold(m.Name, name)
 }
 
 type modelCatalogDetailsResponse struct {

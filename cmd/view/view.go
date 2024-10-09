@@ -3,7 +3,6 @@ package view
 import (
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/cli/go-gh/v2/pkg/auth"
@@ -87,7 +86,7 @@ func NewViewCommand() *cobra.Command {
 // getModelByName returns the model with the specified name, or an error if no such model exists within the given list.
 func getModelByName(modelName string, models []*azure_models.ModelSummary) (*azure_models.ModelSummary, error) {
 	for _, model := range models {
-		if strings.EqualFold(model.FriendlyName, modelName) || strings.EqualFold(model.Name, modelName) {
+		if model.HasName(modelName) {
 			return model, nil
 		}
 	}
