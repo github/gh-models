@@ -37,6 +37,7 @@ func (p *modelPrinter) render() error {
 		p.printLabelledLine("License:", modelDetails.License)
 		p.printMultipleLinesWithLabel("License description:", modelDetails.LicenseDescription)
 		p.printMultipleLinesWithLabel("Description:", modelDetails.Description)
+		p.printMultipleLinesWithLabel("Notes:", modelDetails.Notes)
 	}
 
 	err := p.printer.Render()
@@ -56,6 +57,12 @@ func (p *modelPrinter) printLabelledLine(label string, value string) {
 func (p *modelPrinter) printMultipleLinesWithLabel(label string, value string) {
 	p.addLabel(label)
 	p.printer.AddField(value, tableprinter.WithTruncate(nil))
+	p.printer.EndRow()
+	p.printBlankLine()
+}
+
+func (p *modelPrinter) printBlankLine() {
+	p.printer.AddField("")
 	p.printer.EndRow()
 }
 

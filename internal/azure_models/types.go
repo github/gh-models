@@ -119,6 +119,7 @@ type ModelDetails struct {
 	Description        string `json:"description"`
 	License            string `json:"license"`
 	LicenseDescription string `json:"license_description"`
+	Notes              string `json:"notes"`
 }
 
 func Ptr[T any](value T) *T {
