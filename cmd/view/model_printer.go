@@ -43,7 +43,7 @@ func (p *modelPrinter) render() error {
 		p.printLabelledList("Tags:", modelDetails.Tags)
 		p.printLabelledList("Supported input types:", modelDetails.SupportedInputModalities)
 		p.printLabelledList("Supported output types:", modelDetails.SupportedOutputModalities)
-		p.printLabelledList("Supported languages:", modelDetails.SupportedLanguages)
+		p.printLabelledMultiLineList("Supported languages:", modelDetails.SupportedLanguages)
 		p.printLabelledLine("License:", modelDetails.License)
 		p.printMultipleLinesWithLabel("License description:", modelDetails.LicenseDescription)
 		p.printMultipleLinesWithLabel("Description:", modelDetails.Description)
@@ -70,6 +70,10 @@ func (p *modelPrinter) printLabelledLine(label string, value string) {
 
 func (p *modelPrinter) printLabelledList(label string, values []string) {
 	p.printLabelledLine(label, strings.Join(values, ", "))
+}
+
+func (p *modelPrinter) printLabelledMultiLineList(label string, values []string) {
+	p.printMultipleLinesWithLabel(label, strings.Join(values, ", "))
 }
 
 func (p *modelPrinter) printMultipleLinesWithLabel(label string, value string) {
