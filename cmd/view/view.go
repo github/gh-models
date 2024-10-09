@@ -1,14 +1,15 @@
 package view
 
 import (
+	"fmt"
 	"io"
+	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azure_models"
 	"github.com/github/gh-models/internal/ux"
-	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -60,7 +61,7 @@ func NewViewCommand() *cobra.Command {
 				modelName = args[0]
 			}
 
-			modelSummary, err := util.GetModelByName(modelName, models)
+			modelSummary, err := getModelByName(modelName, models)
 			if err != nil {
 				return err
 			}
@@ -81,4 +82,14 @@ func NewViewCommand() *cobra.Command {
 		},
 	}
 	return cmd
+}
+
+// getModelByName returns the model with the specified name, or an error if no such model exists within the given list.
+func getModelByName(modelName string, models []*azure_models.ModelSummary) (*azure_models.ModelSummary, error) {
+	for _, model := range models {
+		if strings.EqualFold(model.FriendlyName, modelName) || strings.EqualFold(model.Name, modelName) {
+			return model, nil
+		}
+	}
+	return nil, fmt.Errorf("the specified model name is not supported: %s", modelName)
 }
