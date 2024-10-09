@@ -122,8 +122,8 @@ type ModelDetails struct {
 	LicenseDescription        string   `json:"license_description"`
 	Notes                     string   `json:"notes"`
 	Tags                      []string `json:"tags"`
-	SupportedInputModalities  []string `json:"supportedInputModalities"`
-	SupportedOutputModalities []string `json:"supportedOutputModalities"`
+	SupportedInputModalities  []string `json:"supported_input_modalities"`
+	SupportedOutputModalities []string `json:"supported_output_modalities"`
 }
 
 func Ptr[T any](value T) *T {
