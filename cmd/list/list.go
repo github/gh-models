@@ -9,8 +9,12 @@ import (
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azure_models"
 	"github.com/github/gh-models/internal/ux"
-	"github.com/github/gh-models/pkg/util"
+	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
+)
+
+var (
+	lightGrayUnderline = ansi.ColorFunc("white+du")
 )
 
 func NewListCommand() *cobra.Command {
@@ -51,7 +55,7 @@ func NewListCommand() *cobra.Command {
 			width, _, _ := terminal.Size()
 			printer := tableprinter.New(out, isTTY, width)
 
-			printer.AddHeader([]string{"DISPLAY NAME", "MODEL NAME"}, tableprinter.WithColor(util.LightGrayUnderline))
+			printer.AddHeader([]string{"DISPLAY NAME", "MODEL NAME"}, tableprinter.WithColor(lightGrayUnderline))
 			printer.EndRow()
 
 			for _, model := range models {

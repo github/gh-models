@@ -4,7 +4,11 @@ import (
 	"github.com/cli/go-gh/v2/pkg/tableprinter"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azure_models"
-	"github.com/github/gh-models/pkg/util"
+	"github.com/mgutz/ansi"
+)
+
+var (
+	lightGrayUnderline = ansi.ColorFunc("white+du")
 )
 
 type modelPrinter struct {
@@ -56,5 +60,5 @@ func (p *modelPrinter) printMultipleLinesWithLabel(label string, value string) {
 }
 
 func (p *modelPrinter) addLabel(label string) {
-	p.printer.AddField(label, tableprinter.WithTruncate(nil), tableprinter.WithColor(util.LightGrayUnderline))
+	p.printer.AddField(label, tableprinter.WithTruncate(nil), tableprinter.WithColor(lightGrayUnderline))
 }
