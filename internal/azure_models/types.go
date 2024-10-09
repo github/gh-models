@@ -104,7 +104,7 @@ type modelCatalogDetailsResponse struct {
 	Labels             []string `json:"labels"`
 	TradeRestricted    bool     `json:"tradeRestricted"`
 	CreatedTime        string   `json:"createdTime"`
-	ModelLimits        struct {
+	ModelLimits        *struct {
 		SupportedLanguages []string `json:"supportedLanguages"`
 		TextLimits         struct {
 			MaxOutputTokens    int `json:"maxOutputTokens"`
@@ -116,11 +116,13 @@ type modelCatalogDetailsResponse struct {
 }
 
 type ModelDetails struct {
-	Description        string   `json:"description"`
-	License            string   `json:"license"`
-	LicenseDescription string   `json:"license_description"`
-	Notes              string   `json:"notes"`
-	Tags               []string `json:"tags"`
+	Description               string   `json:"description"`
+	License                   string   `json:"license"`
+	LicenseDescription        string   `json:"license_description"`
+	Notes                     string   `json:"notes"`
+	Tags                      []string `json:"tags"`
+	SupportedInputModalities  []string `json:"supportedInputModalities"`
+	SupportedOutputModalities []string `json:"supportedOutputModalities"`
 }
 
 func Ptr[T any](value T) *T {

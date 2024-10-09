@@ -112,13 +112,21 @@ func (c *Client) GetModelDetails(registry string, modelName string, version stri
 		return nil, err
 	}
 
-	return &ModelDetails{
+	modelDetails := &ModelDetails{
 		Description:        detailsResponse.Description,
 		License:            detailsResponse.License,
 		LicenseDescription: detailsResponse.LicenseDescription,
 		Notes:              detailsResponse.Notes,
 		Tags:               lowercaseStrings(detailsResponse.Keywords),
-	}, nil
+	}
+
+	modelLimits := detailsResponse.ModelLimits
+	if modelLimits != nil {
+		modelDetails.SupportedInputModalities = modelLimits.SupportedInputModalities
+		modelDetails.SupportedOutputModalities = modelLimits.SupportedOutputModalities
+	}
+
+	return modelDetails, nil
 }
 
 func lowercaseStrings(input []string) []string {
