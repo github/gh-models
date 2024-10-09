@@ -3,6 +3,7 @@ package view
 import (
 	"strings"
 
+	"github.com/cli/cli/v2/pkg/markdown"
 	"github.com/cli/go-gh/v2/pkg/tableprinter"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azure_models"
@@ -14,15 +15,16 @@ var (
 )
 
 type modelPrinter struct {
-	modelSummary *azure_models.ModelSummary
-	modelDetails *azure_models.ModelDetails
-	printer      tableprinter.TablePrinter
+	modelSummary  *azure_models.ModelSummary
+	modelDetails  *azure_models.ModelDetails
+	printer       tableprinter.TablePrinter
+	terminalWidth int
 }
 
 func newModelPrinter(summary *azure_models.ModelSummary, details *azure_models.ModelDetails, terminal term.Term) modelPrinter {
 	width, _, _ := terminal.Size()
 	printer := tableprinter.New(terminal.Out(), terminal.IsTerminalOutput(), width)
-	return modelPrinter{modelSummary: summary, modelDetails: details, printer: printer}
+	return modelPrinter{modelSummary: summary, modelDetails: details, printer: printer, terminalWidth: width}
 }
 
 func (p *modelPrinter) render() error {
@@ -75,7 +77,12 @@ func (p *modelPrinter) printMultipleLinesWithLabel(label string, value string) {
 		return
 	}
 	p.addLabel(label)
-	p.printer.AddField(value, tableprinter.WithTruncate(nil))
+	renderedValue, err := markdown.Render(value, markdown.WithWrap(p.terminalWidth))
+	displayValue := value
+	if err == nil {
+		displayValue = renderedValue
+	}
+	p.printer.AddField(displayValue, tableprinter.WithTruncate(nil))
 	p.printer.EndRow()
 	p.printBlankLine()
 }
