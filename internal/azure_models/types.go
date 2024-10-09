@@ -117,6 +117,7 @@ type modelCatalogDetailsResponse struct {
 
 type ModelDetails struct {
 	Description               string   `json:"description"`
+	Evaluation                string   `json:"evaluation"`
 	License                   string   `json:"license"`
 	LicenseDescription        string   `json:"license_description"`
 	Notes                     string   `json:"notes"`

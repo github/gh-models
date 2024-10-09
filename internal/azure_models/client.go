@@ -118,6 +118,7 @@ func (c *Client) GetModelDetails(registry string, modelName string, version stri
 		LicenseDescription: detailsResponse.LicenseDescription,
 		Notes:              detailsResponse.Notes,
 		Tags:               lowercaseStrings(detailsResponse.Keywords),
+		Evaluation:         detailsResponse.Evaluation,
 	}
 
 	modelLimits := detailsResponse.ModelLimits

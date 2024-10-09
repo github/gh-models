@@ -43,6 +43,7 @@ func (p *modelPrinter) render() error {
 		p.printMultipleLinesWithLabel("License description:", modelDetails.LicenseDescription)
 		p.printMultipleLinesWithLabel("Description:", modelDetails.Description)
 		p.printMultipleLinesWithLabel("Notes:", modelDetails.Notes)
+		p.printMultipleLinesWithLabel("Evaluation:", modelDetails.Evaluation)
 	}
 
 	err := p.printer.Render()
