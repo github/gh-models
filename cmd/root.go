@@ -1,3 +1,4 @@
+// cmd represents the base command when called without any subcommands.
 package cmd
 
 import (
@@ -6,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewRootCommand returns a new root command for the gh-models extension.
 func NewRootCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "gh models",

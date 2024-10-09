@@ -1,3 +1,4 @@
+// list provides a gh command to list available models.
 package list
 
 import (
@@ -17,6 +18,7 @@ var (
 	lightGrayUnderline = ansi.ColorFunc("white+du")
 )
 
+// NewListCommand returns a new command to list available GitHub models.
 func NewListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -28,7 +30,7 @@ func NewListCommand() *cobra.Command {
 
 			token, _ := auth.TokenForHost("github.com")
 			if token == "" {
-				io.WriteString(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
+				writeToOut(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
 				return nil
 			}
 
@@ -47,9 +49,9 @@ func NewListCommand() *cobra.Command {
 			isTTY := terminal.IsTerminalOutput()
 
 			if isTTY {
-				io.WriteString(out, "\n")
-				io.WriteString(out, fmt.Sprintf("Showing %d available chat models\n", len(models)))
-				io.WriteString(out, "\n")
+				writeToOut(out, "\n")
+				writeToOut(out, fmt.Sprintf("Showing %d available chat models\n", len(models)))
+				writeToOut(out, "\n")
 			}
 
 			width, _, _ := terminal.Size()
@@ -74,4 +76,11 @@ func NewListCommand() *cobra.Command {
 	}
 
 	return cmd
+}
+
+func writeToOut(out io.Writer, message string) {
+	_, err := io.WriteString(out, message)
+	if err != nil {
+		fmt.Println("Error writing message:", err)
+	}
 }

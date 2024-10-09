@@ -1,3 +1,4 @@
+// run provides a gh command to run a GitHub model.
 package run
 
 import (
@@ -20,12 +21,14 @@ import (
 	"github.com/spf13/pflag"
 )
 
+// ModelParameters represents the parameters that can be set for a model run.
 type ModelParameters struct {
 	maxTokens   *int
 	temperature *float64
 	topP        *float64
 }
 
+// FormatParameter returns a string representation of the parameter value.
 func (mp *ModelParameters) FormatParameter(name string) string {
 	switch name {
 	case "max-tokens":
@@ -47,6 +50,7 @@ func (mp *ModelParameters) FormatParameter(name string) string {
 	return "<not set>"
 }
 
+// PopulateFromFlags populates the model parameters from the given flags.
 func (mp *ModelParameters) PopulateFromFlags(flags *pflag.FlagSet) error {
 	maxTokensString, err := flags.GetString("max-tokens")
 	if err != nil {
@@ -87,6 +91,7 @@ func (mp *ModelParameters) PopulateFromFlags(flags *pflag.FlagSet) error {
 	return nil
 }
 
+// SetParameterByName sets the parameter with the given name to the given value.
 func (mp *ModelParameters) SetParameterByName(name string, value string) error {
 	switch name {
 	case "max-tokens":
@@ -117,17 +122,20 @@ func (mp *ModelParameters) SetParameterByName(name string, value string) error {
 	return nil
 }
 
+// UpdateRequest updates the given request with the model parameters.
 func (mp *ModelParameters) UpdateRequest(req *azure_models.ChatCompletionOptions) {
 	req.MaxTokens = mp.maxTokens
 	req.Temperature = mp.temperature
 	req.TopP = mp.topP
 }
 
+// Conversation represents a conversation between the user and the model.
 type Conversation struct {
 	messages     []azure_models.ChatMessage
 	systemPrompt string
 }
 
+// AddMessage adds a message to the conversation.
 func (c *Conversation) AddMessage(role azure_models.ChatMessageRole, content string) {
 	c.messages = append(c.messages, azure_models.ChatMessage{
 		Content: azure_models.Ptr(content),
@@ -135,6 +143,7 @@ func (c *Conversation) AddMessage(role azure_models.ChatMessageRole, content str
 	})
 }
 
+// GetMessages returns the messages in the conversation.
 func (c *Conversation) GetMessages() []azure_models.ChatMessage {
 	length := len(c.messages)
 	if c.systemPrompt != "" {
@@ -159,6 +168,7 @@ func (c *Conversation) GetMessages() []azure_models.ChatMessage {
 	return messages
 }
 
+// Reset removes messages from the conversation.
 func (c *Conversation) Reset() {
 	c.messages = nil
 }
@@ -176,6 +186,7 @@ func isPipe(r io.Reader) bool {
 	return false
 }
 
+// NewRunCommand returns a new gh command for running a model.
 func NewRunCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run [model] [prompt]",
