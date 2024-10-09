@@ -37,6 +37,7 @@ func (p *modelPrinter) render() error {
 	modelDetails := p.modelDetails
 	if modelDetails != nil {
 		p.printLabelledLine("Context:", modelDetails.ContextLimits())
+		p.printLabelledLine("Rate limit tier:", modelDetails.RateLimitTier)
 		p.printLabelledList("Tags:", modelDetails.Tags)
 		p.printLabelledList("Supported input types:", modelDetails.SupportedInputModalities)
 		p.printLabelledList("Supported output types:", modelDetails.SupportedOutputModalities)

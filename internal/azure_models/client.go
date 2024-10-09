@@ -136,6 +136,11 @@ func (c *Client) GetModelDetails(registry string, modelName string, version stri
 		}
 	}
 
+	playgroundLimits := detailsResponse.PlaygroundLimits
+	if playgroundLimits != nil {
+		modelDetails.RateLimitTier = playgroundLimits.RateLimitTier
+	}
+
 	return modelDetails, nil
 }
 

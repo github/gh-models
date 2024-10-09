@@ -105,7 +105,10 @@ type modelCatalogDetailsResponse struct {
 	Labels             []string `json:"labels"`
 	TradeRestricted    bool     `json:"tradeRestricted"`
 	CreatedTime        string   `json:"createdTime"`
-	ModelLimits        *struct {
+	PlaygroundLimits   *struct {
+		RateLimitTier string `json:"rateLimitTier"`
+	} `json:"playgroundLimits"`
+	ModelLimits *struct {
 		SupportedLanguages []string `json:"supportedLanguages"`
 		TextLimits         *struct {
 			MaxOutputTokens    int `json:"maxOutputTokens"`
@@ -128,6 +131,7 @@ type ModelDetails struct {
 	SupportedLanguages        []string `json:"supported_languages"`
 	MaxOutputTokens           int      `json:"max_output_tokens"`
 	MaxInputTokens            int      `json:"max_input_tokens"`
+	RateLimitTier             string   `json:"rateLimitTier"`
 }
 
 func (m *ModelDetails) ContextLimits() string {
