@@ -36,7 +36,8 @@ func (p *modelPrinter) render() error {
 
 	modelDetails := p.modelDetails
 	if modelDetails != nil {
-		p.printLabelledLine("Tags:", strings.Join(modelDetails.Tags, ", "))
+		p.printLabelledLine("Context:", modelDetails.ContextLimits())
+		p.printLabelledList("Tags:", modelDetails.Tags)
 		p.printLabelledList("Supported input types:", modelDetails.SupportedInputModalities)
 		p.printLabelledList("Supported output types:", modelDetails.SupportedOutputModalities)
 		p.printLabelledList("Supported languages:", modelDetails.SupportedLanguages)

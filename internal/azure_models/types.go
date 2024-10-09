@@ -2,6 +2,7 @@ package azure_models
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/github/gh-models/internal/sse"
@@ -106,7 +107,7 @@ type modelCatalogDetailsResponse struct {
 	CreatedTime        string   `json:"createdTime"`
 	ModelLimits        *struct {
 		SupportedLanguages []string `json:"supportedLanguages"`
-		TextLimits         struct {
+		TextLimits         *struct {
 			MaxOutputTokens    int `json:"maxOutputTokens"`
 			InputContextWindow int `json:"inputContextWindow"`
 		} `json:"textLimits"`
@@ -125,6 +126,12 @@ type ModelDetails struct {
 	SupportedInputModalities  []string `json:"supported_input_modalities"`
 	SupportedOutputModalities []string `json:"supported_output_modalities"`
 	SupportedLanguages        []string `json:"supported_languages"`
+	MaxOutputTokens           int      `json:"max_output_tokens"`
+	MaxInputTokens            int      `json:"max_input_tokens"`
+}
+
+func (m *ModelDetails) ContextLimits() string {
+	return fmt.Sprintf("up to %d input tokens and %d output tokens", m.MaxInputTokens, m.MaxOutputTokens)
 }
 
 func Ptr[T any](value T) *T {

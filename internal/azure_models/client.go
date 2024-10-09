@@ -128,6 +128,12 @@ func (c *Client) GetModelDetails(registry string, modelName string, version stri
 		modelDetails.SupportedInputModalities = modelLimits.SupportedInputModalities
 		modelDetails.SupportedOutputModalities = modelLimits.SupportedOutputModalities
 		modelDetails.SupportedLanguages = convertLanguageCodesToNames(modelLimits.SupportedLanguages)
+
+		textLimits := modelLimits.TextLimits
+		if textLimits != nil {
+			modelDetails.MaxOutputTokens = textLimits.MaxOutputTokens
+			modelDetails.MaxInputTokens = textLimits.InputContextWindow
+		}
 	}
 
 	return modelDetails, nil
