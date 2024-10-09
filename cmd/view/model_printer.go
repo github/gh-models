@@ -64,7 +64,7 @@ func (p *modelPrinter) printLabelledLine(label string, value string) {
 		return
 	}
 	p.addLabel(label)
-	p.printer.AddField(value)
+	p.printer.AddField(strings.TrimSpace(value))
 	p.printer.EndRow()
 }
 
@@ -81,18 +81,12 @@ func (p *modelPrinter) printMultipleLinesWithLabel(label string, value string) {
 		return
 	}
 	p.addLabel(label)
-	renderedValue, err := markdown.Render(value, markdown.WithWrap(p.terminalWidth))
+	renderedValue, err := markdown.Render(strings.TrimSpace(value), markdown.WithWrap(p.terminalWidth))
 	displayValue := value
 	if err == nil {
 		displayValue = renderedValue
 	}
 	p.printer.AddField(displayValue, tableprinter.WithTruncate(nil))
-	p.printer.EndRow()
-	p.printBlankLine()
-}
-
-func (p *modelPrinter) printBlankLine() {
-	p.printer.AddField("")
 	p.printer.EndRow()
 }
 
