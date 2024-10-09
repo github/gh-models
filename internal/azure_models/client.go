@@ -117,7 +117,16 @@ func (c *Client) GetModelDetails(registry string, modelName string, version stri
 		License:            detailsResponse.License,
 		LicenseDescription: detailsResponse.LicenseDescription,
 		Notes:              detailsResponse.Notes,
+		Tags:               lowercaseStrings(detailsResponse.Keywords),
 	}, nil
+}
+
+func lowercaseStrings(input []string) []string {
+	output := make([]string, len(input))
+	for i, s := range input {
+		output[i] = strings.ToLower(s)
+	}
+	return output
 }
 
 func (c *Client) ListModels() ([]*ModelSummary, error) {

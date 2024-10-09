@@ -116,10 +116,11 @@ type modelCatalogDetailsResponse struct {
 }
 
 type ModelDetails struct {
-	Description        string `json:"description"`
-	License            string `json:"license"`
-	LicenseDescription string `json:"license_description"`
-	Notes              string `json:"notes"`
+	Description        string   `json:"description"`
+	License            string   `json:"license"`
+	LicenseDescription string   `json:"license_description"`
+	Notes              string   `json:"notes"`
+	Tags               []string `json:"tags"`
 }
 
 func Ptr[T any](value T) *T {

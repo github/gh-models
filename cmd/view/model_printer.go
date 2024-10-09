@@ -1,6 +1,8 @@
 package view
 
 import (
+	"strings"
+
 	"github.com/cli/go-gh/v2/pkg/tableprinter"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azure_models"
@@ -34,6 +36,7 @@ func (p *modelPrinter) render() error {
 
 	modelDetails := p.modelDetails
 	if modelDetails != nil {
+		p.printLabelledLine("Tags:", strings.Join(modelDetails.Tags, ", "))
 		p.printLabelledLine("License:", modelDetails.License)
 		p.printMultipleLinesWithLabel("License description:", modelDetails.LicenseDescription)
 		p.printMultipleLinesWithLabel("Description:", modelDetails.Description)
