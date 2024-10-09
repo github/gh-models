@@ -11,6 +11,8 @@ import (
 
 	"github.com/cli/go-gh/v2/pkg/api"
 	"github.com/github/gh-models/internal/sse"
+	"golang.org/x/text/language"
+	"golang.org/x/text/language/display"
 )
 
 type Client struct {
@@ -125,9 +127,20 @@ func (c *Client) GetModelDetails(registry string, modelName string, version stri
 	if modelLimits != nil {
 		modelDetails.SupportedInputModalities = modelLimits.SupportedInputModalities
 		modelDetails.SupportedOutputModalities = modelLimits.SupportedOutputModalities
+		modelDetails.SupportedLanguages = convertLanguageCodesToNames(modelLimits.SupportedLanguages)
 	}
 
 	return modelDetails, nil
+}
+
+func convertLanguageCodesToNames(input []string) []string {
+	output := make([]string, len(input))
+	english := display.English.Languages()
+	for i, code := range input {
+		tag := language.MustParse(code)
+		output[i] = english.Name(tag)
+	}
+	return output
 }
 
 func lowercaseStrings(input []string) []string {

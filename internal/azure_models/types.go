@@ -124,6 +124,7 @@ type ModelDetails struct {
 	Tags                      []string `json:"tags"`
 	SupportedInputModalities  []string `json:"supported_input_modalities"`
 	SupportedOutputModalities []string `json:"supported_output_modalities"`
+	SupportedLanguages        []string `json:"supported_languages"`
 }
 
 func Ptr[T any](value T) *T {
