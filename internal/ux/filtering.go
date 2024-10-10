@@ -1,3 +1,4 @@
+// Package ux provides utility functions around presentation and user experience.
 package ux
 
 import "github.com/github/gh-models/internal/azuremodels"

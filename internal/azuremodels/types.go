@@ -54,13 +54,14 @@ type ChatChoice struct {
 	Message      *chatChoiceMessage `json:"message,omitempty"`
 }
 
-type chatCompletion struct {
+// ChatCompletion represents a chat completion.
+type ChatCompletion struct {
 	Choices []ChatChoice `json:"choices"`
 }
 
 // ChatCompletionResponse represents a response to a chat completion request.
 type ChatCompletionResponse struct {
-	Reader sse.Reader[chatCompletion]
+	Reader sse.Reader[ChatCompletion]
 }
 
 type modelCatalogSearchResponse struct {

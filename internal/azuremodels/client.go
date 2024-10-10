@@ -54,7 +54,7 @@ func (c *Client) GetChatCompletionStream(ctx context.Context, req ChatCompletion
 
 	body := bytes.NewReader(bodyBytes)
 
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", prodInferenceURL, body)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, prodInferenceURL, body)
 	if err != nil {
 		return nil, err
 	}
@@ -77,15 +77,15 @@ func (c *Client) GetChatCompletionStream(ctx context.Context, req ChatCompletion
 
 	if req.Stream {
 		// Handle streamed response
-		chatCompletionResponse.Reader = sse.NewEventReader[chatCompletion](resp.Body)
+		chatCompletionResponse.Reader = sse.NewEventReader[ChatCompletion](resp.Body)
 	} else {
-		var completion chatCompletion
+		var completion ChatCompletion
 		if err := json.NewDecoder(resp.Body).Decode(&completion); err != nil {
 			return nil, err
 		}
 
 		// Create a mock reader that returns the decoded completion
-		mockReader := sse.NewMockEventReader([]chatCompletion{completion})
+		mockReader := sse.NewMockEventReader([]ChatCompletion{completion})
 		chatCompletionResponse.Reader = mockReader
 	}
 
@@ -95,7 +95,7 @@ func (c *Client) GetChatCompletionStream(ctx context.Context, req ChatCompletion
 // GetModelDetails returns the details of the specified model in a prticular registry.
 func (c *Client) GetModelDetails(ctx context.Context, registry, modelName, version string) (*ModelDetails, error) {
 	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", azureAiStudioURL, registry, modelName, version)
-	httpReq, err := http.NewRequestWithContext(ctx, "GET", url, http.NoBody)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +184,7 @@ func (c *Client) ListModels(ctx context.Context) ([]*ModelSummary, error) {
 		}
 	`))
 
-	httpReq, err := http.NewRequestWithContext(ctx, "POST", prodModelsURL, body)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, prodModelsURL, body)
 	if err != nil {
 		return nil, err
 	}
