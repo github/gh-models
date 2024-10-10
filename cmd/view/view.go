@@ -2,13 +2,13 @@ package view
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azure_models"
 	"github.com/github/gh-models/internal/ux"
+	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
 )
 
@@ -22,7 +22,7 @@ func NewViewCommand() *cobra.Command {
 
 			token, _ := auth.TokenForHost("github.com")
 			if token == "" {
-				io.WriteString(terminal.Out(), "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
+				util.WriteToOut(terminal.Out(), "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
 				return nil
 			}
 

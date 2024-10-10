@@ -17,6 +17,7 @@ import (
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azure_models"
 	"github.com/github/gh-models/internal/ux"
+	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -199,7 +200,7 @@ func NewRunCommand() *cobra.Command {
 
 			token, _ := auth.TokenForHost("github.com")
 			if token == "" {
-				io.WriteString(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
+				util.WriteToOut(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
 				return nil
 			}
 
@@ -315,24 +316,24 @@ func NewRunCommand() *cobra.Command {
 					}
 
 					if prompt == "/parameters" {
-						io.WriteString(out, "Current parameters:\n")
+						util.WriteToOut(out, "Current parameters:\n")
 						names := []string{"max-tokens", "temperature", "top-p"}
 						for _, name := range names {
-							io.WriteString(out, fmt.Sprintf("  %s: %s\n", name, mp.FormatParameter(name)))
+							util.WriteToOut(out, fmt.Sprintf("  %s: %s\n", name, mp.FormatParameter(name)))
 						}
-						io.WriteString(out, "\n")
-						io.WriteString(out, "System Prompt:\n")
+						util.WriteToOut(out, "\n")
+						util.WriteToOut(out, "System Prompt:\n")
 						if conversation.systemPrompt != "" {
-							io.WriteString(out, "  "+conversation.systemPrompt+"\n")
+							util.WriteToOut(out, "  "+conversation.systemPrompt+"\n")
 						} else {
-							io.WriteString(out, "  <not set>\n")
+							util.WriteToOut(out, "  <not set>\n")
 						}
 						continue
 					}
 
 					if prompt == "/reset" || prompt == "/clear" {
 						conversation.Reset()
-						io.WriteString(out, "Reset chat history\n")
+						util.WriteToOut(out, "Reset chat history\n")
 						continue
 					}
 
@@ -344,35 +345,35 @@ func NewRunCommand() *cobra.Command {
 
 							err := mp.SetParameterByName(name, value)
 							if err != nil {
-								io.WriteString(out, err.Error()+"\n")
+								util.WriteToOut(out, err.Error()+"\n")
 								continue
 							}
 
-							io.WriteString(out, "Set "+name+" to "+value+"\n")
+							util.WriteToOut(out, "Set "+name+" to "+value+"\n")
 						} else {
-							io.WriteString(out, "Invalid /set syntax. Usage: /set <name> <value>\n")
+							util.WriteToOut(out, "Invalid /set syntax. Usage: /set <name> <value>\n")
 						}
 						continue
 					}
 
 					if strings.HasPrefix(prompt, "/system-prompt ") {
 						conversation.systemPrompt = strings.Trim(strings.TrimPrefix(prompt, "/system-prompt "), "\"")
-						io.WriteString(out, "Updated system prompt\n")
+						util.WriteToOut(out, "Updated system prompt\n")
 						continue
 					}
 
 					if prompt == "/help" {
-						io.WriteString(out, "Commands:\n")
-						io.WriteString(out, "  /bye, /exit, /quit - Exit the chat\n")
-						io.WriteString(out, "  /parameters - Show current model parameters\n")
-						io.WriteString(out, "  /reset, /clear - Reset chat context\n")
-						io.WriteString(out, "  /set <name> <value> - Set a model parameter\n")
-						io.WriteString(out, "  /system-prompt <prompt> - Set the system prompt\n")
-						io.WriteString(out, "  /help - Show this help message\n")
+						util.WriteToOut(out, "Commands:\n")
+						util.WriteToOut(out, "  /bye, /exit, /quit - Exit the chat\n")
+						util.WriteToOut(out, "  /parameters - Show current model parameters\n")
+						util.WriteToOut(out, "  /reset, /clear - Reset chat context\n")
+						util.WriteToOut(out, "  /set <name> <value> - Set a model parameter\n")
+						util.WriteToOut(out, "  /system-prompt <prompt> - Set the system prompt\n")
+						util.WriteToOut(out, "  /help - Show this help message\n")
 						continue
 					}
 
-					io.WriteString(out, "Unknown command '"+prompt+"'. See /help for supported commands.\n")
+					util.WriteToOut(out, "Unknown command '"+prompt+"'. See /help for supported commands.\n")
 					continue
 				}
 
@@ -415,11 +416,11 @@ func NewRunCommand() *cobra.Command {
 						if choice.Delta != nil && choice.Delta.Content != nil {
 							content := choice.Delta.Content
 							messageBuilder.WriteString(*content)
-							io.WriteString(out, *content)
+							util.WriteToOut(out, *content)
 						} else if choice.Message != nil && choice.Message.Content != nil {
 							content := choice.Message.Content
 							messageBuilder.WriteString(*content)
-							io.WriteString(out, *content)
+							util.WriteToOut(out, *content)
 						}
 
 						// Introduce a small delay in between response tokens to better simulate a conversation
@@ -429,7 +430,7 @@ func NewRunCommand() *cobra.Command {
 					}
 				}
 
-				io.WriteString(out, "\n")
+				util.WriteToOut(out, "\n")
 				messageBuilder.WriteString("\n")
 
 				conversation.AddMessage(azure_models.ChatMessageRoleAssistant, messageBuilder.String())
