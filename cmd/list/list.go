@@ -1,4 +1,4 @@
-// list provides a gh command to list available models.
+// Package list provides a gh command to list available models.
 package list
 
 import (

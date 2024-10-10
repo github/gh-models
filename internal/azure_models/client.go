@@ -1,3 +1,4 @@
+// Package azure_models provides a client for interacting with the Azure models API.
 package azure_models
 
 import (
@@ -26,6 +27,7 @@ const (
 	prodModelsURL    = azureAiStudioURL + "/asset-gallery/v1.0/models"
 )
 
+// NewClient returns a new client using the given auth token.
 func NewClient(authToken string) *Client {
 	httpClient, _ := api.DefaultHTTPClient()
 	return &Client{
@@ -34,6 +36,7 @@ func NewClient(authToken string) *Client {
 	}
 }
 
+// GetChatCompletionStream returns a stream of chat completions for the given request.
 func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatCompletionResponse, error) {
 	// Check if the model name is `o1-mini` or `o1-preview`
 	if req.Model == "o1-mini" || req.Model == "o1-preview" {
@@ -72,21 +75,22 @@ func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatComple
 
 	if req.Stream {
 		// Handle streamed response
-		chatCompletionResponse.Reader = sse.NewEventReader[ChatCompletion](resp.Body)
+		chatCompletionResponse.Reader = sse.NewEventReader[chatCompletion](resp.Body)
 	} else {
-		var completion ChatCompletion
+		var completion chatCompletion
 		if err := json.NewDecoder(resp.Body).Decode(&completion); err != nil {
 			return nil, err
 		}
 
 		// Create a mock reader that returns the decoded completion
-		mockReader := sse.NewMockEventReader([]ChatCompletion{completion})
+		mockReader := sse.NewMockEventReader([]chatCompletion{completion})
 		chatCompletionResponse.Reader = mockReader
 	}
 
 	return &chatCompletionResponse, nil
 }
 
+// GetModelDetails returns the details of the specified model in a prticular registry.
 func (c *Client) GetModelDetails(registry string, modelName string, version string) (*ModelDetails, error) {
 	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", azureAiStudioURL, registry, modelName, version)
 	httpReq, err := http.NewRequest("GET", url, nil)
@@ -162,6 +166,7 @@ func lowercaseStrings(input []string) []string {
 	return output
 }
 
+// ListModels returns a list of available models.
 func (c *Client) ListModels() ([]*ModelSummary, error) {
 	body := bytes.NewReader([]byte(`
 		{
@@ -223,7 +228,6 @@ func (c *Client) ListModels() ([]*ModelSummary, error) {
 }
 
 func (c *Client) handleHTTPError(resp *http.Response) error {
-
 	sb := strings.Builder{}
 
 	switch resp.StatusCode {

@@ -1,3 +1,4 @@
+// Package util provides utility functions for the gh-models extension.
 package util
 
 import (
@@ -11,4 +12,9 @@ func WriteToOut(out io.Writer, message string) {
 	if err != nil {
 		fmt.Println("Error writing message:", err)
 	}
+}
+
+// Ptr returns a pointer to the given value.
+func Ptr[T any](value T) *T {
+	return &value
 }

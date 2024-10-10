@@ -1,4 +1,4 @@
-// run provides a gh command to run a GitHub model.
+// Package run provides a gh command to run a GitHub model.
 package run
 
 import (
@@ -62,7 +62,7 @@ func (mp *ModelParameters) PopulateFromFlags(flags *pflag.FlagSet) error {
 		if err != nil {
 			return err
 		}
-		mp.maxTokens = azure_models.Ptr(maxTokens)
+		mp.maxTokens = util.Ptr(maxTokens)
 	}
 
 	temperatureString, err := flags.GetString("temperature")
@@ -74,7 +74,7 @@ func (mp *ModelParameters) PopulateFromFlags(flags *pflag.FlagSet) error {
 		if err != nil {
 			return err
 		}
-		mp.temperature = azure_models.Ptr(temperature)
+		mp.temperature = util.Ptr(temperature)
 	}
 
 	topPString, err := flags.GetString("top-p")
@@ -86,35 +86,35 @@ func (mp *ModelParameters) PopulateFromFlags(flags *pflag.FlagSet) error {
 		if err != nil {
 			return err
 		}
-		mp.topP = azure_models.Ptr(topP)
+		mp.topP = util.Ptr(topP)
 	}
 
 	return nil
 }
 
 // SetParameterByName sets the parameter with the given name to the given value.
-func (mp *ModelParameters) SetParameterByName(name string, value string) error {
+func (mp *ModelParameters) SetParameterByName(name, value string) error {
 	switch name {
 	case "max-tokens":
 		maxTokens, err := strconv.Atoi(value)
 		if err != nil {
 			return err
 		}
-		mp.maxTokens = azure_models.Ptr(maxTokens)
+		mp.maxTokens = util.Ptr(maxTokens)
 
 	case "temperature":
 		temperature, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return err
 		}
-		mp.temperature = azure_models.Ptr(temperature)
+		mp.temperature = util.Ptr(temperature)
 
 	case "top-p":
 		topP, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return err
 		}
-		mp.topP = azure_models.Ptr(topP)
+		mp.topP = util.Ptr(topP)
 
 	default:
 		return errors.New("unknown parameter '" + name + "'. Supported parameters: max-tokens, temperature, top-p")
@@ -139,7 +139,7 @@ type Conversation struct {
 // AddMessage adds a message to the conversation.
 func (c *Conversation) AddMessage(role azure_models.ChatMessageRole, content string) {
 	c.messages = append(c.messages, azure_models.ChatMessage{
-		Content: azure_models.Ptr(content),
+		Content: util.Ptr(content),
 		Role:    role,
 	})
 }
@@ -156,7 +156,7 @@ func (c *Conversation) GetMessages() []azure_models.ChatMessage {
 
 	if c.systemPrompt != "" {
 		messages[0] = azure_models.ChatMessage{
-			Content: azure_models.Ptr(c.systemPrompt),
+			Content: util.Ptr(c.systemPrompt),
 			Role:    azure_models.ChatMessageRoleSystem,
 		}
 		startIndex++

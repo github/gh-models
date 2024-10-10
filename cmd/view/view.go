@@ -1,3 +1,4 @@
+// Package view provides a `gh models view` command to view details about a model.
 package view
 
 import (
@@ -12,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// NewViewCommand returns a new command to view details about a model.
 func NewViewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "view [model]",
