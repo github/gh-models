@@ -437,7 +437,10 @@ func NewRunCommand() *cobra.Command {
 				}
 
 				util.WriteToOut(out, "\n")
-				messageBuilder.WriteString("\n")
+				_, err = messageBuilder.WriteString("\n")
+				if err != nil {
+					return err
+				}
 
 				conversation.AddMessage(azuremodels.ChatMessageRoleAssistant, messageBuilder.String())
 

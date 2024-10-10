@@ -1,5 +1,6 @@
 // Forked from https://github.com/Azure/azure-sdk-for-go/blob/4661007ca1fd68b2e31f3502d4282904014fd731/sdk/ai/azopenai/event_reader.go#L18
 
+// Package sse provides a reader for Server-Sent Events (SSE) streams.
 package sse
 
 import (

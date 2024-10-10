@@ -16,6 +16,7 @@ import (
 	"golang.org/x/text/language/display"
 )
 
+// Client provides a client for interacting with the Azure models API.
 type Client struct {
 	client *http.Client
 	token  string
@@ -93,7 +94,7 @@ func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatComple
 // GetModelDetails returns the details of the specified model in a prticular registry.
 func (c *Client) GetModelDetails(registry, modelName, version string) (*ModelDetails, error) {
 	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", azureAiStudioURL, registry, modelName, version)
-	httpReq, err := http.NewRequest("GET", url, nil)
+	httpReq, err := http.NewRequest("GET", url, http.NoBody)
 	if err != nil {
 		return nil, err
 	}
@@ -104,6 +105,8 @@ func (c *Client) GetModelDetails(registry, modelName, version string) (*ModelDet
 	if err != nil {
 		return nil, err
 	}
+
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, c.handleHTTPError(resp)
@@ -191,6 +194,8 @@ func (c *Client) ListModels() ([]*ModelSummary, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, c.handleHTTPError(resp)

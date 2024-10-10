@@ -78,6 +78,7 @@ type modelCatalogSearchSummary struct {
 	Summary        string      `json:"summary"`
 }
 
+// ModelSummary includes basic information about a model.
 type ModelSummary struct {
 	ID           string `json:"id"`
 	Name         string `json:"name"`
@@ -127,6 +128,7 @@ type modelCatalogDetailsResponse struct {
 	} `json:"modelLimits"`
 }
 
+// ModelDetails includes detailed information about a model.
 type ModelDetails struct {
 	Description               string   `json:"description"`
 	Evaluation                string   `json:"evaluation"`

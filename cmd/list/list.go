@@ -43,7 +43,7 @@ func NewListCommand() *cobra.Command {
 
 			// For now, filter to just chat models.
 			// Once other tasks are supported (like embeddings), update the list to show all models, with the task as a column.
-			models = ux.FilterToChatModels(models)
+			models = filterToChatModels(models)
 			ux.SortModels(models)
 
 			isTTY := terminal.IsTerminalOutput()
@@ -76,4 +76,14 @@ func NewListCommand() *cobra.Command {
 	}
 
 	return cmd
+}
+
+func filterToChatModels(models []*azuremodels.ModelSummary) []*azuremodels.ModelSummary {
+	var chatModels []*azuremodels.ModelSummary
+	for _, model := range models {
+		if ux.IsChatModel(model) {
+			chatModels = append(chatModels, model)
+		}
+	}
+	return chatModels
 }

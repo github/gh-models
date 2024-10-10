@@ -1,3 +1,4 @@
+// Package main provides the entry point for the gh-models extension.
 package main
 
 import (
@@ -20,12 +21,12 @@ func main() {
 }
 
 func mainRun() exitCode {
-	cmd := cmd.NewRootCommand()
+	rootCmd := cmd.NewRootCommand()
 	exitCode := exitOK
 
 	ctx := context.Background()
 
-	if _, err := cmd.ExecuteContextC(ctx); err != nil {
+	if _, err := rootCmd.ExecuteContextC(ctx); err != nil {
 		exitCode = exitError
 	}
 
