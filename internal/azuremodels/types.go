@@ -1,4 +1,4 @@
-package azure_models
+package azuremodels
 
 import (
 	"encoding/json"

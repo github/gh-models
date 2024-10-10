@@ -15,7 +15,7 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/term"
-	"github.com/github/gh-models/internal/azure_models"
+	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/internal/ux"
 	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
@@ -124,7 +124,7 @@ func (mp *ModelParameters) SetParameterByName(name, value string) error {
 }
 
 // UpdateRequest updates the given request with the model parameters.
-func (mp *ModelParameters) UpdateRequest(req *azure_models.ChatCompletionOptions) {
+func (mp *ModelParameters) UpdateRequest(req *azuremodels.ChatCompletionOptions) {
 	req.MaxTokens = mp.maxTokens
 	req.Temperature = mp.temperature
 	req.TopP = mp.topP
@@ -132,32 +132,32 @@ func (mp *ModelParameters) UpdateRequest(req *azure_models.ChatCompletionOptions
 
 // Conversation represents a conversation between the user and the model.
 type Conversation struct {
-	messages     []azure_models.ChatMessage
+	messages     []azuremodels.ChatMessage
 	systemPrompt string
 }
 
 // AddMessage adds a message to the conversation.
-func (c *Conversation) AddMessage(role azure_models.ChatMessageRole, content string) {
-	c.messages = append(c.messages, azure_models.ChatMessage{
+func (c *Conversation) AddMessage(role azuremodels.ChatMessageRole, content string) {
+	c.messages = append(c.messages, azuremodels.ChatMessage{
 		Content: util.Ptr(content),
 		Role:    role,
 	})
 }
 
 // GetMessages returns the messages in the conversation.
-func (c *Conversation) GetMessages() []azure_models.ChatMessage {
+func (c *Conversation) GetMessages() []azuremodels.ChatMessage {
 	length := len(c.messages)
 	if c.systemPrompt != "" {
 		length++
 	}
 
-	messages := make([]azure_models.ChatMessage, length)
+	messages := make([]azuremodels.ChatMessage, length)
 	startIndex := 0
 
 	if c.systemPrompt != "" {
-		messages[0] = azure_models.ChatMessage{
+		messages[0] = azuremodels.ChatMessage{
 			Content: util.Ptr(c.systemPrompt),
-			Role:    azure_models.ChatMessageRoleSystem,
+			Role:    azuremodels.ChatMessageRoleSystem,
 		}
 		startIndex++
 	}
@@ -204,7 +204,7 @@ func NewRunCommand() *cobra.Command {
 				return nil
 			}
 
-			client := azure_models.NewClient(token)
+			client := azuremodels.NewClient(token)
 
 			models, err := client.ListModels()
 			if err != nil {
@@ -377,9 +377,9 @@ func NewRunCommand() *cobra.Command {
 					continue
 				}
 
-				conversation.AddMessage(azure_models.ChatMessageRoleUser, prompt)
+				conversation.AddMessage(azuremodels.ChatMessageRoleUser, prompt)
 
-				req := azure_models.ChatCompletionOptions{
+				req := azuremodels.ChatCompletionOptions{
 					Messages: conversation.GetMessages(),
 					Model:    modelName,
 				}
@@ -439,7 +439,7 @@ func NewRunCommand() *cobra.Command {
 				util.WriteToOut(out, "\n")
 				messageBuilder.WriteString("\n")
 
-				conversation.AddMessage(azure_models.ChatMessageRoleAssistant, messageBuilder.String())
+				conversation.AddMessage(azuremodels.ChatMessageRoleAssistant, messageBuilder.String())
 
 				if singleShot {
 					break

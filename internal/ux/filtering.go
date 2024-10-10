@@ -1,15 +1,13 @@
 package ux
 
-import (
-	"github.com/github/gh-models/internal/azure_models"
-)
+import "github.com/github/gh-models/internal/azuremodels"
 
-func IsChatModel(model *azure_models.ModelSummary) bool {
+func IsChatModel(model *azuremodels.ModelSummary) bool {
 	return model.Task == "chat-completion"
 }
 
-func FilterToChatModels(models []*azure_models.ModelSummary) []*azure_models.ModelSummary {
-	var chatModels []*azure_models.ModelSummary
+func FilterToChatModels(models []*azuremodels.ModelSummary) []*azuremodels.ModelSummary {
+	var chatModels []*azuremodels.ModelSummary
 	for _, model := range models {
 		if IsChatModel(model) {
 			chatModels = append(chatModels, model)

@@ -5,14 +5,14 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/github/gh-models/internal/azure_models"
+	"github.com/github/gh-models/internal/azuremodels"
 )
 
 var (
 	featuredModelNames = []string{}
 )
 
-func SortModels(models []*azure_models.ModelSummary) {
+func SortModels(models []*azuremodels.ModelSummary) {
 	sort.Slice(models, func(i, j int) bool {
 		// Sort featured models first, by name
 		isFeaturedI := slices.Contains(featuredModelNames, models[i].Name)

@@ -7,7 +7,7 @@ import (
 	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/tableprinter"
 	"github.com/cli/go-gh/v2/pkg/term"
-	"github.com/github/gh-models/internal/azure_models"
+	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/internal/ux"
 	"github.com/github/gh-models/pkg/util"
 	"github.com/mgutz/ansi"
@@ -34,7 +34,7 @@ func NewListCommand() *cobra.Command {
 				return nil
 			}
 
-			client := azure_models.NewClient(token)
+			client := azuremodels.NewClient(token)
 
 			models, err := client.ListModels()
 			if err != nil {

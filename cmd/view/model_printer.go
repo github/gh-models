@@ -6,7 +6,7 @@ import (
 	"github.com/cli/cli/v2/pkg/markdown"
 	"github.com/cli/go-gh/v2/pkg/tableprinter"
 	"github.com/cli/go-gh/v2/pkg/term"
-	"github.com/github/gh-models/internal/azure_models"
+	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/mgutz/ansi"
 )
 
@@ -15,13 +15,13 @@ var (
 )
 
 type modelPrinter struct {
-	modelSummary  *azure_models.ModelSummary
-	modelDetails  *azure_models.ModelDetails
+	modelSummary  *azuremodels.ModelSummary
+	modelDetails  *azuremodels.ModelDetails
 	printer       tableprinter.TablePrinter
 	terminalWidth int
 }
 
-func newModelPrinter(summary *azure_models.ModelSummary, details *azure_models.ModelDetails, terminal term.Term) modelPrinter {
+func newModelPrinter(summary *azuremodels.ModelSummary, details *azuremodels.ModelDetails, terminal term.Term) modelPrinter {
 	width, _, _ := terminal.Size()
 	printer := tableprinter.New(terminal.Out(), terminal.IsTerminalOutput(), width)
 	return modelPrinter{modelSummary: summary, modelDetails: details, printer: printer, terminalWidth: width}

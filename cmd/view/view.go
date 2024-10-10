@@ -7,7 +7,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/term"
-	"github.com/github/gh-models/internal/azure_models"
+	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/internal/ux"
 	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
@@ -28,7 +28,7 @@ func NewViewCommand() *cobra.Command {
 				return nil
 			}
 
-			client := azure_models.NewClient(token)
+			client := azuremodels.NewClient(token)
 
 			models, err := client.ListModels()
 			if err != nil {
@@ -86,7 +86,7 @@ func NewViewCommand() *cobra.Command {
 }
 
 // getModelByName returns the model with the specified name, or an error if no such model exists within the given list.
-func getModelByName(modelName string, models []*azure_models.ModelSummary) (*azure_models.ModelSummary, error) {
+func getModelByName(modelName string, models []*azuremodels.ModelSummary) (*azuremodels.ModelSummary, error) {
 	for _, model := range models {
 		if model.HasName(modelName) {
 			return model, nil

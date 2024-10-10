@@ -1,5 +1,5 @@
-// Package azure_models provides a client for interacting with the Azure models API.
-package azure_models
+// Package azuremodels provides a client for interacting with the Azure models API.
+package azuremodels
 
 import (
 	"bytes"
