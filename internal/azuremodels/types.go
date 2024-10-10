@@ -46,7 +46,8 @@ type chatChoiceDelta struct {
 	Role    *string `json:"role,omitempty"`
 }
 
-type chatChoice struct {
+// ChatChoice represents a choice in a chat completion.
+type ChatChoice struct {
 	Delta        *chatChoiceDelta   `json:"delta,omitempty"`
 	FinishReason string             `json:"finish_reason"`
 	Index        int32              `json:"index"`
@@ -54,7 +55,7 @@ type chatChoice struct {
 }
 
 type chatCompletion struct {
-	Choices []chatChoice `json:"choices"`
+	Choices []ChatChoice `json:"choices"`
 }
 
 // ChatCompletionResponse represents a response to a chat completion request.

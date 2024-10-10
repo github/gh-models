@@ -214,48 +214,9 @@ func NewRunCommand() *cobra.Command {
 
 			ux.SortModels(models)
 
-			modelName := ""
-			switch {
-			case len(args) == 0:
-				// Need to prompt for a model
-				prompt := &survey.Select{
-					Message: "Select a model:",
-					Options: []string{},
-				}
-
-				for _, model := range models {
-					if !ux.IsChatModel(model) {
-						continue
-					}
-					prompt.Options = append(prompt.Options, model.FriendlyName)
-				}
-
-				err = survey.AskOne(prompt, &modelName, survey.WithPageSize(10))
-				if err != nil {
-					return err
-				}
-
-			case len(args) >= 1:
-				modelName = args[0]
-			}
-
-			noMatchErrorMessage := "The specified model name is not found. Run 'gh models list' to see available models or 'gh models run' to select interactively."
-
-			if modelName == "" {
-				return errors.New(noMatchErrorMessage)
-			}
-
-			foundMatch := false
-			for _, model := range models {
-				if model.HasName(modelName) {
-					modelName = model.Name
-					foundMatch = true
-					break
-				}
-			}
-
-			if !foundMatch {
-				return errors.New(noMatchErrorMessage)
+			modelName, err := getModelNameFromArgs(args, models)
+			if err != nil {
+				return err
 			}
 
 			initialPrompt := ""
@@ -317,64 +278,31 @@ func NewRunCommand() *cobra.Command {
 					}
 
 					if prompt == "/parameters" {
-						util.WriteToOut(out, "Current parameters:\n")
-						names := []string{"max-tokens", "temperature", "top-p"}
-						for _, name := range names {
-							util.WriteToOut(out, fmt.Sprintf("  %s: %s\n", name, mp.FormatParameter(name)))
-						}
-						util.WriteToOut(out, "\n")
-						util.WriteToOut(out, "System Prompt:\n")
-						if conversation.systemPrompt != "" {
-							util.WriteToOut(out, "  "+conversation.systemPrompt+"\n")
-						} else {
-							util.WriteToOut(out, "  <not set>\n")
-						}
+						handleParametersPrompt(out, conversation, mp)
 						continue
 					}
 
 					if prompt == "/reset" || prompt == "/clear" {
-						conversation.Reset()
-						util.WriteToOut(out, "Reset chat history\n")
+						handleResetPrompt(out, conversation)
 						continue
 					}
 
 					if strings.HasPrefix(prompt, "/set ") {
-						parts := strings.Split(prompt, " ")
-						if len(parts) == 3 {
-							name := parts[1]
-							value := parts[2]
-
-							err := mp.SetParameterByName(name, value)
-							if err != nil {
-								util.WriteToOut(out, err.Error()+"\n")
-								continue
-							}
-
-							util.WriteToOut(out, "Set "+name+" to "+value+"\n")
-						} else {
-							util.WriteToOut(out, "Invalid /set syntax. Usage: /set <name> <value>\n")
-						}
+						handleSetPrompt(out, prompt, mp)
 						continue
 					}
 
 					if strings.HasPrefix(prompt, "/system-prompt ") {
-						conversation.systemPrompt = strings.Trim(strings.TrimPrefix(prompt, "/system-prompt "), "\"")
-						util.WriteToOut(out, "Updated system prompt\n")
+						handleSystemPrompt(out, prompt, conversation)
 						continue
 					}
 
 					if prompt == "/help" {
-						util.WriteToOut(out, "Commands:\n")
-						util.WriteToOut(out, "  /bye, /exit, /quit - Exit the chat\n")
-						util.WriteToOut(out, "  /parameters - Show current model parameters\n")
-						util.WriteToOut(out, "  /reset, /clear - Reset chat context\n")
-						util.WriteToOut(out, "  /set <name> <value> - Set a model parameter\n")
-						util.WriteToOut(out, "  /system-prompt <prompt> - Set the system prompt\n")
-						util.WriteToOut(out, "  /help - Show this help message\n")
+						handleHelpPrompt(out)
 						continue
 					}
 
-					util.WriteToOut(out, "Unknown command '"+prompt+"'. See /help for supported commands.\n")
+					handleUnrecognizedPrompt(out, prompt)
 					continue
 				}
 
@@ -412,27 +340,9 @@ func NewRunCommand() *cobra.Command {
 					sp.Stop()
 
 					for _, choice := range completion.Choices {
-						// Streamed responses from the OpenAI API have their data in `.Delta`, while
-						// non-streamed responses use `.Message`, so let's support both
-						if choice.Delta != nil && choice.Delta.Content != nil {
-							content := choice.Delta.Content
-							_, err := messageBuilder.WriteString(*content)
-							if err != nil {
-								return err
-							}
-							util.WriteToOut(out, *content)
-						} else if choice.Message != nil && choice.Message.Content != nil {
-							content := choice.Message.Content
-							_, err := messageBuilder.WriteString(*content)
-							if err != nil {
-								return err
-							}
-							util.WriteToOut(out, *content)
-						}
-
-						// Introduce a small delay in between response tokens to better simulate a conversation
-						if terminal.IsTerminalOutput() {
-							time.Sleep(10 * time.Millisecond)
+						err = handleCompletionChoice(choice, messageBuilder, out, terminal)
+						if err != nil {
+							return err
 						}
 					}
 				}
@@ -460,4 +370,141 @@ func NewRunCommand() *cobra.Command {
 	cmd.Flags().String("system-prompt", "", "Prompt the system.")
 
 	return cmd
+}
+
+func getModelNameFromArgs(args []string, models []*azuremodels.ModelSummary) (string, error) {
+	modelName := ""
+
+	switch {
+	case len(args) == 0:
+		// Need to prompt for a model
+		prompt := &survey.Select{
+			Message: "Select a model:",
+			Options: []string{},
+		}
+
+		for _, model := range models {
+			if !ux.IsChatModel(model) {
+				continue
+			}
+			prompt.Options = append(prompt.Options, model.FriendlyName)
+		}
+
+		err := survey.AskOne(prompt, &modelName, survey.WithPageSize(10))
+		if err != nil {
+			return "", err
+		}
+
+	case len(args) >= 1:
+		modelName = args[0]
+	}
+
+	return validateModelName(modelName, models)
+}
+
+func validateModelName(modelName string, models []*azuremodels.ModelSummary) (string, error) {
+	noMatchErrorMessage := "The specified model name is not found. Run 'gh models list' to see available models or 'gh models run' to select interactively."
+
+	if modelName == "" {
+		return "", errors.New(noMatchErrorMessage)
+	}
+
+	foundMatch := false
+	for _, model := range models {
+		if model.HasName(modelName) {
+			modelName = model.Name
+			foundMatch = true
+			break
+		}
+	}
+
+	if !foundMatch {
+		return "", errors.New(noMatchErrorMessage)
+	}
+
+	return modelName, nil
+}
+
+func handleParametersPrompt(out io.Writer, conversation Conversation, mp ModelParameters) {
+	util.WriteToOut(out, "Current parameters:\n")
+	names := []string{"max-tokens", "temperature", "top-p"}
+	for _, name := range names {
+		util.WriteToOut(out, fmt.Sprintf("  %s: %s\n", name, mp.FormatParameter(name)))
+	}
+	util.WriteToOut(out, "\n")
+	util.WriteToOut(out, "System Prompt:\n")
+	if conversation.systemPrompt != "" {
+		util.WriteToOut(out, "  "+conversation.systemPrompt+"\n")
+	} else {
+		util.WriteToOut(out, "  <not set>\n")
+	}
+}
+
+func handleResetPrompt(out io.Writer, conversation Conversation) {
+	conversation.Reset()
+	util.WriteToOut(out, "Reset chat history\n")
+}
+
+func handleSetPrompt(out io.Writer, prompt string, mp ModelParameters) {
+	parts := strings.Split(prompt, " ")
+	if len(parts) == 3 {
+		name := parts[1]
+		value := parts[2]
+
+		err := mp.SetParameterByName(name, value)
+		if err != nil {
+			util.WriteToOut(out, err.Error()+"\n")
+			return
+		}
+
+		util.WriteToOut(out, "Set "+name+" to "+value+"\n")
+	} else {
+		util.WriteToOut(out, "Invalid /set syntax. Usage: /set <name> <value>\n")
+	}
+}
+
+func handleSystemPrompt(out io.Writer, prompt string, conversation Conversation) {
+	conversation.systemPrompt = strings.Trim(strings.TrimPrefix(prompt, "/system-prompt "), "\"")
+	util.WriteToOut(out, "Updated system prompt\n")
+}
+
+func handleHelpPrompt(out io.Writer) {
+	util.WriteToOut(out, "Commands:\n")
+	util.WriteToOut(out, "  /bye, /exit, /quit - Exit the chat\n")
+	util.WriteToOut(out, "  /parameters - Show current model parameters\n")
+	util.WriteToOut(out, "  /reset, /clear - Reset chat context\n")
+	util.WriteToOut(out, "  /set <name> <value> - Set a model parameter\n")
+	util.WriteToOut(out, "  /system-prompt <prompt> - Set the system prompt\n")
+	util.WriteToOut(out, "  /help - Show this help message\n")
+}
+
+func handleUnrecognizedPrompt(out io.Writer, prompt string) {
+	util.WriteToOut(out, "Unknown command '"+prompt+"'. See /help for supported commands.\n")
+}
+
+func handleCompletionChoice(choice azuremodels.ChatChoice, messageBuilder strings.Builder, out io.Writer, terminal term.Term) error {
+	// Streamed responses from the OpenAI API have their data in `.Delta`, while
+	// non-streamed responses use `.Message`, so let's support both
+	if choice.Delta != nil && choice.Delta.Content != nil {
+		content := choice.Delta.Content
+		_, err := messageBuilder.WriteString(*content)
+		if err != nil {
+			return err
+		}
+		util.WriteToOut(out, *content)
+	} else if choice.Message != nil && choice.Message.Content != nil {
+		content := choice.Message.Content
+		_, err := messageBuilder.WriteString(*content)
+		if err != nil {
+			return err
+		}
+		util.WriteToOut(out, *content)
+	}
+
+	// Introduce a small delay in between response tokens to better simulate a conversation
+	if terminal.IsTerminalOutput() {
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	return nil
 }
