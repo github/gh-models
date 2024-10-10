@@ -5,6 +5,9 @@ on:
   merge_group:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     strategy:
