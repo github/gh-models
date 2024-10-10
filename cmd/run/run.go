@@ -285,7 +285,7 @@ func NewRunCommand() *cobra.Command {
 					}
 
 					if strings.HasPrefix(prompt, "/system-prompt ") {
-						cmdHandler.handleSystemPrompt(prompt, conversation)
+						conversation = cmdHandler.handleSystemPrompt(prompt, conversation)
 						continue
 					}
 
@@ -312,6 +312,9 @@ func NewRunCommand() *cobra.Command {
 				defer sp.Stop()
 
 				reader, err := cmdHandler.getChatCompletionStreamReader(req)
+				if err != nil {
+					return err
+				}
 				defer reader.Close()
 
 				messageBuilder := strings.Builder{}
@@ -496,9 +499,10 @@ func (h *runCommandHandler) handleSetPrompt(prompt string, mp ModelParameters) {
 	}
 }
 
-func (h *runCommandHandler) handleSystemPrompt(prompt string, conversation Conversation) {
+func (h *runCommandHandler) handleSystemPrompt(prompt string, conversation Conversation) Conversation {
 	conversation.systemPrompt = strings.Trim(strings.TrimPrefix(prompt, "/system-prompt "), "\"")
 	util.WriteToOut(h.out, "Updated system prompt\n")
+	return conversation
 }
 
 func (h *runCommandHandler) handleHelpPrompt() {
