@@ -3,13 +3,13 @@ package list
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/tableprinter"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azure_models"
 	"github.com/github/gh-models/internal/ux"
+	"github.com/github/gh-models/pkg/util"
 	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
 )
@@ -30,7 +30,7 @@ func NewListCommand() *cobra.Command {
 
 			token, _ := auth.TokenForHost("github.com")
 			if token == "" {
-				writeToOut(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
+				util.WriteToOut(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
 				return nil
 			}
 
@@ -49,9 +49,9 @@ func NewListCommand() *cobra.Command {
 			isTTY := terminal.IsTerminalOutput()
 
 			if isTTY {
-				writeToOut(out, "\n")
-				writeToOut(out, fmt.Sprintf("Showing %d available chat models\n", len(models)))
-				writeToOut(out, "\n")
+				util.WriteToOut(out, "\n")
+				util.WriteToOut(out, fmt.Sprintf("Showing %d available chat models\n", len(models)))
+				util.WriteToOut(out, "\n")
 			}
 
 			width, _, _ := terminal.Size()
@@ -76,11 +76,4 @@ func NewListCommand() *cobra.Command {
 	}
 
 	return cmd
-}
-
-func writeToOut(out io.Writer, message string) {
-	_, err := io.WriteString(out, message)
-	if err != nil {
-		fmt.Println("Error writing message:", err)
-	}
 }
