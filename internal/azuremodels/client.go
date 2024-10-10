@@ -3,6 +3,7 @@ package azuremodels
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -38,7 +39,7 @@ func NewClient(authToken string) *Client {
 }
 
 // GetChatCompletionStream returns a stream of chat completions for the given request.
-func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatCompletionResponse, error) {
+func (c *Client) GetChatCompletionStream(ctx context.Context, req ChatCompletionOptions) (*ChatCompletionResponse, error) {
 	// Check if the model name is `o1-mini` or `o1-preview`
 	if req.Model == "o1-mini" || req.Model == "o1-preview" {
 		req.Stream = false
@@ -53,7 +54,7 @@ func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatComple
 
 	body := bytes.NewReader(bodyBytes)
 
-	httpReq, err := http.NewRequest("POST", prodInferenceURL, body)
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", prodInferenceURL, body)
 	if err != nil {
 		return nil, err
 	}
@@ -92,9 +93,9 @@ func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatComple
 }
 
 // GetModelDetails returns the details of the specified model in a prticular registry.
-func (c *Client) GetModelDetails(registry, modelName, version string) (*ModelDetails, error) {
+func (c *Client) GetModelDetails(ctx context.Context, registry, modelName, version string) (*ModelDetails, error) {
 	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", azureAiStudioURL, registry, modelName, version)
-	httpReq, err := http.NewRequest("GET", url, http.NoBody)
+	httpReq, err := http.NewRequestWithContext(ctx, "GET", url, http.NoBody)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +171,7 @@ func lowercaseStrings(input []string) []string {
 }
 
 // ListModels returns a list of available models.
-func (c *Client) ListModels() ([]*ModelSummary, error) {
+func (c *Client) ListModels(ctx context.Context) ([]*ModelSummary, error) {
 	body := bytes.NewReader([]byte(`
 		{
 			"filters": [
@@ -183,7 +184,7 @@ func (c *Client) ListModels() ([]*ModelSummary, error) {
 		}
 	`))
 
-	httpReq, err := http.NewRequest("POST", prodModelsURL, body)
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", prodModelsURL, body)
 	if err != nil {
 		return nil, err
 	}

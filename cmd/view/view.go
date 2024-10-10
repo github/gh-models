@@ -29,8 +29,9 @@ func NewViewCommand() *cobra.Command {
 			}
 
 			client := azuremodels.NewClient(token)
+			ctx := cmd.Context()
 
-			models, err := client.ListModels()
+			models, err := client.ListModels(ctx)
 			if err != nil {
 				return err
 			}
@@ -67,7 +68,7 @@ func NewViewCommand() *cobra.Command {
 				return err
 			}
 
-			modelDetails, err := client.GetModelDetails(modelSummary.RegistryName, modelSummary.Name, modelSummary.Version)
+			modelDetails, err := client.GetModelDetails(ctx, modelSummary.RegistryName, modelSummary.Name, modelSummary.Version)
 			if err != nil {
 				return err
 			}

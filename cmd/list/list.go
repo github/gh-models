@@ -35,8 +35,9 @@ func NewListCommand() *cobra.Command {
 			}
 
 			client := azuremodels.NewClient(token)
+			ctx := cmd.Context()
 
-			models, err := client.ListModels()
+			models, err := client.ListModels(ctx)
 			if err != nil {
 				return err
 			}

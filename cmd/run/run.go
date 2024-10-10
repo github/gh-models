@@ -205,8 +205,9 @@ func NewRunCommand() *cobra.Command {
 			}
 
 			client := azuremodels.NewClient(token)
+			ctx := cmd.Context()
 
-			models, err := client.ListModels()
+			models, err := client.ListModels(ctx)
 			if err != nil {
 				return err
 			}
@@ -390,7 +391,7 @@ func NewRunCommand() *cobra.Command {
 				sp.Start()
 				defer sp.Stop()
 
-				resp, err := client.GetChatCompletionStream(req)
+				resp, err := client.GetChatCompletionStream(ctx, req)
 				if err != nil {
 					return err
 				}
