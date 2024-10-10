@@ -3,6 +3,7 @@ package run
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -16,6 +17,7 @@ import (
 	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azuremodels"
+	"github.com/github/gh-models/internal/sse"
 	"github.com/github/gh-models/internal/ux"
 	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
@@ -194,27 +196,17 @@ func NewRunCommand() *cobra.Command {
 		Short: "Run inference with the specified model",
 		Args:  cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			terminal := term.FromEnv()
-			out := terminal.Out()
-			errOut := terminal.ErrOut()
-
-			token, _ := auth.TokenForHost("github.com")
-			if token == "" {
-				util.WriteToOut(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
+			cmdHandler := newRunCommandHandler(cmd, args)
+			if cmdHandler == nil {
 				return nil
 			}
 
-			client := azuremodels.NewClient(token)
-			ctx := cmd.Context()
-
-			models, err := client.ListModels(ctx)
+			models, err := cmdHandler.loadModels()
 			if err != nil {
 				return err
 			}
 
-			ux.SortModels(models)
-
-			modelName, err := getModelNameFromArgs(args, models)
+			modelName, err := cmdHandler.getModelNameFromArgs(models)
 			if err != nil {
 				return err
 			}
@@ -278,31 +270,31 @@ func NewRunCommand() *cobra.Command {
 					}
 
 					if prompt == "/parameters" {
-						handleParametersPrompt(out, conversation, mp)
+						cmdHandler.handleParametersPrompt(conversation, mp)
 						continue
 					}
 
 					if prompt == "/reset" || prompt == "/clear" {
-						handleResetPrompt(out, conversation)
+						cmdHandler.handleResetPrompt(conversation)
 						continue
 					}
 
 					if strings.HasPrefix(prompt, "/set ") {
-						handleSetPrompt(out, prompt, mp)
+						cmdHandler.handleSetPrompt(prompt, mp)
 						continue
 					}
 
 					if strings.HasPrefix(prompt, "/system-prompt ") {
-						handleSystemPrompt(out, prompt, conversation)
+						cmdHandler.handleSystemPrompt(prompt, conversation)
 						continue
 					}
 
 					if prompt == "/help" {
-						handleHelpPrompt(out)
+						cmdHandler.handleHelpPrompt()
 						continue
 					}
 
-					handleUnrecognizedPrompt(out, prompt)
+					cmdHandler.handleUnrecognizedPrompt(prompt)
 					continue
 				}
 
@@ -315,21 +307,17 @@ func NewRunCommand() *cobra.Command {
 
 				mp.UpdateRequest(&req)
 
-				sp := spinner.New(spinner.CharSets[14], 100*time.Millisecond, spinner.WithWriter(errOut))
+				sp := spinner.New(spinner.CharSets[14], 100*time.Millisecond, spinner.WithWriter(cmdHandler.errOut))
 				sp.Start()
 				defer sp.Stop()
 
-				resp, err := client.GetChatCompletionStream(ctx, req)
-				if err != nil {
-					return err
-				}
-
-				defer resp.Reader.Close()
+				reader, err := cmdHandler.getChatCompletionStreamReader(req)
+				defer reader.Close()
 
 				messageBuilder := strings.Builder{}
 
 				for {
-					completion, err := resp.Reader.Read()
+					completion, err := reader.Read()
 					if err != nil {
 						if errors.Is(err, io.EOF) {
 							break
@@ -340,14 +328,14 @@ func NewRunCommand() *cobra.Command {
 					sp.Stop()
 
 					for _, choice := range completion.Choices {
-						err = handleCompletionChoice(choice, messageBuilder, out, terminal)
+						err = cmdHandler.handleCompletionChoice(choice, messageBuilder)
 						if err != nil {
 							return err
 						}
 					}
 				}
 
-				util.WriteToOut(out, "\n")
+				util.WriteToOut(cmdHandler.out, "\n")
 				_, err = messageBuilder.WriteString("\n")
 				if err != nil {
 					return err
@@ -372,11 +360,48 @@ func NewRunCommand() *cobra.Command {
 	return cmd
 }
 
-func getModelNameFromArgs(args []string, models []*azuremodels.ModelSummary) (string, error) {
+type runCommandHandler struct {
+	ctx      context.Context
+	terminal term.Term
+	out      io.Writer
+	errOut   io.Writer
+	client   *azuremodels.Client
+	args     []string
+}
+
+func newRunCommandHandler(cmd *cobra.Command, args []string) *runCommandHandler {
+	terminal := term.FromEnv()
+	out := terminal.Out()
+	token, _ := auth.TokenForHost("github.com")
+	if token == "" {
+		util.WriteToOut(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
+		return nil
+	}
+	return &runCommandHandler{
+		ctx:      cmd.Context(),
+		terminal: terminal,
+		out:      out,
+		args:     args,
+		errOut:   terminal.ErrOut(),
+		client:   azuremodels.NewClient(token),
+	}
+}
+
+func (h *runCommandHandler) loadModels() ([]*azuremodels.ModelSummary, error) {
+	models, err := h.client.ListModels(h.ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	ux.SortModels(models)
+	return models, nil
+}
+
+func (h *runCommandHandler) getModelNameFromArgs(models []*azuremodels.ModelSummary) (string, error) {
 	modelName := ""
 
 	switch {
-	case len(args) == 0:
+	case len(h.args) == 0:
 		// Need to prompt for a model
 		prompt := &survey.Select{
 			Message: "Select a model:",
@@ -395,8 +420,8 @@ func getModelNameFromArgs(args []string, models []*azuremodels.ModelSummary) (st
 			return "", err
 		}
 
-	case len(args) >= 1:
-		modelName = args[0]
+	case len(h.args) >= 1:
+		modelName = h.args[0]
 	}
 
 	return validateModelName(modelName, models)
@@ -425,27 +450,35 @@ func validateModelName(modelName string, models []*azuremodels.ModelSummary) (st
 	return modelName, nil
 }
 
-func handleParametersPrompt(out io.Writer, conversation Conversation, mp ModelParameters) {
-	util.WriteToOut(out, "Current parameters:\n")
+func (h *runCommandHandler) getChatCompletionStreamReader(req azuremodels.ChatCompletionOptions) (sse.Reader[azuremodels.ChatCompletion], error) {
+	resp, err := h.client.GetChatCompletionStream(h.ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Reader, nil
+}
+
+func (h *runCommandHandler) handleParametersPrompt(conversation Conversation, mp ModelParameters) {
+	util.WriteToOut(h.out, "Current parameters:\n")
 	names := []string{"max-tokens", "temperature", "top-p"}
 	for _, name := range names {
-		util.WriteToOut(out, fmt.Sprintf("  %s: %s\n", name, mp.FormatParameter(name)))
+		util.WriteToOut(h.out, fmt.Sprintf("  %s: %s\n", name, mp.FormatParameter(name)))
 	}
-	util.WriteToOut(out, "\n")
-	util.WriteToOut(out, "System Prompt:\n")
+	util.WriteToOut(h.out, "\n")
+	util.WriteToOut(h.out, "System Prompt:\n")
 	if conversation.systemPrompt != "" {
-		util.WriteToOut(out, "  "+conversation.systemPrompt+"\n")
+		util.WriteToOut(h.out, "  "+conversation.systemPrompt+"\n")
 	} else {
-		util.WriteToOut(out, "  <not set>\n")
+		util.WriteToOut(h.out, "  <not set>\n")
 	}
 }
 
-func handleResetPrompt(out io.Writer, conversation Conversation) {
+func (h *runCommandHandler) handleResetPrompt(conversation Conversation) {
 	conversation.Reset()
-	util.WriteToOut(out, "Reset chat history\n")
+	util.WriteToOut(h.out, "Reset chat history\n")
 }
 
-func handleSetPrompt(out io.Writer, prompt string, mp ModelParameters) {
+func (h *runCommandHandler) handleSetPrompt(prompt string, mp ModelParameters) {
 	parts := strings.Split(prompt, " ")
 	if len(parts) == 3 {
 		name := parts[1]
@@ -453,36 +486,36 @@ func handleSetPrompt(out io.Writer, prompt string, mp ModelParameters) {
 
 		err := mp.SetParameterByName(name, value)
 		if err != nil {
-			util.WriteToOut(out, err.Error()+"\n")
+			util.WriteToOut(h.out, err.Error()+"\n")
 			return
 		}
 
-		util.WriteToOut(out, "Set "+name+" to "+value+"\n")
+		util.WriteToOut(h.out, "Set "+name+" to "+value+"\n")
 	} else {
-		util.WriteToOut(out, "Invalid /set syntax. Usage: /set <name> <value>\n")
+		util.WriteToOut(h.out, "Invalid /set syntax. Usage: /set <name> <value>\n")
 	}
 }
 
-func handleSystemPrompt(out io.Writer, prompt string, conversation Conversation) {
+func (h *runCommandHandler) handleSystemPrompt(prompt string, conversation Conversation) {
 	conversation.systemPrompt = strings.Trim(strings.TrimPrefix(prompt, "/system-prompt "), "\"")
-	util.WriteToOut(out, "Updated system prompt\n")
+	util.WriteToOut(h.out, "Updated system prompt\n")
 }
 
-func handleHelpPrompt(out io.Writer) {
-	util.WriteToOut(out, "Commands:\n")
-	util.WriteToOut(out, "  /bye, /exit, /quit - Exit the chat\n")
-	util.WriteToOut(out, "  /parameters - Show current model parameters\n")
-	util.WriteToOut(out, "  /reset, /clear - Reset chat context\n")
-	util.WriteToOut(out, "  /set <name> <value> - Set a model parameter\n")
-	util.WriteToOut(out, "  /system-prompt <prompt> - Set the system prompt\n")
-	util.WriteToOut(out, "  /help - Show this help message\n")
+func (h *runCommandHandler) handleHelpPrompt() {
+	util.WriteToOut(h.out, "Commands:\n")
+	util.WriteToOut(h.out, "  /bye, /exit, /quit - Exit the chat\n")
+	util.WriteToOut(h.out, "  /parameters - Show current model parameters\n")
+	util.WriteToOut(h.out, "  /reset, /clear - Reset chat context\n")
+	util.WriteToOut(h.out, "  /set <name> <value> - Set a model parameter\n")
+	util.WriteToOut(h.out, "  /system-prompt <prompt> - Set the system prompt\n")
+	util.WriteToOut(h.out, "  /help - Show this help message\n")
 }
 
-func handleUnrecognizedPrompt(out io.Writer, prompt string) {
-	util.WriteToOut(out, "Unknown command '"+prompt+"'. See /help for supported commands.\n")
+func (h *runCommandHandler) handleUnrecognizedPrompt(prompt string) {
+	util.WriteToOut(h.out, "Unknown command '"+prompt+"'. See /help for supported commands.\n")
 }
 
-func handleCompletionChoice(choice azuremodels.ChatChoice, messageBuilder strings.Builder, out io.Writer, terminal term.Term) error {
+func (h *runCommandHandler) handleCompletionChoice(choice azuremodels.ChatChoice, messageBuilder strings.Builder) error {
 	// Streamed responses from the OpenAI API have their data in `.Delta`, while
 	// non-streamed responses use `.Message`, so let's support both
 	if choice.Delta != nil && choice.Delta.Content != nil {
@@ -491,18 +524,18 @@ func handleCompletionChoice(choice azuremodels.ChatChoice, messageBuilder string
 		if err != nil {
 			return err
 		}
-		util.WriteToOut(out, *content)
+		util.WriteToOut(h.out, *content)
 	} else if choice.Message != nil && choice.Message.Content != nil {
 		content := choice.Message.Content
 		_, err := messageBuilder.WriteString(*content)
 		if err != nil {
 			return err
 		}
-		util.WriteToOut(out, *content)
+		util.WriteToOut(h.out, *content)
 	}
 
 	// Introduce a small delay in between response tokens to better simulate a conversation
-	if terminal.IsTerminalOutput() {
+	if h.terminal.IsTerminalOutput() {
 		time.Sleep(10 * time.Millisecond)
 	}
 
