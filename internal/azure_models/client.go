@@ -229,23 +229,44 @@ func (c *Client) ListModels() ([]*ModelSummary, error) {
 
 func (c *Client) handleHTTPError(resp *http.Response) error {
 	sb := strings.Builder{}
+	var err error
 
 	switch resp.StatusCode {
 	case http.StatusUnauthorized:
-		sb.WriteString("unauthorized")
+		_, err = sb.WriteString("unauthorized")
+		if err != nil {
+			return err
+		}
 
 	case http.StatusBadRequest:
-		sb.WriteString("bad request")
+		_, err = sb.WriteString("bad request")
+		if err != nil {
+			return err
+		}
 
 	default:
-		sb.WriteString("unexpected response from the server: " + resp.Status)
+		_, err = sb.WriteString("unexpected response from the server: " + resp.Status)
+		if err != nil {
+			return err
+		}
 	}
 
 	body, _ := io.ReadAll(resp.Body)
 	if len(body) > 0 {
-		sb.WriteString("\n")
-		sb.Write(body)
-		sb.WriteString("\n")
+		_, err = sb.WriteString("\n")
+		if err != nil {
+			return err
+		}
+
+		_, err = sb.Write(body)
+		if err != nil {
+			return err
+		}
+
+		_, err = sb.WriteString("\n")
+		if err != nil {
+			return err
+		}
 	}
 
 	return errors.New(sb.String())

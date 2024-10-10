@@ -415,11 +415,17 @@ func NewRunCommand() *cobra.Command {
 						// non-streamed responses use `.Message`, so let's support both
 						if choice.Delta != nil && choice.Delta.Content != nil {
 							content := choice.Delta.Content
-							messageBuilder.WriteString(*content)
+							_, err := messageBuilder.WriteString(*content)
+							if err != nil {
+								return err
+							}
 							util.WriteToOut(out, *content)
 						} else if choice.Message != nil && choice.Message.Content != nil {
 							content := choice.Message.Content
-							messageBuilder.WriteString(*content)
+							_, err := messageBuilder.WriteString(*content)
+							if err != nil {
+								return err
+							}
 							util.WriteToOut(out, *content)
 						}
 
