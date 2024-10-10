@@ -91,7 +91,7 @@ func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatComple
 }
 
 // GetModelDetails returns the details of the specified model in a prticular registry.
-func (c *Client) GetModelDetails(registry string, modelName string, version string) (*ModelDetails, error) {
+func (c *Client) GetModelDetails(registry, modelName, version string) (*ModelDetails, error) {
 	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", azureAiStudioURL, registry, modelName, version)
 	httpReq, err := http.NewRequest("GET", url, nil)
 	if err != nil {

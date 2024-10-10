@@ -59,7 +59,7 @@ func (p *modelPrinter) render() error {
 	return nil
 }
 
-func (p *modelPrinter) printLabelledLine(label string, value string) {
+func (p *modelPrinter) printLabelledLine(label, value string) {
 	if value == "" {
 		return
 	}
@@ -76,7 +76,7 @@ func (p *modelPrinter) printLabelledMultiLineList(label string, values []string)
 	p.printMultipleLinesWithLabel(label, strings.Join(values, ", "))
 }
 
-func (p *modelPrinter) printMultipleLinesWithLabel(label string, value string) {
+func (p *modelPrinter) printMultipleLinesWithLabel(label, value string) {
 	if value == "" {
 		return
 	}
