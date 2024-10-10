@@ -6,7 +6,7 @@ Use the GitHub Models service from the CLI!
 
 ### Prerequisites
 
-The extension requires the `gh` CLI to be installed and in the PATH. The extension also requires the user have authenticated via `gh auth`.
+The extension requires the [`gh` CLI](https://cli.github.com/) to be installed and in the `PATH`. The extension also requires the user have authenticated via `gh auth`.
 
 ### Installing
 
