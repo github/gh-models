@@ -245,7 +245,7 @@ func NewRunCommand() *cobra.Command {
 
 			foundMatch := false
 			for _, model := range models {
-				if strings.EqualFold(model.FriendlyName, modelName) || strings.EqualFold(model.Name, modelName) {
+				if model.HasName(modelName) {
 					modelName = model.Name
 					foundMatch = true
 					break

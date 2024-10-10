@@ -4,12 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
 
 	"github.com/cli/go-gh/v2/pkg/api"
 	"github.com/github/gh-models/internal/sse"
+	"golang.org/x/text/language"
+	"golang.org/x/text/language/display"
 )
 
 type Client struct {
@@ -19,7 +22,8 @@ type Client struct {
 
 const (
 	prodInferenceURL = "https://models.inference.ai.azure.com/chat/completions"
-	prodModelsURL    = "https://api.catalog.azureml.ms/asset-gallery/v1.0/models"
+	azureAiStudioURL = "https://api.catalog.azureml.ms"
+	prodModelsURL    = azureAiStudioURL + "/asset-gallery/v1.0/models"
 )
 
 func NewClient(authToken string) *Client {
@@ -83,6 +87,81 @@ func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatComple
 	return &chatCompletionResponse, nil
 }
 
+func (c *Client) GetModelDetails(registry string, modelName string, version string) (*ModelDetails, error) {
+	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", azureAiStudioURL, registry, modelName, version)
+	httpReq, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	resp, err := c.client.Do(httpReq)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, c.handleHTTPError(resp)
+	}
+
+	decoder := json.NewDecoder(resp.Body)
+	decoder.UseNumber()
+
+	var detailsResponse modelCatalogDetailsResponse
+	err = decoder.Decode(&detailsResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	modelDetails := &ModelDetails{
+		Description:        detailsResponse.Description,
+		License:            detailsResponse.License,
+		LicenseDescription: detailsResponse.LicenseDescription,
+		Notes:              detailsResponse.Notes,
+		Tags:               lowercaseStrings(detailsResponse.Keywords),
+		Evaluation:         detailsResponse.Evaluation,
+	}
+
+	modelLimits := detailsResponse.ModelLimits
+	if modelLimits != nil {
+		modelDetails.SupportedInputModalities = modelLimits.SupportedInputModalities
+		modelDetails.SupportedOutputModalities = modelLimits.SupportedOutputModalities
+		modelDetails.SupportedLanguages = convertLanguageCodesToNames(modelLimits.SupportedLanguages)
+
+		textLimits := modelLimits.TextLimits
+		if textLimits != nil {
+			modelDetails.MaxOutputTokens = textLimits.MaxOutputTokens
+			modelDetails.MaxInputTokens = textLimits.InputContextWindow
+		}
+	}
+
+	playgroundLimits := detailsResponse.PlaygroundLimits
+	if playgroundLimits != nil {
+		modelDetails.RateLimitTier = playgroundLimits.RateLimitTier
+	}
+
+	return modelDetails, nil
+}
+
+func convertLanguageCodesToNames(input []string) []string {
+	output := make([]string, len(input))
+	english := display.English.Languages()
+	for i, code := range input {
+		tag := language.MustParse(code)
+		output[i] = english.Name(tag)
+	}
+	return output
+}
+
+func lowercaseStrings(input []string) []string {
+	output := make([]string, len(input))
+	for i, s := range input {
+		output[i] = strings.ToLower(s)
+	}
+	return output
+}
+
 func (c *Client) ListModels() ([]*ModelSummary, error) {
 	body := bytes.NewReader([]byte(`
 		{
@@ -135,6 +214,8 @@ func (c *Client) ListModels() ([]*ModelSummary, error) {
 			Task:         inferenceTask,
 			Publisher:    summary.Publisher,
 			Summary:      summary.Summary,
+			Version:      summary.Version,
+			RegistryName: summary.RegistryName,
 		})
 	}
 
