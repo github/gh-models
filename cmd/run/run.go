@@ -309,14 +309,14 @@ func NewRunCommand() *cobra.Command {
 
 				sp := spinner.New(spinner.CharSets[14], 100*time.Millisecond, spinner.WithWriter(cmdHandler.errOut))
 				sp.Start()
-				//nolint:gocritic // TODO
+				//nolint:gocritic,revive // TODO
 				defer sp.Stop()
 
 				reader, err := cmdHandler.getChatCompletionStreamReader(req)
 				if err != nil {
 					return err
 				}
-				//nolint:gocritic // TODO
+				//nolint:gocritic,revive // TODO
 				defer reader.Close()
 
 				messageBuilder := strings.Builder{}
