@@ -2,6 +2,7 @@ name: "go-linter"
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
   merge_group:
   workflow_dispatch:
 
