@@ -36,7 +36,8 @@ type ChatCompletionOptions struct {
 	TopP        *float64      `json:"top_p,omitempty"`
 }
 
-type chatChoiceMessage struct {
+// ChatChoiceMessage is a message from a choice in a chat conversation.
+type ChatChoiceMessage struct {
 	Content *string `json:"content,omitempty"`
 	Role    *string `json:"role,omitempty"`
 }
@@ -51,7 +52,7 @@ type ChatChoice struct {
 	Delta        *chatChoiceDelta   `json:"delta,omitempty"`
 	FinishReason string             `json:"finish_reason"`
 	Index        int32              `json:"index"`
-	Message      *chatChoiceMessage `json:"message,omitempty"`
+	Message      *ChatChoiceMessage `json:"message,omitempty"`
 }
 
 // ChatCompletion represents a chat completion.
