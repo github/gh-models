@@ -1,14 +1,15 @@
+// Package list provides a gh command to list available models.
 package list
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/tableprinter"
 	"github.com/cli/go-gh/v2/pkg/term"
-	"github.com/github/gh-models/internal/azure_models"
+	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/internal/ux"
+	"github.com/github/gh-models/pkg/util"
 	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
 )
@@ -17,6 +18,7 @@ var (
 	lightGrayUnderline = ansi.ColorFunc("white+du")
 )
 
+// NewListCommand returns a new command to list available GitHub models.
 func NewListCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
@@ -28,28 +30,29 @@ func NewListCommand() *cobra.Command {
 
 			token, _ := auth.TokenForHost("github.com")
 			if token == "" {
-				io.WriteString(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
+				util.WriteToOut(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
 				return nil
 			}
 
-			client := azure_models.NewClient(token)
+			client := azuremodels.NewClient(token)
+			ctx := cmd.Context()
 
-			models, err := client.ListModels()
+			models, err := client.ListModels(ctx)
 			if err != nil {
 				return err
 			}
 
 			// For now, filter to just chat models.
 			// Once other tasks are supported (like embeddings), update the list to show all models, with the task as a column.
-			models = ux.FilterToChatModels(models)
+			models = filterToChatModels(models)
 			ux.SortModels(models)
 
 			isTTY := terminal.IsTerminalOutput()
 
 			if isTTY {
-				io.WriteString(out, "\n")
-				io.WriteString(out, fmt.Sprintf("Showing %d available chat models\n", len(models)))
-				io.WriteString(out, "\n")
+				util.WriteToOut(out, "\n")
+				util.WriteToOut(out, fmt.Sprintf("Showing %d available chat models\n", len(models)))
+				util.WriteToOut(out, "\n")
 			}
 
 			width, _, _ := terminal.Size()
@@ -74,4 +77,14 @@ func NewListCommand() *cobra.Command {
 	}
 
 	return cmd
+}
+
+func filterToChatModels(models []*azuremodels.ModelSummary) []*azuremodels.ModelSummary {
+	var chatModels []*azuremodels.ModelSummary
+	for _, model := range models {
+		if ux.IsChatModel(model) {
+			chatModels = append(chatModels, model)
+		}
+	}
+	return chatModels
 }

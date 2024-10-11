@@ -1,17 +1,19 @@
+// Package view provides a `gh models view` command to view details about a model.
 package view
 
 import (
 	"fmt"
-	"io"
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/term"
-	"github.com/github/gh-models/internal/azure_models"
+	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/internal/ux"
+	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
 )
 
+// NewViewCommand returns a new command to view details about a model.
 func NewViewCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "view [model]",
@@ -22,13 +24,14 @@ func NewViewCommand() *cobra.Command {
 
 			token, _ := auth.TokenForHost("github.com")
 			if token == "" {
-				io.WriteString(terminal.Out(), "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
+				util.WriteToOut(terminal.Out(), "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
 				return nil
 			}
 
-			client := azure_models.NewClient(token)
+			client := azuremodels.NewClient(token)
+			ctx := cmd.Context()
 
-			models, err := client.ListModels()
+			models, err := client.ListModels(ctx)
 			if err != nil {
 				return err
 			}
@@ -65,7 +68,7 @@ func NewViewCommand() *cobra.Command {
 				return err
 			}
 
-			modelDetails, err := client.GetModelDetails(modelSummary.RegistryName, modelSummary.Name, modelSummary.Version)
+			modelDetails, err := client.GetModelDetails(ctx, modelSummary.RegistryName, modelSummary.Name, modelSummary.Version)
 			if err != nil {
 				return err
 			}
@@ -84,7 +87,7 @@ func NewViewCommand() *cobra.Command {
 }
 
 // getModelByName returns the model with the specified name, or an error if no such model exists within the given list.
-func getModelByName(modelName string, models []*azure_models.ModelSummary) (*azure_models.ModelSummary, error) {
+func getModelByName(modelName string, models []*azuremodels.ModelSummary) (*azuremodels.ModelSummary, error) {
 	for _, model := range models {
 		if model.HasName(modelName) {
 			return model, nil

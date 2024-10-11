@@ -1,19 +1,9 @@
+// Package ux provides utility functions around presentation and user experience.
 package ux
 
-import (
-	"github.com/github/gh-models/internal/azure_models"
-)
+import "github.com/github/gh-models/internal/azuremodels"
 
-func IsChatModel(model *azure_models.ModelSummary) bool {
+// IsChatModel returns true if the given model is for chat completions.
+func IsChatModel(model *azuremodels.ModelSummary) bool {
 	return model.Task == "chat-completion"
-}
-
-func FilterToChatModels(models []*azure_models.ModelSummary) []*azure_models.ModelSummary {
-	var chatModels []*azure_models.ModelSummary
-	for _, model := range models {
-		if IsChatModel(model) {
-			chatModels = append(chatModels, model)
-		}
-	}
-	return chatModels
 }

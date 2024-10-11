@@ -1,4 +1,4 @@
-package azure_models
+package azuremodels
 
 import (
 	"encoding/json"
@@ -8,19 +8,25 @@ import (
 	"github.com/github/gh-models/internal/sse"
 )
 
+// ChatMessageRole represents the role of a chat message.
 type ChatMessageRole string
 
 const (
+	// ChatMessageRoleAssistant represents a message from the model.
 	ChatMessageRoleAssistant ChatMessageRole = "assistant"
-	ChatMessageRoleSystem    ChatMessageRole = "system"
-	ChatMessageRoleUser      ChatMessageRole = "user"
+	// ChatMessageRoleSystem represents a system message.
+	ChatMessageRoleSystem ChatMessageRole = "system"
+	// ChatMessageRoleUser represents a message from the user.
+	ChatMessageRoleUser ChatMessageRole = "user"
 )
 
+// ChatMessage represents a message from a chat thread with a model.
 type ChatMessage struct {
 	Content *string         `json:"content,omitempty"`
 	Role    ChatMessageRole `json:"role"`
 }
 
+// ChatCompletionOptions represents available options for a chat completion request.
 type ChatCompletionOptions struct {
 	MaxTokens   *int          `json:"max_tokens,omitempty"`
 	Messages    []ChatMessage `json:"messages"`
@@ -30,27 +36,30 @@ type ChatCompletionOptions struct {
 	TopP        *float64      `json:"top_p,omitempty"`
 }
 
-type ChatChoiceMessage struct {
+type chatChoiceMessage struct {
 	Content *string `json:"content,omitempty"`
 	Role    *string `json:"role,omitempty"`
 }
 
-type ChatChoiceDelta struct {
+type chatChoiceDelta struct {
 	Content *string `json:"content,omitempty"`
 	Role    *string `json:"role,omitempty"`
 }
 
+// ChatChoice represents a choice in a chat completion.
 type ChatChoice struct {
-	Delta        *ChatChoiceDelta   `json:"delta,omitempty"`
+	Delta        *chatChoiceDelta   `json:"delta,omitempty"`
 	FinishReason string             `json:"finish_reason"`
 	Index        int32              `json:"index"`
-	Message      *ChatChoiceMessage `json:"message,omitempty"`
+	Message      *chatChoiceMessage `json:"message,omitempty"`
 }
 
+// ChatCompletion represents a chat completion.
 type ChatCompletion struct {
 	Choices []ChatChoice `json:"choices"`
 }
 
+// ChatCompletionResponse represents a response to a chat completion request.
 type ChatCompletionResponse struct {
 	Reader sse.Reader[ChatCompletion]
 }
@@ -71,6 +80,7 @@ type modelCatalogSearchSummary struct {
 	Summary        string      `json:"summary"`
 }
 
+// ModelSummary includes basic information about a model.
 type ModelSummary struct {
 	ID           string `json:"id"`
 	Name         string `json:"name"`
@@ -82,6 +92,7 @@ type ModelSummary struct {
 	RegistryName string `json:"registry_name"`
 }
 
+// HasName checks if the model has the given name.
 func (m *ModelSummary) HasName(name string) bool {
 	return strings.EqualFold(m.FriendlyName, name) || strings.EqualFold(m.Name, name)
 }
@@ -119,6 +130,7 @@ type modelCatalogDetailsResponse struct {
 	} `json:"modelLimits"`
 }
 
+// ModelDetails includes detailed information about a model.
 type ModelDetails struct {
 	Description               string   `json:"description"`
 	Evaluation                string   `json:"evaluation"`
@@ -134,10 +146,7 @@ type ModelDetails struct {
 	RateLimitTier             string   `json:"rateLimitTier"`
 }
 
+// ContextLimits returns a summary of the context limits for the model.
 func (m *ModelDetails) ContextLimits() string {
 	return fmt.Sprintf("up to %d input tokens and %d output tokens", m.MaxInputTokens, m.MaxOutputTokens)
-}
-
-func Ptr[T any](value T) *T {
-	return &value
 }

@@ -1,7 +1,9 @@
-package azure_models
+// Package azuremodels provides a client for interacting with the Azure models API.
+package azuremodels
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +17,7 @@ import (
 	"golang.org/x/text/language/display"
 )
 
+// Client provides a client for interacting with the Azure models API.
 type Client struct {
 	client *http.Client
 	token  string
@@ -26,6 +29,7 @@ const (
 	prodModelsURL    = azureAiStudioURL + "/asset-gallery/v1.0/models"
 )
 
+// NewClient returns a new client using the given auth token.
 func NewClient(authToken string) *Client {
 	httpClient, _ := api.DefaultHTTPClient()
 	return &Client{
@@ -34,7 +38,8 @@ func NewClient(authToken string) *Client {
 	}
 }
 
-func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatCompletionResponse, error) {
+// GetChatCompletionStream returns a stream of chat completions for the given request.
+func (c *Client) GetChatCompletionStream(ctx context.Context, req ChatCompletionOptions) (*ChatCompletionResponse, error) {
 	// Check if the model name is `o1-mini` or `o1-preview`
 	if req.Model == "o1-mini" || req.Model == "o1-preview" {
 		req.Stream = false
@@ -49,7 +54,7 @@ func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatComple
 
 	body := bytes.NewReader(bodyBytes)
 
-	httpReq, err := http.NewRequest("POST", prodInferenceURL, body)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, prodInferenceURL, body)
 	if err != nil {
 		return nil, err
 	}
@@ -87,9 +92,10 @@ func (c *Client) GetChatCompletionStream(req ChatCompletionOptions) (*ChatComple
 	return &chatCompletionResponse, nil
 }
 
-func (c *Client) GetModelDetails(registry string, modelName string, version string) (*ModelDetails, error) {
+// GetModelDetails returns the details of the specified model in a prticular registry.
+func (c *Client) GetModelDetails(ctx context.Context, registry, modelName, version string) (*ModelDetails, error) {
 	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", azureAiStudioURL, registry, modelName, version)
-	httpReq, err := http.NewRequest("GET", url, nil)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, err
 	}
@@ -100,6 +106,8 @@ func (c *Client) GetModelDetails(registry string, modelName string, version stri
 	if err != nil {
 		return nil, err
 	}
+
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, c.handleHTTPError(resp)
@@ -162,7 +170,8 @@ func lowercaseStrings(input []string) []string {
 	return output
 }
 
-func (c *Client) ListModels() ([]*ModelSummary, error) {
+// ListModels returns a list of available models.
+func (c *Client) ListModels(ctx context.Context) ([]*ModelSummary, error) {
 	body := bytes.NewReader([]byte(`
 		{
 			"filters": [
@@ -175,7 +184,7 @@ func (c *Client) ListModels() ([]*ModelSummary, error) {
 		}
 	`))
 
-	httpReq, err := http.NewRequest("POST", prodModelsURL, body)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, prodModelsURL, body)
 	if err != nil {
 		return nil, err
 	}
@@ -186,6 +195,8 @@ func (c *Client) ListModels() ([]*ModelSummary, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, c.handleHTTPError(resp)
@@ -223,25 +234,45 @@ func (c *Client) ListModels() ([]*ModelSummary, error) {
 }
 
 func (c *Client) handleHTTPError(resp *http.Response) error {
-
 	sb := strings.Builder{}
+	var err error
 
 	switch resp.StatusCode {
 	case http.StatusUnauthorized:
-		sb.WriteString("unauthorized")
+		_, err = sb.WriteString("unauthorized")
+		if err != nil {
+			return err
+		}
 
 	case http.StatusBadRequest:
-		sb.WriteString("bad request")
+		_, err = sb.WriteString("bad request")
+		if err != nil {
+			return err
+		}
 
 	default:
-		sb.WriteString("unexpected response from the server: " + resp.Status)
+		_, err = sb.WriteString("unexpected response from the server: " + resp.Status)
+		if err != nil {
+			return err
+		}
 	}
 
 	body, _ := io.ReadAll(resp.Body)
 	if len(body) > 0 {
-		sb.WriteString("\n")
-		sb.Write(body)
-		sb.WriteString("\n")
+		_, err = sb.WriteString("\n")
+		if err != nil {
+			return err
+		}
+
+		_, err = sb.Write(body)
+		if err != nil {
+			return err
+		}
+
+		_, err = sb.WriteString("\n")
+		if err != nil {
+			return err
+		}
 	}
 
 	return errors.New(sb.String())

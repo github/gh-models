@@ -1,7 +1,9 @@
+// Package run provides a gh command to run a GitHub model.
 package run
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -14,18 +16,22 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/term"
-	"github.com/github/gh-models/internal/azure_models"
+	"github.com/github/gh-models/internal/azuremodels"
+	"github.com/github/gh-models/internal/sse"
 	"github.com/github/gh-models/internal/ux"
+	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
 
+// ModelParameters represents the parameters that can be set for a model run.
 type ModelParameters struct {
 	maxTokens   *int
 	temperature *float64
 	topP        *float64
 }
 
+// FormatParameter returns a string representation of the parameter value.
 func (mp *ModelParameters) FormatParameter(name string) string {
 	switch name {
 	case "max-tokens":
@@ -47,6 +53,7 @@ func (mp *ModelParameters) FormatParameter(name string) string {
 	return "<not set>"
 }
 
+// PopulateFromFlags populates the model parameters from the given flags.
 func (mp *ModelParameters) PopulateFromFlags(flags *pflag.FlagSet) error {
 	maxTokensString, err := flags.GetString("max-tokens")
 	if err != nil {
@@ -57,7 +64,7 @@ func (mp *ModelParameters) PopulateFromFlags(flags *pflag.FlagSet) error {
 		if err != nil {
 			return err
 		}
-		mp.maxTokens = azure_models.Ptr(maxTokens)
+		mp.maxTokens = util.Ptr(maxTokens)
 	}
 
 	temperatureString, err := flags.GetString("temperature")
@@ -69,7 +76,7 @@ func (mp *ModelParameters) PopulateFromFlags(flags *pflag.FlagSet) error {
 		if err != nil {
 			return err
 		}
-		mp.temperature = azure_models.Ptr(temperature)
+		mp.temperature = util.Ptr(temperature)
 	}
 
 	topPString, err := flags.GetString("top-p")
@@ -81,34 +88,35 @@ func (mp *ModelParameters) PopulateFromFlags(flags *pflag.FlagSet) error {
 		if err != nil {
 			return err
 		}
-		mp.topP = azure_models.Ptr(topP)
+		mp.topP = util.Ptr(topP)
 	}
 
 	return nil
 }
 
-func (mp *ModelParameters) SetParameterByName(name string, value string) error {
+// SetParameterByName sets the parameter with the given name to the given value.
+func (mp *ModelParameters) SetParameterByName(name, value string) error {
 	switch name {
 	case "max-tokens":
 		maxTokens, err := strconv.Atoi(value)
 		if err != nil {
 			return err
 		}
-		mp.maxTokens = azure_models.Ptr(maxTokens)
+		mp.maxTokens = util.Ptr(maxTokens)
 
 	case "temperature":
 		temperature, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return err
 		}
-		mp.temperature = azure_models.Ptr(temperature)
+		mp.temperature = util.Ptr(temperature)
 
 	case "top-p":
 		topP, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return err
 		}
-		mp.topP = azure_models.Ptr(topP)
+		mp.topP = util.Ptr(topP)
 
 	default:
 		return errors.New("unknown parameter '" + name + "'. Supported parameters: max-tokens, temperature, top-p")
@@ -117,37 +125,41 @@ func (mp *ModelParameters) SetParameterByName(name string, value string) error {
 	return nil
 }
 
-func (mp *ModelParameters) UpdateRequest(req *azure_models.ChatCompletionOptions) {
+// UpdateRequest updates the given request with the model parameters.
+func (mp *ModelParameters) UpdateRequest(req *azuremodels.ChatCompletionOptions) {
 	req.MaxTokens = mp.maxTokens
 	req.Temperature = mp.temperature
 	req.TopP = mp.topP
 }
 
+// Conversation represents a conversation between the user and the model.
 type Conversation struct {
-	messages     []azure_models.ChatMessage
+	messages     []azuremodels.ChatMessage
 	systemPrompt string
 }
 
-func (c *Conversation) AddMessage(role azure_models.ChatMessageRole, content string) {
-	c.messages = append(c.messages, azure_models.ChatMessage{
-		Content: azure_models.Ptr(content),
+// AddMessage adds a message to the conversation.
+func (c *Conversation) AddMessage(role azuremodels.ChatMessageRole, content string) {
+	c.messages = append(c.messages, azuremodels.ChatMessage{
+		Content: util.Ptr(content),
 		Role:    role,
 	})
 }
 
-func (c *Conversation) GetMessages() []azure_models.ChatMessage {
+// GetMessages returns the messages in the conversation.
+func (c *Conversation) GetMessages() []azuremodels.ChatMessage {
 	length := len(c.messages)
 	if c.systemPrompt != "" {
 		length++
 	}
 
-	messages := make([]azure_models.ChatMessage, length)
+	messages := make([]azuremodels.ChatMessage, length)
 	startIndex := 0
 
 	if c.systemPrompt != "" {
-		messages[0] = azure_models.ChatMessage{
-			Content: azure_models.Ptr(c.systemPrompt),
-			Role:    azure_models.ChatMessageRoleSystem,
+		messages[0] = azuremodels.ChatMessage{
+			Content: util.Ptr(c.systemPrompt),
+			Role:    azuremodels.ChatMessageRoleSystem,
 		}
 		startIndex++
 	}
@@ -159,6 +171,7 @@ func (c *Conversation) GetMessages() []azure_models.ChatMessage {
 	return messages
 }
 
+// Reset removes messages from the conversation.
 func (c *Conversation) Reset() {
 	c.messages = nil
 }
@@ -176,73 +189,26 @@ func isPipe(r io.Reader) bool {
 	return false
 }
 
+// NewRunCommand returns a new gh command for running a model.
 func NewRunCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run [model] [prompt]",
 		Short: "Run inference with the specified model",
 		Args:  cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			terminal := term.FromEnv()
-			out := terminal.Out()
-			errOut := terminal.ErrOut()
-
-			token, _ := auth.TokenForHost("github.com")
-			if token == "" {
-				io.WriteString(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
+			cmdHandler := newRunCommandHandler(cmd, args)
+			if cmdHandler == nil {
 				return nil
 			}
 
-			client := azure_models.NewClient(token)
-
-			models, err := client.ListModels()
+			models, err := cmdHandler.loadModels()
 			if err != nil {
 				return err
 			}
 
-			ux.SortModels(models)
-
-			modelName := ""
-			switch {
-			case len(args) == 0:
-				// Need to prompt for a model
-				prompt := &survey.Select{
-					Message: "Select a model:",
-					Options: []string{},
-				}
-
-				for _, model := range models {
-					if !ux.IsChatModel(model) {
-						continue
-					}
-					prompt.Options = append(prompt.Options, model.FriendlyName)
-				}
-
-				err = survey.AskOne(prompt, &modelName, survey.WithPageSize(10))
-				if err != nil {
-					return err
-				}
-
-			case len(args) >= 1:
-				modelName = args[0]
-			}
-
-			noMatchErrorMessage := "The specified model name is not found. Run 'gh models list' to see available models or 'gh models run' to select interactively."
-
-			if modelName == "" {
-				return errors.New(noMatchErrorMessage)
-			}
-
-			foundMatch := false
-			for _, model := range models {
-				if model.HasName(modelName) {
-					modelName = model.Name
-					foundMatch = true
-					break
-				}
-			}
-
-			if !foundMatch {
-				return errors.New(noMatchErrorMessage)
+			modelName, err := cmdHandler.getModelNameFromArgs(models)
+			if err != nil {
+				return err
 			}
 
 			initialPrompt := ""
@@ -304,91 +270,59 @@ func NewRunCommand() *cobra.Command {
 					}
 
 					if prompt == "/parameters" {
-						io.WriteString(out, "Current parameters:\n")
-						names := []string{"max-tokens", "temperature", "top-p"}
-						for _, name := range names {
-							io.WriteString(out, fmt.Sprintf("  %s: %s\n", name, mp.FormatParameter(name)))
-						}
-						io.WriteString(out, "\n")
-						io.WriteString(out, "System Prompt:\n")
-						if conversation.systemPrompt != "" {
-							io.WriteString(out, "  "+conversation.systemPrompt+"\n")
-						} else {
-							io.WriteString(out, "  <not set>\n")
-						}
+						cmdHandler.handleParametersPrompt(conversation, mp)
 						continue
 					}
 
 					if prompt == "/reset" || prompt == "/clear" {
-						conversation.Reset()
-						io.WriteString(out, "Reset chat history\n")
+						cmdHandler.handleResetPrompt(conversation)
 						continue
 					}
 
 					if strings.HasPrefix(prompt, "/set ") {
-						parts := strings.Split(prompt, " ")
-						if len(parts) == 3 {
-							name := parts[1]
-							value := parts[2]
-
-							err := mp.SetParameterByName(name, value)
-							if err != nil {
-								io.WriteString(out, err.Error()+"\n")
-								continue
-							}
-
-							io.WriteString(out, "Set "+name+" to "+value+"\n")
-						} else {
-							io.WriteString(out, "Invalid /set syntax. Usage: /set <name> <value>\n")
-						}
+						cmdHandler.handleSetPrompt(prompt, mp)
 						continue
 					}
 
 					if strings.HasPrefix(prompt, "/system-prompt ") {
-						conversation.systemPrompt = strings.Trim(strings.TrimPrefix(prompt, "/system-prompt "), "\"")
-						io.WriteString(out, "Updated system prompt\n")
+						conversation = cmdHandler.handleSystemPrompt(prompt, conversation)
 						continue
 					}
 
 					if prompt == "/help" {
-						io.WriteString(out, "Commands:\n")
-						io.WriteString(out, "  /bye, /exit, /quit - Exit the chat\n")
-						io.WriteString(out, "  /parameters - Show current model parameters\n")
-						io.WriteString(out, "  /reset, /clear - Reset chat context\n")
-						io.WriteString(out, "  /set <name> <value> - Set a model parameter\n")
-						io.WriteString(out, "  /system-prompt <prompt> - Set the system prompt\n")
-						io.WriteString(out, "  /help - Show this help message\n")
+						cmdHandler.handleHelpPrompt()
 						continue
 					}
 
-					io.WriteString(out, "Unknown command '"+prompt+"'. See /help for supported commands.\n")
+					cmdHandler.handleUnrecognizedPrompt(prompt)
 					continue
 				}
 
-				conversation.AddMessage(azure_models.ChatMessageRoleUser, prompt)
+				conversation.AddMessage(azuremodels.ChatMessageRoleUser, prompt)
 
-				req := azure_models.ChatCompletionOptions{
+				req := azuremodels.ChatCompletionOptions{
 					Messages: conversation.GetMessages(),
 					Model:    modelName,
 				}
 
 				mp.UpdateRequest(&req)
 
-				sp := spinner.New(spinner.CharSets[14], 100*time.Millisecond, spinner.WithWriter(errOut))
+				sp := spinner.New(spinner.CharSets[14], 100*time.Millisecond, spinner.WithWriter(cmdHandler.errOut))
 				sp.Start()
+				//nolint:gocritic,revive // TODO
 				defer sp.Stop()
 
-				resp, err := client.GetChatCompletionStream(req)
+				reader, err := cmdHandler.getChatCompletionStreamReader(req)
 				if err != nil {
 					return err
 				}
-
-				defer resp.Reader.Close()
+				//nolint:gocritic,revive // TODO
+				defer reader.Close()
 
 				messageBuilder := strings.Builder{}
 
 				for {
-					completion, err := resp.Reader.Read()
+					completion, err := reader.Read()
 					if err != nil {
 						if errors.Is(err, io.EOF) {
 							break
@@ -399,29 +333,20 @@ func NewRunCommand() *cobra.Command {
 					sp.Stop()
 
 					for _, choice := range completion.Choices {
-						// Streamed responses from the OpenAI API have their data in `.Delta`, while
-						// non-streamed responses use `.Message`, so let's support both
-						if choice.Delta != nil && choice.Delta.Content != nil {
-							content := choice.Delta.Content
-							messageBuilder.WriteString(*content)
-							io.WriteString(out, *content)
-						} else if choice.Message != nil && choice.Message.Content != nil {
-							content := choice.Message.Content
-							messageBuilder.WriteString(*content)
-							io.WriteString(out, *content)
-						}
-
-						// Introduce a small delay in between response tokens to better simulate a conversation
-						if terminal.IsTerminalOutput() {
-							time.Sleep(10 * time.Millisecond)
+						err = cmdHandler.handleCompletionChoice(choice, messageBuilder)
+						if err != nil {
+							return err
 						}
 					}
 				}
 
-				io.WriteString(out, "\n")
-				messageBuilder.WriteString("\n")
+				util.WriteToOut(cmdHandler.out, "\n")
+				_, err = messageBuilder.WriteString("\n")
+				if err != nil {
+					return err
+				}
 
-				conversation.AddMessage(azure_models.ChatMessageRoleAssistant, messageBuilder.String())
+				conversation.AddMessage(azuremodels.ChatMessageRoleAssistant, messageBuilder.String())
 
 				if singleShot {
 					break
@@ -438,4 +363,187 @@ func NewRunCommand() *cobra.Command {
 	cmd.Flags().String("system-prompt", "", "Prompt the system.")
 
 	return cmd
+}
+
+type runCommandHandler struct {
+	ctx      context.Context
+	terminal term.Term
+	out      io.Writer
+	errOut   io.Writer
+	client   *azuremodels.Client
+	args     []string
+}
+
+func newRunCommandHandler(cmd *cobra.Command, args []string) *runCommandHandler {
+	terminal := term.FromEnv()
+	out := terminal.Out()
+	token, _ := auth.TokenForHost("github.com")
+	if token == "" {
+		util.WriteToOut(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
+		return nil
+	}
+	return &runCommandHandler{
+		ctx:      cmd.Context(),
+		terminal: terminal,
+		out:      out,
+		args:     args,
+		errOut:   terminal.ErrOut(),
+		client:   azuremodels.NewClient(token),
+	}
+}
+
+func (h *runCommandHandler) loadModels() ([]*azuremodels.ModelSummary, error) {
+	models, err := h.client.ListModels(h.ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	ux.SortModels(models)
+	return models, nil
+}
+
+func (h *runCommandHandler) getModelNameFromArgs(models []*azuremodels.ModelSummary) (string, error) {
+	modelName := ""
+
+	switch {
+	case len(h.args) == 0:
+		// Need to prompt for a model
+		prompt := &survey.Select{
+			Message: "Select a model:",
+			Options: []string{},
+		}
+
+		for _, model := range models {
+			if !ux.IsChatModel(model) {
+				continue
+			}
+			prompt.Options = append(prompt.Options, model.FriendlyName)
+		}
+
+		err := survey.AskOne(prompt, &modelName, survey.WithPageSize(10))
+		if err != nil {
+			return "", err
+		}
+
+	case len(h.args) >= 1:
+		modelName = h.args[0]
+	}
+
+	return validateModelName(modelName, models)
+}
+
+func validateModelName(modelName string, models []*azuremodels.ModelSummary) (string, error) {
+	noMatchErrorMessage := "The specified model name is not found. Run 'gh models list' to see available models or 'gh models run' to select interactively."
+
+	if modelName == "" {
+		return "", errors.New(noMatchErrorMessage)
+	}
+
+	foundMatch := false
+	for _, model := range models {
+		if model.HasName(modelName) {
+			modelName = model.Name
+			foundMatch = true
+			break
+		}
+	}
+
+	if !foundMatch {
+		return "", errors.New(noMatchErrorMessage)
+	}
+
+	return modelName, nil
+}
+
+func (h *runCommandHandler) getChatCompletionStreamReader(req azuremodels.ChatCompletionOptions) (sse.Reader[azuremodels.ChatCompletion], error) {
+	resp, err := h.client.GetChatCompletionStream(h.ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	return resp.Reader, nil
+}
+
+func (h *runCommandHandler) handleParametersPrompt(conversation Conversation, mp ModelParameters) {
+	util.WriteToOut(h.out, "Current parameters:\n")
+	names := []string{"max-tokens", "temperature", "top-p"}
+	for _, name := range names {
+		util.WriteToOut(h.out, fmt.Sprintf("  %s: %s\n", name, mp.FormatParameter(name)))
+	}
+	util.WriteToOut(h.out, "\n")
+	util.WriteToOut(h.out, "System Prompt:\n")
+	if conversation.systemPrompt != "" {
+		util.WriteToOut(h.out, "  "+conversation.systemPrompt+"\n")
+	} else {
+		util.WriteToOut(h.out, "  <not set>\n")
+	}
+}
+
+func (h *runCommandHandler) handleResetPrompt(conversation Conversation) {
+	conversation.Reset()
+	util.WriteToOut(h.out, "Reset chat history\n")
+}
+
+func (h *runCommandHandler) handleSetPrompt(prompt string, mp ModelParameters) {
+	parts := strings.Split(prompt, " ")
+	if len(parts) == 3 {
+		name := parts[1]
+		value := parts[2]
+
+		err := mp.SetParameterByName(name, value)
+		if err != nil {
+			util.WriteToOut(h.out, err.Error()+"\n")
+			return
+		}
+
+		util.WriteToOut(h.out, "Set "+name+" to "+value+"\n")
+	} else {
+		util.WriteToOut(h.out, "Invalid /set syntax. Usage: /set <name> <value>\n")
+	}
+}
+
+func (h *runCommandHandler) handleSystemPrompt(prompt string, conversation Conversation) Conversation {
+	conversation.systemPrompt = strings.Trim(strings.TrimPrefix(prompt, "/system-prompt "), "\"")
+	util.WriteToOut(h.out, "Updated system prompt\n")
+	return conversation
+}
+
+func (h *runCommandHandler) handleHelpPrompt() {
+	util.WriteToOut(h.out, "Commands:\n")
+	util.WriteToOut(h.out, "  /bye, /exit, /quit - Exit the chat\n")
+	util.WriteToOut(h.out, "  /parameters - Show current model parameters\n")
+	util.WriteToOut(h.out, "  /reset, /clear - Reset chat context\n")
+	util.WriteToOut(h.out, "  /set <name> <value> - Set a model parameter\n")
+	util.WriteToOut(h.out, "  /system-prompt <prompt> - Set the system prompt\n")
+	util.WriteToOut(h.out, "  /help - Show this help message\n")
+}
+
+func (h *runCommandHandler) handleUnrecognizedPrompt(prompt string) {
+	util.WriteToOut(h.out, "Unknown command '"+prompt+"'. See /help for supported commands.\n")
+}
+
+func (h *runCommandHandler) handleCompletionChoice(choice azuremodels.ChatChoice, messageBuilder strings.Builder) error {
+	// Streamed responses from the OpenAI API have their data in `.Delta`, while
+	// non-streamed responses use `.Message`, so let's support both
+	if choice.Delta != nil && choice.Delta.Content != nil {
+		content := choice.Delta.Content
+		_, err := messageBuilder.WriteString(*content)
+		if err != nil {
+			return err
+		}
+		util.WriteToOut(h.out, *content)
+	} else if choice.Message != nil && choice.Message.Content != nil {
+		content := choice.Message.Content
+		_, err := messageBuilder.WriteString(*content)
+		if err != nil {
+			return err
+		}
+		util.WriteToOut(h.out, *content)
+	}
+
+	// Introduce a small delay in between response tokens to better simulate a conversation
+	if h.terminal.IsTerminalOutput() {
+		time.Sleep(10 * time.Millisecond)
+	}
+
+	return nil
 }
