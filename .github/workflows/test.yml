@@ -20,15 +20,12 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      GOPROXY: https://goproxy.githubapp.com/mod,https://proxy.golang.org/,direct
+      GOPROXY: https://proxy.golang.org/,direct
       GOPRIVATE: ""
       GONOPROXY: ""
       GONOSUMDB: github.com/github/*
     steps:
       - uses: actions/checkout@v4
-      - name: Configure Go private module access
-        run: |
-          echo "machine goproxy.githubapp.com login nobody password ${{ secrets.GOPROXY_TOKEN }}" >> $HOME/.netrc
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ vars.GOVERSION }}
