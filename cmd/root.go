@@ -25,12 +25,16 @@ func NewRootCommand() *cobra.Command {
 	terminal := term.FromEnv()
 	out := terminal.Out()
 	token, _ := auth.TokenForHost("github.com")
+
+	var client azuremodels.Client
+
 	if token == "" {
 		util.WriteToOut(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
-		return nil
+		client = azuremodels.NewUnauthenticatedClient()
+	} else {
+		client = azuremodels.NewAzureClient(token)
 	}
 
-	client := azuremodels.NewAzureClient(token)
 	cfg := command.NewConfigWithTerminal(terminal, client)
 
 	cmd.AddCommand(list.NewListCommand(cfg))
