@@ -189,7 +189,7 @@ func isPipe(r io.Reader) bool {
 }
 
 // NewRunCommand returns a new gh command for running a model.
-func NewRunCommand(client *azuremodels.AzureClient) *cobra.Command {
+func NewRunCommand(client azuremodels.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run [model] [prompt]",
 		Short: "Run inference with the specified model",
@@ -369,11 +369,11 @@ type runCommandHandler struct {
 	terminal term.Term
 	out      io.Writer
 	errOut   io.Writer
-	client   *azuremodels.AzureClient
+	client   azuremodels.Client
 	args     []string
 }
 
-func newRunCommandHandler(cmd *cobra.Command, client *azuremodels.AzureClient, args []string) *runCommandHandler {
+func newRunCommandHandler(cmd *cobra.Command, client azuremodels.Client, args []string) *runCommandHandler {
 	terminal := term.FromEnv()
 	out := terminal.Out()
 	return &runCommandHandler{
