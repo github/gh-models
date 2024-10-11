@@ -11,7 +11,7 @@ type MockClient struct {
 	MockListModels              func(context.Context) ([]*ModelSummary, error)
 }
 
-// NewMockClient returns a new mock client.
+// NewMockClient returns a new mock client for stubbing out interactions with the models API.
 func NewMockClient() *MockClient {
 	return &MockClient{
 		MockGetChatCompletionStream: func(context.Context, ChatCompletionOptions) (*ChatCompletionResponse, error) {
@@ -27,7 +27,6 @@ func NewMockClient() *MockClient {
 }
 
 // GetChatCompletionStream calls the mocked function for getting a stream of chat completions for the given request.
-
 func (c *MockClient) GetChatCompletionStream(ctx context.Context, opt ChatCompletionOptions) (*ChatCompletionResponse, error) {
 	return c.MockGetChatCompletionStream(ctx, opt)
 }

@@ -29,7 +29,7 @@ const (
 	prodModelsURL    = azureAiStudioURL + "/asset-gallery/v1.0/models"
 )
 
-// NewClient returns a new client using the given auth token.
+// NewAzureClient returns a new Azure client using the given auth token.
 func NewAzureClient(authToken string) *AzureClient {
 	httpClient, _ := api.DefaultHTTPClient()
 	return &AzureClient{

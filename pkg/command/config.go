@@ -22,6 +22,6 @@ type Config struct {
 }
 
 // NewConfig returns a new command configuration.
-func NewConfig(out io.Writer, errOut io.Writer, client azuremodels.Client, isTerminalOutput bool, width int) *Config {
+func NewConfig(out, errOut io.Writer, client azuremodels.Client, isTerminalOutput bool, width int) *Config {
 	return &Config{Out: out, ErrOut: errOut, Client: client, IsTerminalOutput: isTerminalOutput, TerminalWidth: width}
 }
