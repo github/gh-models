@@ -5,6 +5,9 @@ on:
     types: [opened, synchronize, reopened]
   merge_group:
   workflow_dispatch:
+  push:
+    branches:
+      - 'main'
 
 permissions:
   contents: read
