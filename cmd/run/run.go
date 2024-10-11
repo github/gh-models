@@ -339,7 +339,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 					}
 				}
 
-				util.WriteToOut(cmdHandler.cfg.Out, "\n")
+				cmdHandler.cfg.WriteToOut("\n")
 				_, err = messageBuilder.WriteString("\n")
 				if err != nil {
 					return err
@@ -446,23 +446,23 @@ func (h *runCommandHandler) getChatCompletionStreamReader(req azuremodels.ChatCo
 }
 
 func (h *runCommandHandler) handleParametersPrompt(conversation Conversation, mp ModelParameters) {
-	util.WriteToOut(h.cfg.Out, "Current parameters:\n")
+	h.cfg.WriteToOut("Current parameters:\n")
 	names := []string{"max-tokens", "temperature", "top-p"}
 	for _, name := range names {
-		util.WriteToOut(h.cfg.Out, fmt.Sprintf("  %s: %s\n", name, mp.FormatParameter(name)))
+		h.cfg.WriteToOut(fmt.Sprintf("  %s: %s\n", name, mp.FormatParameter(name)))
 	}
-	util.WriteToOut(h.cfg.Out, "\n")
-	util.WriteToOut(h.cfg.Out, "System Prompt:\n")
+	h.cfg.WriteToOut("\n")
+	h.cfg.WriteToOut("System Prompt:\n")
 	if conversation.systemPrompt != "" {
-		util.WriteToOut(h.cfg.Out, "  "+conversation.systemPrompt+"\n")
+		h.cfg.WriteToOut("  " + conversation.systemPrompt + "\n")
 	} else {
-		util.WriteToOut(h.cfg.Out, "  <not set>\n")
+		h.cfg.WriteToOut("  <not set>\n")
 	}
 }
 
 func (h *runCommandHandler) handleResetPrompt(conversation Conversation) {
 	conversation.Reset()
-	util.WriteToOut(h.cfg.Out, "Reset chat history\n")
+	h.cfg.WriteToOut("Reset chat history\n")
 }
 
 func (h *runCommandHandler) handleSetPrompt(prompt string, mp ModelParameters) {
@@ -473,34 +473,34 @@ func (h *runCommandHandler) handleSetPrompt(prompt string, mp ModelParameters) {
 
 		err := mp.SetParameterByName(name, value)
 		if err != nil {
-			util.WriteToOut(h.cfg.Out, err.Error()+"\n")
+			h.cfg.WriteToOut(err.Error() + "\n")
 			return
 		}
 
-		util.WriteToOut(h.cfg.Out, "Set "+name+" to "+value+"\n")
+		h.cfg.WriteToOut("Set " + name + " to " + value + "\n")
 	} else {
-		util.WriteToOut(h.cfg.Out, "Invalid /set syntax. Usage: /set <name> <value>\n")
+		h.cfg.WriteToOut("Invalid /set syntax. Usage: /set <name> <value>\n")
 	}
 }
 
 func (h *runCommandHandler) handleSystemPrompt(prompt string, conversation Conversation) Conversation {
 	conversation.systemPrompt = strings.Trim(strings.TrimPrefix(prompt, "/system-prompt "), "\"")
-	util.WriteToOut(h.cfg.Out, "Updated system prompt\n")
+	h.cfg.WriteToOut("Updated system prompt\n")
 	return conversation
 }
 
 func (h *runCommandHandler) handleHelpPrompt() {
-	util.WriteToOut(h.cfg.Out, "Commands:\n")
-	util.WriteToOut(h.cfg.Out, "  /bye, /exit, /quit - Exit the chat\n")
-	util.WriteToOut(h.cfg.Out, "  /parameters - Show current model parameters\n")
-	util.WriteToOut(h.cfg.Out, "  /reset, /clear - Reset chat context\n")
-	util.WriteToOut(h.cfg.Out, "  /set <name> <value> - Set a model parameter\n")
-	util.WriteToOut(h.cfg.Out, "  /system-prompt <prompt> - Set the system prompt\n")
-	util.WriteToOut(h.cfg.Out, "  /help - Show this help message\n")
+	h.cfg.WriteToOut("Commands:\n")
+	h.cfg.WriteToOut("  /bye, /exit, /quit - Exit the chat\n")
+	h.cfg.WriteToOut("  /parameters - Show current model parameters\n")
+	h.cfg.WriteToOut("  /reset, /clear - Reset chat context\n")
+	h.cfg.WriteToOut("  /set <name> <value> - Set a model parameter\n")
+	h.cfg.WriteToOut("  /system-prompt <prompt> - Set the system prompt\n")
+	h.cfg.WriteToOut("  /help - Show this help message\n")
 }
 
 func (h *runCommandHandler) handleUnrecognizedPrompt(prompt string) {
-	util.WriteToOut(h.cfg.Out, "Unknown command '"+prompt+"'. See /help for supported commands.\n")
+	h.cfg.WriteToOut("Unknown command '" + prompt + "'. See /help for supported commands.\n")
 }
 
 func (h *runCommandHandler) handleCompletionChoice(choice azuremodels.ChatChoice, messageBuilder strings.Builder) error {
@@ -512,14 +512,14 @@ func (h *runCommandHandler) handleCompletionChoice(choice azuremodels.ChatChoice
 		if err != nil {
 			return err
 		}
-		util.WriteToOut(h.cfg.Out, *content)
+		h.cfg.WriteToOut(*content)
 	} else if choice.Message != nil && choice.Message.Content != nil {
 		content := choice.Message.Content
 		_, err := messageBuilder.WriteString(*content)
 		if err != nil {
 			return err
 		}
-		util.WriteToOut(h.cfg.Out, *content)
+		h.cfg.WriteToOut(*content)
 	}
 
 	// Introduce a small delay in between response tokens to better simulate a conversation

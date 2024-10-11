@@ -8,7 +8,6 @@ import (
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/internal/ux"
 	"github.com/github/gh-models/pkg/command"
-	"github.com/github/gh-models/pkg/util"
 	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
 )
@@ -37,9 +36,9 @@ func NewListCommand(cfg *command.Config) *cobra.Command {
 			ux.SortModels(models)
 
 			if cfg.IsTerminalOutput {
-				util.WriteToOut(cfg.Out, "\n")
-				util.WriteToOut(cfg.Out, fmt.Sprintf("Showing %d available chat models\n", len(models)))
-				util.WriteToOut(cfg.Out, "\n")
+				cfg.WriteToOut("\n")
+				cfg.WriteToOut(fmt.Sprintf("Showing %d available chat models\n", len(models)))
+				cfg.WriteToOut("\n")
 			}
 
 			printer := cfg.NewTablePrinter()

@@ -7,6 +7,7 @@ import (
 	"github.com/cli/go-gh/v2/pkg/tableprinter"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azuremodels"
+	"github.com/github/gh-models/pkg/util"
 )
 
 // Config represents configurable settings for a command.
@@ -43,4 +44,9 @@ func NewConfigWithTerminal(terminal term.Term, client azuremodels.Client) *Confi
 // NewTablePrinter initializes a table printer with terminal mode and terminal width.
 func (c *Config) NewTablePrinter() tableprinter.TablePrinter {
 	return tableprinter.New(c.Out, c.IsTerminalOutput, c.TerminalWidth)
+}
+
+// WriteToOut writes a message to the configured stdout writer.
+func (c *Config) WriteToOut(message string) {
+	util.WriteToOut(c.Out, message)
 }
