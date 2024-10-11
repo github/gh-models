@@ -10,6 +10,7 @@ import (
 	"github.com/github/gh-models/cmd/run"
 	"github.com/github/gh-models/cmd/view"
 	"github.com/github/gh-models/internal/azuremodels"
+	"github.com/github/gh-models/pkg/command"
 	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -21,18 +22,21 @@ func NewRootCommand() *cobra.Command {
 		Short: "GitHub Models extension",
 	}
 
+	terminal := term.FromEnv()
+	out := terminal.Out()
 	token, _ := auth.TokenForHost("github.com")
 	if token == "" {
-		terminal := term.FromEnv()
-		util.WriteToOut(terminal.Out(), "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
+		util.WriteToOut(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
 		return nil
 	}
 
 	client := azuremodels.NewAzureClient(token)
+	width, _, _ := terminal.Size()
+	cfg := command.NewConfig(out, terminal.ErrOut(), client, terminal.IsTerminalOutput(), width)
 
-	cmd.AddCommand(list.NewListCommand(client))
-	cmd.AddCommand(run.NewRunCommand(client))
-	cmd.AddCommand(view.NewViewCommand(client))
+	cmd.AddCommand(list.NewListCommand(cfg))
+	cmd.AddCommand(run.NewRunCommand(cfg))
+	cmd.AddCommand(view.NewViewCommand(cfg))
 
 	// Cobra doesn't have a way to specify a two word command (ie. "gh models"), so set a custom usage template
 	// with `gh`` in it. Cobra will use this template for the root and all child commands.
