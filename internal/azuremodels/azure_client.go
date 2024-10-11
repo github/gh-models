@@ -38,7 +38,7 @@ func NewAzureClient(authToken string) *AzureClient {
 	}
 }
 
-// GetChatCompletionStream returns a stream of chat completions for the given request.
+// GetChatCompletionStream returns a stream of chat completions using the given options.
 func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompletionOptions) (*ChatCompletionResponse, error) {
 	// Check if the model name is `o1-mini` or `o1-preview`
 	if req.Model == "o1-mini" || req.Model == "o1-preview" {
@@ -92,7 +92,7 @@ func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompl
 	return &chatCompletionResponse, nil
 }
 
-// GetModelDetails returns the details of the specified model in a prticular registry.
+// GetModelDetails returns the details of the specified model in a particular registry.
 func (c *AzureClient) GetModelDetails(ctx context.Context, registry, modelName, version string) (*ModelDetails, error) {
 	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", azureAiStudioURL, registry, modelName, version)
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)

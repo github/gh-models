@@ -9,11 +9,16 @@ import (
 
 // Config represents configurable settings for a command.
 type Config struct {
-	Out              io.Writer
-	ErrOut           io.Writer
-	Client           azuremodels.Client
+	// Out is where standard output is written.
+	Out io.Writer
+	// ErrOut is where error output is written.
+	ErrOut io.Writer
+	// Client is the client for interacting with the models service.
+	Client azuremodels.Client
+	// IsTerminalOutput is true if the output should be formatted for a terminal.
 	IsTerminalOutput bool
-	TerminalWidth    int
+	// TerminalWidth is the width of the terminal.
+	TerminalWidth int
 }
 
 // NewConfig returns a new command configuration.
