@@ -36,15 +36,13 @@ func NewListCommand(cfg *command.Config) *cobra.Command {
 			models = filterToChatModels(models)
 			ux.SortModels(models)
 
-			out := cfg.Out
-
 			if cfg.IsTerminalOutput {
-				util.WriteToOut(out, "\n")
-				util.WriteToOut(out, fmt.Sprintf("Showing %d available chat models\n", len(models)))
-				util.WriteToOut(out, "\n")
+				util.WriteToOut(cfg.Out, "\n")
+				util.WriteToOut(cfg.Out, fmt.Sprintf("Showing %d available chat models\n", len(models)))
+				util.WriteToOut(cfg.Out, "\n")
 			}
 
-			printer := tableprinter.New(out, cfg.IsTerminalOutput, cfg.TerminalWidth)
+			printer := cfg.NewTablePrinter()
 
 			printer.AddHeader([]string{"DISPLAY NAME", "MODEL NAME"}, tableprinter.WithColor(lightGrayUnderline))
 			printer.EndRow()

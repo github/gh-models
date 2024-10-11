@@ -22,8 +22,12 @@ type modelPrinter struct {
 }
 
 func newModelPrinter(summary *azuremodels.ModelSummary, details *azuremodels.ModelDetails, cfg *command.Config) modelPrinter {
-	printer := tableprinter.New(cfg.Out, cfg.IsTerminalOutput, cfg.TerminalWidth)
-	return modelPrinter{modelSummary: summary, modelDetails: details, printer: printer, terminalWidth: cfg.TerminalWidth}
+	return modelPrinter{
+		modelSummary:  summary,
+		modelDetails:  details,
+		printer:       cfg.NewTablePrinter(),
+		terminalWidth: cfg.TerminalWidth,
+	}
 }
 
 func (p *modelPrinter) render() error {

@@ -4,6 +4,7 @@ package command
 import (
 	"io"
 
+	"github.com/cli/go-gh/v2/pkg/tableprinter"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azuremodels"
 )
@@ -37,4 +38,9 @@ func NewConfigWithTerminal(terminal term.Term, client azuremodels.Client) *Confi
 		IsTerminalOutput: terminal.IsTerminalOutput(),
 		TerminalWidth:    width,
 	}
+}
+
+// NewTablePrinter initializes a table printer with terminal mode and terminal width.
+func (c *Config) NewTablePrinter() tableprinter.TablePrinter {
+	return tableprinter.New(c.Out, c.IsTerminalOutput, c.TerminalWidth)
 }
