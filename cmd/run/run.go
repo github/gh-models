@@ -365,17 +365,18 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 }
 
 type runCommandHandler struct {
-	ctx  context.Context
-	cfg  *command.Config
-	args []string
+	ctx    context.Context
+	cfg    *command.Config
+	client azuremodels.Client
+	args   []string
 }
 
 func newRunCommandHandler(cmd *cobra.Command, cfg *command.Config, args []string) *runCommandHandler {
-	return &runCommandHandler{ctx: cmd.Context(), cfg: cfg, args: args}
+	return &runCommandHandler{ctx: cmd.Context(), cfg: cfg, client: cfg.Client, args: args}
 }
 
 func (h *runCommandHandler) loadModels() ([]*azuremodels.ModelSummary, error) {
-	models, err := h.cfg.Client.ListModels(h.ctx)
+	models, err := h.client.ListModels(h.ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -438,7 +439,7 @@ func validateModelName(modelName string, models []*azuremodels.ModelSummary) (st
 }
 
 func (h *runCommandHandler) getChatCompletionStreamReader(req azuremodels.ChatCompletionOptions) (sse.Reader[azuremodels.ChatCompletion], error) {
-	resp, err := h.cfg.Client.GetChatCompletionStream(h.ctx, req)
+	resp, err := h.client.GetChatCompletionStream(h.ctx, req)
 	if err != nil {
 		return nil, err
 	}
