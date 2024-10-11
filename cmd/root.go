@@ -31,8 +31,7 @@ func NewRootCommand() *cobra.Command {
 	}
 
 	client := azuremodels.NewAzureClient(token)
-	width, _, _ := terminal.Size()
-	cfg := command.NewConfig(out, terminal.ErrOut(), client, terminal.IsTerminalOutput(), width)
+	cfg := command.NewConfigWithTerminal(terminal, client)
 
 	cmd.AddCommand(list.NewListCommand(cfg))
 	cmd.AddCommand(run.NewRunCommand(cfg))

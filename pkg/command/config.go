@@ -4,6 +4,7 @@ package command
 import (
 	"io"
 
+	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azuremodels"
 )
 
@@ -24,4 +25,16 @@ type Config struct {
 // NewConfig returns a new command configuration.
 func NewConfig(out, errOut io.Writer, client azuremodels.Client, isTerminalOutput bool, width int) *Config {
 	return &Config{Out: out, ErrOut: errOut, Client: client, IsTerminalOutput: isTerminalOutput, TerminalWidth: width}
+}
+
+// NewConfigWithTerminal returns a new command configuration using the given terminal.
+func NewConfigWithTerminal(terminal term.Term, client azuremodels.Client) *Config {
+	width, _, _ := terminal.Size()
+	return &Config{
+		Out:              terminal.Out(),
+		ErrOut:           terminal.ErrOut(),
+		Client:           client,
+		IsTerminalOutput: terminal.IsTerminalOutput(),
+		TerminalWidth:    width,
+	}
 }
