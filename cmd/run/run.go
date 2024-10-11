@@ -339,7 +339,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 					}
 				}
 
-				cmdHandler.cfg.WriteToOut("\n")
+				cmdHandler.writeToOut("\n")
 				_, err = messageBuilder.WriteString("\n")
 				if err != nil {
 					return err
@@ -446,23 +446,23 @@ func (h *runCommandHandler) getChatCompletionStreamReader(req azuremodels.ChatCo
 }
 
 func (h *runCommandHandler) handleParametersPrompt(conversation Conversation, mp ModelParameters) {
-	h.cfg.WriteToOut("Current parameters:\n")
+	h.writeToOut("Current parameters:\n")
 	names := []string{"max-tokens", "temperature", "top-p"}
 	for _, name := range names {
-		h.cfg.WriteToOut(fmt.Sprintf("  %s: %s\n", name, mp.FormatParameter(name)))
+		h.writeToOut(fmt.Sprintf("  %s: %s\n", name, mp.FormatParameter(name)))
 	}
-	h.cfg.WriteToOut("\n")
-	h.cfg.WriteToOut("System Prompt:\n")
+	h.writeToOut("\n")
+	h.writeToOut("System Prompt:\n")
 	if conversation.systemPrompt != "" {
-		h.cfg.WriteToOut("  " + conversation.systemPrompt + "\n")
+		h.writeToOut("  " + conversation.systemPrompt + "\n")
 	} else {
-		h.cfg.WriteToOut("  <not set>\n")
+		h.writeToOut("  <not set>\n")
 	}
 }
 
 func (h *runCommandHandler) handleResetPrompt(conversation Conversation) {
 	conversation.Reset()
-	h.cfg.WriteToOut("Reset chat history\n")
+	h.writeToOut("Reset chat history\n")
 }
 
 func (h *runCommandHandler) handleSetPrompt(prompt string, mp ModelParameters) {
@@ -473,34 +473,34 @@ func (h *runCommandHandler) handleSetPrompt(prompt string, mp ModelParameters) {
 
 		err := mp.SetParameterByName(name, value)
 		if err != nil {
-			h.cfg.WriteToOut(err.Error() + "\n")
+			h.writeToOut(err.Error() + "\n")
 			return
 		}
 
-		h.cfg.WriteToOut("Set " + name + " to " + value + "\n")
+		h.writeToOut("Set " + name + " to " + value + "\n")
 	} else {
-		h.cfg.WriteToOut("Invalid /set syntax. Usage: /set <name> <value>\n")
+		h.writeToOut("Invalid /set syntax. Usage: /set <name> <value>\n")
 	}
 }
 
 func (h *runCommandHandler) handleSystemPrompt(prompt string, conversation Conversation) Conversation {
 	conversation.systemPrompt = strings.Trim(strings.TrimPrefix(prompt, "/system-prompt "), "\"")
-	h.cfg.WriteToOut("Updated system prompt\n")
+	h.writeToOut("Updated system prompt\n")
 	return conversation
 }
 
 func (h *runCommandHandler) handleHelpPrompt() {
-	h.cfg.WriteToOut("Commands:\n")
-	h.cfg.WriteToOut("  /bye, /exit, /quit - Exit the chat\n")
-	h.cfg.WriteToOut("  /parameters - Show current model parameters\n")
-	h.cfg.WriteToOut("  /reset, /clear - Reset chat context\n")
-	h.cfg.WriteToOut("  /set <name> <value> - Set a model parameter\n")
-	h.cfg.WriteToOut("  /system-prompt <prompt> - Set the system prompt\n")
-	h.cfg.WriteToOut("  /help - Show this help message\n")
+	h.writeToOut("Commands:\n")
+	h.writeToOut("  /bye, /exit, /quit - Exit the chat\n")
+	h.writeToOut("  /parameters - Show current model parameters\n")
+	h.writeToOut("  /reset, /clear - Reset chat context\n")
+	h.writeToOut("  /set <name> <value> - Set a model parameter\n")
+	h.writeToOut("  /system-prompt <prompt> - Set the system prompt\n")
+	h.writeToOut("  /help - Show this help message\n")
 }
 
 func (h *runCommandHandler) handleUnrecognizedPrompt(prompt string) {
-	h.cfg.WriteToOut("Unknown command '" + prompt + "'. See /help for supported commands.\n")
+	h.writeToOut("Unknown command '" + prompt + "'. See /help for supported commands.\n")
 }
 
 func (h *runCommandHandler) handleCompletionChoice(choice azuremodels.ChatChoice, messageBuilder strings.Builder) error {
@@ -512,14 +512,14 @@ func (h *runCommandHandler) handleCompletionChoice(choice azuremodels.ChatChoice
 		if err != nil {
 			return err
 		}
-		h.cfg.WriteToOut(*content)
+		h.writeToOut(*content)
 	} else if choice.Message != nil && choice.Message.Content != nil {
 		content := choice.Message.Content
 		_, err := messageBuilder.WriteString(*content)
 		if err != nil {
 			return err
 		}
-		h.cfg.WriteToOut(*content)
+		h.writeToOut(*content)
 	}
 
 	// Introduce a small delay in between response tokens to better simulate a conversation
@@ -528,4 +528,8 @@ func (h *runCommandHandler) handleCompletionChoice(choice azuremodels.ChatChoice
 	}
 
 	return nil
+}
+
+func (h *runCommandHandler) writeToOut(message string) {
+	h.cfg.WriteToOut(message)
 }
