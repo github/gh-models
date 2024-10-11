@@ -2,6 +2,7 @@ package azuremodels
 
 import (
 	"context"
+	"errors"
 )
 
 // MockClient provides a client for interacting with the Azure models API in tests.
@@ -15,13 +16,13 @@ type MockClient struct {
 func NewMockClient() *MockClient {
 	return &MockClient{
 		MockGetChatCompletionStream: func(context.Context, ChatCompletionOptions) (*ChatCompletionResponse, error) {
-			return nil, nil
+			return nil, errors.New("GetChatCompletionStream not implemented")
 		},
 		MockGetModelDetails: func(context.Context, string, string, string) (*ModelDetails, error) {
-			return nil, nil
+			return nil, errors.New("GetModelDetails not implemented")
 		},
 		MockListModels: func(context.Context) ([]*ModelSummary, error) {
-			return nil, nil
+			return nil, errors.New("ListModels not implemented")
 		},
 	}
 }
