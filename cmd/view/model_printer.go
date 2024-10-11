@@ -30,7 +30,7 @@ func (p *modelPrinter) render() error {
 	modelSummary := p.modelSummary
 	if modelSummary != nil {
 		p.printLabelledLine("Display name:", modelSummary.FriendlyName)
-		p.printLabelledLine("Summary name:", modelSummary.Name)
+		p.printLabelledLine("Model name:", modelSummary.Name)
 		p.printLabelledLine("Publisher:", modelSummary.Publisher)
 		p.printLabelledLine("Summary:", modelSummary.Summary)
 	}
