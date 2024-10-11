@@ -18,7 +18,7 @@ var (
 )
 
 // NewListCommand returns a new command to list available GitHub models.
-func NewListCommand(client *azuremodels.Client) *cobra.Command {
+func NewListCommand(client *azuremodels.AzureClient) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List available models",

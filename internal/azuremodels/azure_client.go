@@ -17,8 +17,8 @@ import (
 	"golang.org/x/text/language/display"
 )
 
-// Client provides a client for interacting with the Azure models API.
-type Client struct {
+// AzureClient provides a client for interacting with the Azure models API.
+type AzureClient struct {
 	client *http.Client
 	token  string
 }
@@ -30,16 +30,16 @@ const (
 )
 
 // NewClient returns a new client using the given auth token.
-func NewClient(authToken string) *Client {
+func NewAzureClient(authToken string) *AzureClient {
 	httpClient, _ := api.DefaultHTTPClient()
-	return &Client{
+	return &AzureClient{
 		client: httpClient,
 		token:  authToken,
 	}
 }
 
 // GetChatCompletionStream returns a stream of chat completions for the given request.
-func (c *Client) GetChatCompletionStream(ctx context.Context, req ChatCompletionOptions) (*ChatCompletionResponse, error) {
+func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompletionOptions) (*ChatCompletionResponse, error) {
 	// Check if the model name is `o1-mini` or `o1-preview`
 	if req.Model == "o1-mini" || req.Model == "o1-preview" {
 		req.Stream = false
@@ -93,7 +93,7 @@ func (c *Client) GetChatCompletionStream(ctx context.Context, req ChatCompletion
 }
 
 // GetModelDetails returns the details of the specified model in a prticular registry.
-func (c *Client) GetModelDetails(ctx context.Context, registry, modelName, version string) (*ModelDetails, error) {
+func (c *AzureClient) GetModelDetails(ctx context.Context, registry, modelName, version string) (*ModelDetails, error) {
 	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", azureAiStudioURL, registry, modelName, version)
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
@@ -171,7 +171,7 @@ func lowercaseStrings(input []string) []string {
 }
 
 // ListModels returns a list of available models.
-func (c *Client) ListModels(ctx context.Context) ([]*ModelSummary, error) {
+func (c *AzureClient) ListModels(ctx context.Context) ([]*ModelSummary, error) {
 	body := bytes.NewReader([]byte(`
 		{
 			"filters": [
@@ -233,7 +233,7 @@ func (c *Client) ListModels(ctx context.Context) ([]*ModelSummary, error) {
 	return models, nil
 }
 
-func (c *Client) handleHTTPError(resp *http.Response) error {
+func (c *AzureClient) handleHTTPError(resp *http.Response) error {
 	sb := strings.Builder{}
 	var err error
 

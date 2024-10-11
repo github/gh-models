@@ -12,7 +12,7 @@ import (
 )
 
 // NewViewCommand returns a new command to view details about a model.
-func NewViewCommand(client *azuremodels.Client) *cobra.Command {
+func NewViewCommand(client *azuremodels.AzureClient) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "view [model]",
 		Short: "View details about a model",

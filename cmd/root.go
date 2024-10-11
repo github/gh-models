@@ -28,7 +28,7 @@ func NewRootCommand() *cobra.Command {
 		return nil
 	}
 
-	client := azuremodels.NewClient(token)
+	client := azuremodels.NewAzureClient(token)
 
 	cmd.AddCommand(list.NewListCommand(client))
 	cmd.AddCommand(run.NewRunCommand(client))
