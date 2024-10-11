@@ -12,7 +12,7 @@ jobs:
   lint:
     strategy:
       fail-fast: false
-    runs-on: ubuntu-latest-xl
+    runs-on: ubuntu-latest
     env:
       GOPROXY: https://goproxy.githubapp.com/mod,https://proxy.golang.org/,direct
       GOPRIVATE: ""
