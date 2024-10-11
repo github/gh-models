@@ -5,30 +5,19 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/internal/ux"
-	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
 )
 
 // NewViewCommand returns a new command to view details about a model.
-func NewViewCommand() *cobra.Command {
+func NewViewCommand(client *azuremodels.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "view [model]",
 		Short: "View details about a model",
 		Args:  cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			terminal := term.FromEnv()
-
-			token, _ := auth.TokenForHost("github.com")
-			if token == "" {
-				util.WriteToOut(terminal.Out(), "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
-				return nil
-			}
-
-			client := azuremodels.NewClient(token)
 			ctx := cmd.Context()
 
 			models, err := client.ListModels(ctx)
@@ -73,6 +62,7 @@ func NewViewCommand() *cobra.Command {
 				return err
 			}
 
+			terminal := term.FromEnv()
 			modelPrinter := newModelPrinter(modelSummary, modelDetails, terminal)
 
 			err = modelPrinter.render()

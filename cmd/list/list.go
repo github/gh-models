@@ -4,7 +4,6 @@ package list
 import (
 	"fmt"
 
-	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/tableprinter"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azuremodels"
@@ -19,22 +18,12 @@ var (
 )
 
 // NewListCommand returns a new command to list available GitHub models.
-func NewListCommand() *cobra.Command {
+func NewListCommand(client *azuremodels.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List available models",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			terminal := term.FromEnv()
-			out := terminal.Out()
-
-			token, _ := auth.TokenForHost("github.com")
-			if token == "" {
-				util.WriteToOut(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
-				return nil
-			}
-
-			client := azuremodels.NewClient(token)
 			ctx := cmd.Context()
 
 			models, err := client.ListModels(ctx)
@@ -47,6 +36,8 @@ func NewListCommand() *cobra.Command {
 			models = filterToChatModels(models)
 			ux.SortModels(models)
 
+			terminal := term.FromEnv()
+			out := terminal.Out()
 			isTTY := terminal.IsTerminalOutput()
 
 			if isTTY {

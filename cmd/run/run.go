@@ -14,7 +14,6 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/briandowns/spinner"
-	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/internal/sse"
@@ -190,13 +189,13 @@ func isPipe(r io.Reader) bool {
 }
 
 // NewRunCommand returns a new gh command for running a model.
-func NewRunCommand() *cobra.Command {
+func NewRunCommand(client *azuremodels.Client) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run [model] [prompt]",
 		Short: "Run inference with the specified model",
 		Args:  cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmdHandler := newRunCommandHandler(cmd, args)
+			cmdHandler := newRunCommandHandler(cmd, client, args)
 			if cmdHandler == nil {
 				return nil
 			}
@@ -374,21 +373,16 @@ type runCommandHandler struct {
 	args     []string
 }
 
-func newRunCommandHandler(cmd *cobra.Command, args []string) *runCommandHandler {
+func newRunCommandHandler(cmd *cobra.Command, client *azuremodels.Client, args []string) *runCommandHandler {
 	terminal := term.FromEnv()
 	out := terminal.Out()
-	token, _ := auth.TokenForHost("github.com")
-	if token == "" {
-		util.WriteToOut(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
-		return nil
-	}
 	return &runCommandHandler{
 		ctx:      cmd.Context(),
 		terminal: terminal,
 		out:      out,
 		args:     args,
 		errOut:   terminal.ErrOut(),
-		client:   azuremodels.NewClient(token),
+		client:   client,
 	}
 }
 
