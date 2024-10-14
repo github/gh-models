@@ -8,6 +8,7 @@ import (
 
 const notice = "ℹ︎ Azure hosted. AI powered, can make mistakes. Not intended for production/sensitive data.\nFor more information, see https://ai.azure.com/github/model/docs"
 
+// PrintLegalNotice prints a legal notice to the user.
 func PrintLegalNotice() {
 	msg := notice
 	if !term.IsColorDisabled() || term.IsColorForced() {
