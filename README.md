@@ -57,3 +57,7 @@ Run the extension with output from a command. This uses single-shot mode.
 ```shell
 cat README.md | gh models run gpt-4o-mini "summarize this text"
 ```
+
+## Notice
+
+Azure hosted. AI powered, can make mistakes. Not intended for production/sensitive data. Subject to [Product Terms](https://www.microsoft.com/licensing/terms/productoffering/MicrosoftAzure/MCA) & [Privacy Statement](https://www.microsoft.com/licensing/terms/product/PrivacyandSecurityTerms/MCA). For more information, see https://ai.azure.com/github/model/docs
