@@ -18,6 +18,7 @@ import (
 	"github.com/github/gh-models/internal/sse"
 	"github.com/github/gh-models/pkg/command"
 	"github.com/github/gh-models/pkg/util"
+	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -193,6 +194,9 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 		Use:   "run [model] [prompt]",
 		Short: "Run inference with the specified model",
 		Args:  cobra.ArbitraryArgs,
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			cmd.PrintErrln(ansi.Color(azuremodels.NOTICE, "yellow"))
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmdHandler := newRunCommandHandler(cmd, cfg, args)
 			if cmdHandler == nil {
