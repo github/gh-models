@@ -3,6 +3,7 @@ package run
 import (
 	"bytes"
 	"context"
+	"regexp"
 	"testing"
 
 	"github.com/github/gh-models/internal/azuremodels"
@@ -58,5 +59,25 @@ func TestRun(t *testing.T) {
 		require.Equal(t, 1, getChatCompletionCallCount)
 		output := buf.String()
 		require.Contains(t, output, fakeMessageFromModel)
+	})
+
+	t.Run("--help prints usage info", func(t *testing.T) {
+		outBuf := new(bytes.Buffer)
+		errBuf := new(bytes.Buffer)
+		runCmd := NewRunCommand(nil)
+		runCmd.SetOut(outBuf)
+		runCmd.SetErr(errBuf)
+		runCmd.SetArgs([]string{"--help"})
+
+		err := runCmd.Help()
+
+		require.NoError(t, err)
+		output := outBuf.String()
+		require.Contains(t, output, "Run inference with the specified model")
+		require.Regexp(t, regexp.MustCompile(`--max-tokens string\s+Limit the maximum tokens for the model response\.`), output)
+		require.Regexp(t, regexp.MustCompile(`--system-prompt string\s+Prompt the system\.`), output)
+		require.Regexp(t, regexp.MustCompile(`--temperature string\s+Controls randomness in the response, use lower to be more deterministic\.`), output)
+		require.Regexp(t, regexp.MustCompile(`--top-p string\s+Controls text diversity by selecting the most probable words until a set probability is reached\.`), output)
+		require.Equal(t, "", errBuf.String())
 	})
 }

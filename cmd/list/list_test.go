@@ -43,4 +43,19 @@ func TestList(t *testing.T) {
 		require.Contains(t, output, modelSummary.FriendlyName)
 		require.Contains(t, output, modelSummary.Name)
 	})
+
+	t.Run("--help prints usage info", func(t *testing.T) {
+		outBuf := new(bytes.Buffer)
+		errBuf := new(bytes.Buffer)
+		listCmd := NewListCommand(nil)
+		listCmd.SetOut(outBuf)
+		listCmd.SetErr(errBuf)
+		listCmd.SetArgs([]string{"--help"})
+
+		err := listCmd.Help()
+
+		require.NoError(t, err)
+		require.Contains(t, outBuf.String(), "List available models")
+		require.Equal(t, "", errBuf.String())
+	})
 }
