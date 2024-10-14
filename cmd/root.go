@@ -20,6 +20,9 @@ func NewRootCommand() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "models",
 		Short: "GitHub Models extension",
+		PersistentPreRun: func(cmd *cobra.Command, args []string) {
+			cmd.PrintErrln("Azure hosted. AI powered, can make mistakes. Not intended for production/sensitive data.\nFor more information, see https://ai.azure.com/github/model/docs")
+		},
 	}
 
 	terminal := term.FromEnv()
