@@ -14,12 +14,12 @@ Please note that this project is released with a [Contributor Code of Conduct](C
 
 These are one time installations required to be able to test your changes locally as part of the pull request (PR) submission process.
 
-1. install Go [through download](https://go.dev/doc/install) | [through Homebrew](https://formulae.brew.sh/formula/go) and ensure its least version is 1.22
+1. Install Go [through download](https://go.dev/doc/install) | [through Homebrew](https://formulae.brew.sh/formula/go) and ensure it's a least version 1.22
 
 ## Submitting a pull request
 
 1. [Fork][fork] and clone the repository
-1. Make sure the tests pass on your machine: `go test -v ./...` _or_ `make teest`
+1. Make sure the tests pass on your machine: `go test -v ./...` _or_ `make test`
 1. Create a new branch: `git checkout -b my-branch-name`
 1. Make your change, add tests, and make sure the tests and linter still pass: `make check`
 1. Push to your fork and [submit a pull request][pr]

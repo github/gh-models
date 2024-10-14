@@ -9,7 +9,7 @@ For development, we use [Go](https://golang.org/) with a minimum version of 1.22
 
 ```shell
 $ go version
-go version go1.22.x foo/bar
+go version go1.22.x <arch>
 ```
 
 ### Building
