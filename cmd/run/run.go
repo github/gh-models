@@ -194,7 +194,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 		Short: "Run inference with the specified model",
 		Args:  cobra.ArbitraryArgs,
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			azuremodels.LegalNotice()
+			azuremodels.PrintLegalNotice()
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmdHandler := newRunCommandHandler(cmd, cfg, args)
