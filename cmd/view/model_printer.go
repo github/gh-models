@@ -5,8 +5,8 @@ import (
 
 	"github.com/cli/cli/v2/pkg/markdown"
 	"github.com/cli/go-gh/v2/pkg/tableprinter"
-	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azuremodels"
+	"github.com/github/gh-models/pkg/command"
 	"github.com/mgutz/ansi"
 )
 
@@ -21,17 +21,20 @@ type modelPrinter struct {
 	terminalWidth int
 }
 
-func newModelPrinter(summary *azuremodels.ModelSummary, details *azuremodels.ModelDetails, terminal term.Term) modelPrinter {
-	width, _, _ := terminal.Size()
-	printer := tableprinter.New(terminal.Out(), terminal.IsTerminalOutput(), width)
-	return modelPrinter{modelSummary: summary, modelDetails: details, printer: printer, terminalWidth: width}
+func newModelPrinter(summary *azuremodels.ModelSummary, details *azuremodels.ModelDetails, cfg *command.Config) modelPrinter {
+	return modelPrinter{
+		modelSummary:  summary,
+		modelDetails:  details,
+		printer:       cfg.NewTablePrinter(),
+		terminalWidth: cfg.TerminalWidth,
+	}
 }
 
 func (p *modelPrinter) render() error {
 	modelSummary := p.modelSummary
 	if modelSummary != nil {
 		p.printLabelledLine("Display name:", modelSummary.FriendlyName)
-		p.printLabelledLine("Summary name:", modelSummary.Name)
+		p.printLabelledLine("Model name:", modelSummary.Name)
 		p.printLabelledLine("Publisher:", modelSummary.Publisher)
 		p.printLabelledLine("Summary:", modelSummary.Summary)
 	}

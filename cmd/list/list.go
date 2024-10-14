@@ -4,12 +4,10 @@ package list
 import (
 	"fmt"
 
-	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/tableprinter"
-	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/internal/ux"
-	"github.com/github/gh-models/pkg/util"
+	"github.com/github/gh-models/pkg/command"
 	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
 )
@@ -19,24 +17,14 @@ var (
 )
 
 // NewListCommand returns a new command to list available GitHub models.
-func NewListCommand() *cobra.Command {
+func NewListCommand(cfg *command.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List available models",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			terminal := term.FromEnv()
-			out := terminal.Out()
-
-			token, _ := auth.TokenForHost("github.com")
-			if token == "" {
-				util.WriteToOut(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
-				return nil
-			}
-
-			client := azuremodels.NewClient(token)
 			ctx := cmd.Context()
-
+			client := cfg.Client
 			models, err := client.ListModels(ctx)
 			if err != nil {
 				return err
@@ -47,16 +35,13 @@ func NewListCommand() *cobra.Command {
 			models = filterToChatModels(models)
 			ux.SortModels(models)
 
-			isTTY := terminal.IsTerminalOutput()
-
-			if isTTY {
-				util.WriteToOut(out, "\n")
-				util.WriteToOut(out, fmt.Sprintf("Showing %d available chat models\n", len(models)))
-				util.WriteToOut(out, "\n")
+			if cfg.IsTerminalOutput {
+				cfg.WriteToOut("\n")
+				cfg.WriteToOut(fmt.Sprintf("Showing %d available chat models\n", len(models)))
+				cfg.WriteToOut("\n")
 			}
 
-			width, _, _ := terminal.Size()
-			printer := tableprinter.New(out, isTTY, width)
+			printer := cfg.NewTablePrinter()
 
 			printer.AddHeader([]string{"DISPLAY NAME", "MODEL NAME"}, tableprinter.WithColor(lightGrayUnderline))
 			printer.EndRow()

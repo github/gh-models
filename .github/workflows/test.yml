@@ -1,10 +1,10 @@
-name: "go-linter"
+name: "Build and test"
 
 on:
   pull_request:
     types: [opened, synchronize, reopened]
-  merge_group:
   workflow_dispatch:
+  merge_group:
   push:
     branches:
       - 'main'
@@ -17,9 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    strategy:
-      fail-fast: false
+  build:
     runs-on: ubuntu-latest
     env:
       GOPROXY: https://proxy.golang.org/,direct
@@ -27,15 +25,22 @@ jobs:
       GONOPROXY: ""
       GONOSUMDB: github.com/github/*
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ vars.GOVERSION }}
           check-latest: true
-      - uses: actions/checkout@v4
-      - name: Lint
-        # This also does checkout, setup-go, and proxy setup.
-        uses: github/go-linter@v1.2.1
-        with:
-          strict: true
-          go-version: ${{ vars.GOVERSION }}
-          goproxy-token: ${{secrets.GOPROXY_TOKEN}}
+      - name: Verify go.sum is up to date
+        run: |
+          go mod tidy
+          git diff --exit-code go.sum
+          if [ $? -ne 0 ]; then
+            echo "Error: go.sum has changed, please run `go mod tidy` and commit the result"
+            exit 1
+          fi
+
+      - name: Build program
+        run: go build -v ./...
+
+      - name: Run tests
+        run: go test -race -cover ./...
