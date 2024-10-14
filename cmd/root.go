@@ -13,6 +13,7 @@ import (
 	"github.com/github/gh-models/pkg/command"
 	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
+	"github.com/mgutz/ansi"
 )
 
 // NewRootCommand returns a new root command for the gh-models extension.
@@ -21,7 +22,7 @@ func NewRootCommand() *cobra.Command {
 		Use:   "models",
 		Short: "GitHub Models extension",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			cmd.PrintErrln(azuremodels.NOTICE)
+			cmd.PrintErrln(ansi.Color(azuremodels.NOTICE, "yellow"))
 		},
 	}
 
