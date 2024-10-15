@@ -65,9 +65,8 @@ func TestAzureClient(t *testing.T) {
 			chatCompletionResp, err := reader.Read()
 			if errors.Is(err, io.EOF) {
 				break
-			} else {
-				require.NoError(t, err)
 			}
+			require.NoError(t, err)
 			choicesReceived = append(choicesReceived, chatCompletionResp.Choices...)
 		}
 		require.Equal(t, 1, len(choicesReceived))
@@ -144,9 +143,8 @@ func TestAzureClient(t *testing.T) {
 			chatCompletionResp, err := reader.Read()
 			if errors.Is(err, io.EOF) {
 				break
-			} else {
-				require.NoError(t, err)
 			}
+			require.NoError(t, err)
 			choicesReceived = append(choicesReceived, chatCompletionResp.Choices...)
 		}
 		require.Equal(t, 2, len(choicesReceived))
