@@ -57,3 +57,17 @@ Run the extension with output from a command. This uses single-shot mode.
 ```shell
 cat README.md | gh models run gpt-4o-mini "summarize this text"
 ```
+
+## Notice
+
+Remember when interacting with a model you are experimenting with AI, so content mistakes are possible. The feature is
+subject to various limits (including requests per minute, requests per day, tokens per request, and concurrent requests)
+and is not designed for production use cases. GitHub Models uses
+[Azure AI Content Safety](https://azure.microsoft.com/products/ai-services/ai-content-safety). These filters
+cannot be turned off as part of the GitHub Models experience. If you decide to employ models through a paid service,
+please configure your content filters to meet your requirements. This service is under
+[GitHub's Pre-release Terms](https://docs.github.com/site-policy/github-terms/github-pre-release-license-terms). Your
+use of the GitHub Models is subject to the following
+[Product Terms](https://www.microsoft.com/licensing/terms/productoffering/MicrosoftAzure/allprograms) and
+[Privacy Statement](https://www.microsoft.com/licensing/terms/product/PrivacyandSecurityTerms/MCA). Content within this
+Repository may be subject to additional license terms.
