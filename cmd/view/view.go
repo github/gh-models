@@ -6,7 +6,6 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/github/gh-models/internal/azuremodels"
-	"github.com/github/gh-models/internal/ux"
 	"github.com/github/gh-models/pkg/command"
 	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
@@ -36,7 +35,7 @@ func NewViewCommand(cfg *command.Config) *cobra.Command {
 				return err
 			}
 
-			ux.SortModels(models)
+			azuremodels.SortModels(models)
 
 			modelName := ""
 			switch {
@@ -48,7 +47,7 @@ func NewViewCommand(cfg *command.Config) *cobra.Command {
 				}
 
 				for _, model := range models {
-					if !ux.IsChatModel(model) {
+					if !model.IsChatModel() {
 						continue
 					}
 					prompt.Options = append(prompt.Options, model.FriendlyName)

@@ -16,7 +16,6 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/internal/sse"
-	"github.com/github/gh-models/internal/ux"
 	"github.com/github/gh-models/pkg/command"
 	"github.com/github/gh-models/pkg/util"
 	"github.com/MakeNowJust/heredoc"
@@ -395,7 +394,7 @@ func (h *runCommandHandler) loadModels() ([]*azuremodels.ModelSummary, error) {
 		return nil, err
 	}
 
-	ux.SortModels(models)
+	azuremodels.SortModels(models)
 	return models, nil
 }
 
@@ -411,7 +410,7 @@ func (h *runCommandHandler) getModelNameFromArgs(models []*azuremodels.ModelSumm
 		}
 
 		for _, model := range models {
-			if !ux.IsChatModel(model) {
+			if !model.IsChatModel() {
 				continue
 			}
 			prompt.Options = append(prompt.Options, model.FriendlyName)

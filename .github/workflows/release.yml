@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: cli/gh-extension-precompile@v2
+      - uses: cli/gh-extension-precompile@561b19deda1228a0edf856c3325df87416f8c9bd
         with:
           go_version: "1.22"
           release_tag: ${{ github.event.inputs.release_tag || '' }}

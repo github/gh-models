@@ -14,17 +14,14 @@ Please note that this project is released with a [Contributor Code of Conduct](C
 
 These are one time installations required to be able to test your changes locally as part of the pull request (PR) submission process.
 
-1. install Go [through download](https://go.dev/doc/install) | [through Homebrew](https://formulae.brew.sh/formula/go)
-1. [install golangci-lint](https://golangci-lint.run/usage/install/#local-installation)
+1. Install Go [through download](https://go.dev/doc/install) | [through Homebrew](https://formulae.brew.sh/formula/go) and ensure it's at least version 1.22
 
 ## Submitting a pull request
 
 1. [Fork][fork] and clone the repository
-1. Configure and install the dependencies: `script/bootstrap`
-1. Make sure the tests pass on your machine: `go test -v ./...`
-1. Make sure linter passes on your machine: `golangci-lint run`
+1. Make sure the tests pass on your machine: `go test -v ./...` _or_ `make test`
 1. Create a new branch: `git checkout -b my-branch-name`
-1. Make your change, add tests, and make sure the tests and linter still pass
+1. Make your change, add tests, and make sure the tests and linter still pass: `make check`
 1. Push to your fork and [submit a pull request][pr]
 1. Pat yourself on the back and wait for your pull request to be reviewed and merged.
 
