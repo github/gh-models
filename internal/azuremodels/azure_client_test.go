@@ -1,17 +1,81 @@
 package azuremodels
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/github/gh-models/pkg/util"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAzureClient(t *testing.T) {
 	ctx := context.Background()
+
+	t.Run("GetChatCompletionStream non-streaming happy path", func(t *testing.T) {
+		message := &ChatChoiceMessage{
+			Role:    util.Ptr("assistant"),
+			Content: util.Ptr("This is my test story in response to your test prompt."),
+		}
+		choice := ChatChoice{Index: 1, FinishReason: "stop", Message: message}
+		chatCompletion := &ChatCompletion{Choices: []ChatChoice{choice}}
+		authToken := "fake-token-123abc"
+		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			require.Equal(t, "application/json", r.Header.Get("Content-Type"))
+			require.Equal(t, "/", r.URL.Path)
+			require.Equal(t, "Bearer "+authToken, r.Header.Get("Authorization"))
+			require.Equal(t, http.MethodPost, r.Method)
+			require.Equal(t, "github-cli-models", r.Header.Get("x-ms-useragent"))
+			require.Equal(t, "github-cli-models", r.Header.Get("x-ms-user-agent"))
+
+			buf := new(bytes.Buffer)
+			err := json.NewEncoder(buf).Encode(chatCompletion)
+			require.NoError(t, err)
+			w.WriteHeader(http.StatusOK)
+			w.Write([]byte("data: " + buf.String() + "\n\ndata: [DONE]\n"))
+		}))
+		defer testServer.Close()
+		cfg := &AzureClientConfig{InferenceURL: testServer.URL}
+		httpClient := testServer.Client()
+		client := NewAzureClient(httpClient, authToken, cfg)
+		opts := ChatCompletionOptions{
+			Model:  "some-test-model",
+			Stream: false,
+			Messages: []ChatMessage{
+				{
+					Role:    "user",
+					Content: util.Ptr("Tell me a story, test model."),
+				},
+			},
+		}
+
+		chatCompletionStreamResp, err := client.GetChatCompletionStream(ctx, opts)
+
+		require.NoError(t, err)
+		require.NotNil(t, chatCompletionStreamResp)
+		reader := chatCompletionStreamResp.Reader
+		defer reader.Close()
+		choicesReceived := []ChatChoice{}
+		for {
+			chatCompletionResp, err := reader.Read()
+			if errors.Is(err, io.EOF) {
+				break
+			} else {
+				require.NoError(t, err)
+			}
+			choicesReceived = append(choicesReceived, chatCompletionResp.Choices...)
+		}
+		require.Equal(t, 1, len(choicesReceived))
+		require.Equal(t, choice.FinishReason, choicesReceived[0].FinishReason)
+		require.Equal(t, choice.Index, choicesReceived[0].Index)
+		require.Equal(t, message.Role, choicesReceived[0].Message.Role)
+		require.Equal(t, message.Content, choicesReceived[0].Message.Content)
+	})
 
 	t.Run("ListModels happy path", func(t *testing.T) {
 		summary1 := modelCatalogSearchSummary{
@@ -39,6 +103,7 @@ func TestAzureClient(t *testing.T) {
 		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			require.Equal(t, "application/json", r.Header.Get("Content-Type"))
 			require.Equal(t, "/", r.URL.Path)
+			require.Equal(t, http.MethodPost, r.Method)
 
 			w.WriteHeader(http.StatusOK)
 			err := json.NewEncoder(w).Encode(searchResponse)
@@ -97,6 +162,7 @@ func TestAzureClient(t *testing.T) {
 		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			require.Equal(t, "application/json", r.Header.Get("Content-Type"))
 			require.Equal(t, "/asset-gallery/v1.0/"+registry+"/models/"+modelName+"/version/"+version, r.URL.Path)
+			require.Equal(t, http.MethodGet, r.Method)
 
 			w.WriteHeader(http.StatusOK)
 			err := json.NewEncoder(w).Encode(catalogDetails)
