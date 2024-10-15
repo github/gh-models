@@ -192,7 +192,6 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run [model] [prompt]",
 		Short: "Run inference with the specified model",
-		Long: "Run inference with the specified model\n\n" + azuremodels.NOTICE,
 		Args:  cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmdHandler := newRunCommandHandler(cmd, cfg, args)
