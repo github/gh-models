@@ -25,9 +25,12 @@ type AzureClient struct {
 }
 
 // NewAzureClient returns a new Azure client using the given auth token.
-func NewAzureClient(authToken string, cfg *AzureClientConfig) *AzureClient {
-	httpClient, _ := api.DefaultHTTPClient()
-	return &AzureClient{client: httpClient, token: authToken, cfg: cfg}
+func NewAzureClient(authToken string, cfg *AzureClientConfig) (*AzureClient, error) {
+	httpClient, err := api.DefaultHTTPClient()
+	if err != nil {
+		return nil, err
+	}
+	return &AzureClient{client: httpClient, token: authToken, cfg: cfg}, nil
 }
 
 // GetChatCompletionStream returns a stream of chat completions using the given options.

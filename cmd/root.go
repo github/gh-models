@@ -33,7 +33,13 @@ func NewRootCommand() *cobra.Command {
 		client = azuremodels.NewUnauthenticatedClient()
 	} else {
 		cfg := azuremodels.NewDefaultAzureClientConfig()
-		client = azuremodels.NewAzureClient(token, cfg)
+
+		var err error
+		client, err = azuremodels.NewAzureClient(token, cfg)
+		if err != nil {
+			util.WriteToOut(terminal.ErrOut(), "Error creating Azure client: "+err.Error())
+			return nil
+		}
 	}
 
 	cfg := command.NewConfigWithTerminal(terminal, client)
