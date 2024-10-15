@@ -54,6 +54,11 @@ func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompl
 	httpReq.Header.Set("Authorization", "Bearer "+c.token)
 	httpReq.Header.Set("Content-Type", "application/json")
 
+	// Azure would like us to send specific user agents to help distinguish
+	// traffic from known sources and other web requests
+	httpReq.Header.Set("x-ms-useragent", "github-cli-models")
+	httpReq.Header.Set("x-ms-user-agent", "github-cli-models") // send both to accommodate various Azure consumers
+
 	resp, err := c.client.Do(httpReq)
 	if err != nil {
 		return nil, err
