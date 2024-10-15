@@ -78,6 +78,6 @@ func TestRun(t *testing.T) {
 		require.Regexp(t, regexp.MustCompile(`--system-prompt string\s+Prompt the system\.`), output)
 		require.Regexp(t, regexp.MustCompile(`--temperature string\s+Controls randomness in the response, use lower to be more deterministic\.`), output)
 		require.Regexp(t, regexp.MustCompile(`--top-p string\s+Controls text diversity by selecting the most probable words until a set probability is reached\.`), output)
-		require.Equal(t, "", errBuf.String())
+		require.Empty(t, errBuf.String())
 	})
 }

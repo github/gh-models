@@ -56,6 +56,6 @@ func TestList(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Contains(t, outBuf.String(), "List available models")
-		require.Equal(t, "", errBuf.String())
+		require.Empty(t, errBuf.String())
 	})
 }

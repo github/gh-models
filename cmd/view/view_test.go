@@ -99,6 +99,6 @@ func TestView(t *testing.T) {
 
 		require.NoError(t, err)
 		require.Contains(t, outBuf.String(), "View details about a model")
-		require.Equal(t, "", errBuf.String())
+		require.Empty(t, errBuf.String())
 	})
 }
