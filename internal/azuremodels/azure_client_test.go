@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/github/gh-models/pkg/util"
 	"github.com/stretchr/testify/require"
@@ -23,7 +24,6 @@ func TestAzureClient(t *testing.T) {
 			Content: util.Ptr("This is my test story in response to your test prompt."),
 		}
 		choice := ChatChoice{Index: 1, FinishReason: "stop", Message: message}
-		chatCompletion := &ChatCompletion{Choices: []ChatChoice{choice}}
 		authToken := "fake-token-123abc"
 		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			require.Equal(t, "application/json", r.Header.Get("Content-Type"))
@@ -33,11 +33,11 @@ func TestAzureClient(t *testing.T) {
 			require.Equal(t, "github-cli-models", r.Header.Get("x-ms-useragent"))
 			require.Equal(t, "github-cli-models", r.Header.Get("x-ms-user-agent"))
 
-			buf := new(bytes.Buffer)
-			err := json.NewEncoder(buf).Encode(chatCompletion)
+			data := new(bytes.Buffer)
+			err := json.NewEncoder(data).Encode(&ChatCompletion{Choices: []ChatChoice{choice}})
 			require.NoError(t, err)
 			w.WriteHeader(http.StatusOK)
-			w.Write([]byte("data: " + buf.String() + "\n\ndata: [DONE]\n"))
+			w.Write([]byte("data: " + data.String() + "\n\ndata: [DONE]\n"))
 		}))
 		defer testServer.Close()
 		cfg := &AzureClientConfig{InferenceURL: testServer.URL}
@@ -75,6 +75,89 @@ func TestAzureClient(t *testing.T) {
 		require.Equal(t, choice.Index, choicesReceived[0].Index)
 		require.Equal(t, message.Role, choicesReceived[0].Message.Role)
 		require.Equal(t, message.Content, choicesReceived[0].Message.Content)
+	})
+
+	t.Run("GetChatCompletionStream streaming happy path", func(t *testing.T) {
+		message1 := &ChatChoiceMessage{
+			Role:    util.Ptr("assistant"),
+			Content: util.Ptr("This is the first part of my test story in response to your test prompt."),
+		}
+		message2 := &ChatChoiceMessage{
+			Role:    util.Ptr("assistant"),
+			Content: util.Ptr("This is the second part of my test story in response to your test prompt."),
+		}
+		choice1 := ChatChoice{Index: 1, Message: message1}
+		choice2 := ChatChoice{Index: 2, FinishReason: "stop", Message: message2}
+		authToken := "fake-token-123abc"
+		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			require.Equal(t, "application/json", r.Header.Get("Content-Type"))
+			require.Equal(t, "/", r.URL.Path)
+			require.Equal(t, "Bearer "+authToken, r.Header.Get("Authorization"))
+			require.Equal(t, http.MethodPost, r.Method)
+			require.Equal(t, "github-cli-models", r.Header.Get("x-ms-useragent"))
+			require.Equal(t, "github-cli-models", r.Header.Get("x-ms-user-agent"))
+
+			w.WriteHeader(http.StatusOK)
+			w.Header().Set("Content-Type", "text/event-stream")
+			w.Header().Set("Connection", "keep-alive")
+			w.(http.Flusher).Flush()
+
+			data1 := new(bytes.Buffer)
+			err := json.NewEncoder(data1).Encode(&ChatCompletion{Choices: []ChatChoice{choice1}})
+			require.NoError(t, err)
+			w.Write([]byte("data: " + data1.String() + "\n\n"))
+			w.(http.Flusher).Flush()
+			time.Sleep(1 * time.Millisecond)
+
+			data2 := new(bytes.Buffer)
+			err = json.NewEncoder(data2).Encode(&ChatCompletion{Choices: []ChatChoice{choice2}})
+			require.NoError(t, err)
+			w.Write([]byte("data: " + data2.String() + "\n\n"))
+			w.(http.Flusher).Flush()
+			time.Sleep(1 * time.Millisecond)
+
+			w.Write([]byte("data: [DONE]\n"))
+		}))
+		defer testServer.Close()
+		cfg := &AzureClientConfig{InferenceURL: testServer.URL}
+		httpClient := testServer.Client()
+		client := NewAzureClient(httpClient, authToken, cfg)
+		opts := ChatCompletionOptions{
+			Model:  "some-test-model",
+			Stream: true,
+			Messages: []ChatMessage{
+				{
+					Role:    "user",
+					Content: util.Ptr("Tell me a story, test model."),
+				},
+			},
+		}
+
+		chatCompletionStreamResp, err := client.GetChatCompletionStream(ctx, opts)
+
+		require.NoError(t, err)
+		require.NotNil(t, chatCompletionStreamResp)
+		reader := chatCompletionStreamResp.Reader
+		defer reader.Close()
+		choicesReceived := []ChatChoice{}
+		for {
+			chatCompletionResp, err := reader.Read()
+			if errors.Is(err, io.EOF) {
+				break
+			} else {
+				require.NoError(t, err)
+			}
+			choicesReceived = append(choicesReceived, chatCompletionResp.Choices...)
+		}
+		require.Equal(t, 2, len(choicesReceived))
+		require.Equal(t, choice1.FinishReason, choicesReceived[0].FinishReason)
+		require.Equal(t, choice1.Index, choicesReceived[0].Index)
+		require.Equal(t, message1.Role, choicesReceived[0].Message.Role)
+		require.Equal(t, message1.Content, choicesReceived[0].Message.Content)
+		require.Equal(t, choice2.FinishReason, choicesReceived[1].FinishReason)
+		require.Equal(t, choice2.Index, choicesReceived[1].Index)
+		require.Equal(t, message2.Role, choicesReceived[1].Message.Role)
+		require.Equal(t, message2.Content, choicesReceived[1].Message.Content)
 	})
 
 	t.Run("ListModels happy path", func(t *testing.T) {
