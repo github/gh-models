@@ -160,6 +160,27 @@ func TestAzureClient(t *testing.T) {
 		require.Equal(t, message2.Content, choicesReceived[1].Message.Content)
 	})
 
+	t.Run("GetChatCompletionStream handles non-OK status", func(t *testing.T) {
+		errRespBody := `{"error": "o noes"}`
+		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(errRespBody))
+		}))
+		defer testServer.Close()
+		cfg := &AzureClientConfig{InferenceURL: testServer.URL}
+		httpClient := testServer.Client()
+		client := NewAzureClient(httpClient, "fake-token-123abc", cfg)
+		opts := ChatCompletionOptions{
+			Model:    "some-test-model",
+			Messages: []ChatMessage{{Role: "user", Content: util.Ptr("Tell me a story, test model.")}},
+		}
+
+		chatCompletionResp, err := client.GetChatCompletionStream(ctx, opts)
+
+		require.Error(t, err)
+		require.Nil(t, chatCompletionResp)
+		require.Equal(t, "unexpected response from the server: 500 Internal Server Error\n"+errRespBody+"\n", err.Error())
+	})
 	t.Run("ListModels happy path", func(t *testing.T) {
 		summary1 := modelCatalogSearchSummary{
 			AssetID:        "test-id-1",
@@ -220,6 +241,24 @@ func TestAzureClient(t *testing.T) {
 		require.Equal(t, summary2.RegistryName, models[1].RegistryName)
 	})
 
+	t.Run("ListModels handles non-OK status", func(t *testing.T) {
+		errRespBody := `{"error": "o noes"}`
+		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(errRespBody))
+		}))
+		defer testServer.Close()
+		cfg := &AzureClientConfig{ModelsURL: testServer.URL}
+		httpClient := testServer.Client()
+		client := NewAzureClient(httpClient, "fake-token-123abc", cfg)
+
+		models, err := client.ListModels(ctx)
+
+		require.Error(t, err)
+		require.Nil(t, models)
+		require.Equal(t, "unauthorized\n"+errRespBody+"\n", err.Error())
+	})
+
 	t.Run("GetModelDetails happy path", func(t *testing.T) {
 		registry := "foo"
 		modelName := "bar"
@@ -272,5 +311,23 @@ func TestAzureClient(t *testing.T) {
 		require.Equal(t, textLimits.MaxOutputTokens, details.MaxOutputTokens)
 		require.Equal(t, textLimits.InputContextWindow, details.MaxInputTokens)
 		require.Equal(t, playgroundLimits.RateLimitTier, details.RateLimitTier)
+	})
+
+	t.Run("GetModelDetails handles non-OK status", func(t *testing.T) {
+		errRespBody := `{"error": "o noes"}`
+		testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(errRespBody))
+		}))
+		defer testServer.Close()
+		cfg := &AzureClientConfig{AzureAiStudioURL: testServer.URL}
+		httpClient := testServer.Client()
+		client := NewAzureClient(httpClient, "fake-token-123abc", cfg)
+
+		details, err := client.GetModelDetails(ctx, "someRegistry", "someModel", "someVersion")
+
+		require.Error(t, err)
+		require.Nil(t, details)
+		require.Equal(t, "bad request\n"+errRespBody+"\n", err.Error())
 	})
 }
