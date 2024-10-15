@@ -46,7 +46,7 @@ func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompl
 
 	body := bytes.NewReader(bodyBytes)
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.cfg.InferenceUrl, body)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.cfg.InferenceURL, body)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompl
 
 // GetModelDetails returns the details of the specified model in a particular registry.
 func (c *AzureClient) GetModelDetails(ctx context.Context, registry, modelName, version string) (*ModelDetails, error) {
-	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", c.cfg.AzureAiStudioUrl, registry, modelName, version)
+	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", c.cfg.AzureAiStudioURL, registry, modelName, version)
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, err
@@ -176,7 +176,7 @@ func (c *AzureClient) ListModels(ctx context.Context) ([]*ModelSummary, error) {
 		}
 	`))
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.cfg.ModelsUrl, body)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.cfg.ModelsURL, body)
 	if err != nil {
 		return nil, err
 	}
