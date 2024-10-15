@@ -2,8 +2,6 @@ package azuremodels
 
 import (
 	"encoding/json"
-	"fmt"
-	"strings"
 
 	"github.com/github/gh-models/internal/sse"
 )
@@ -81,23 +79,6 @@ type modelCatalogSearchSummary struct {
 	Summary        string      `json:"summary"`
 }
 
-// ModelSummary includes basic information about a model.
-type ModelSummary struct {
-	ID           string `json:"id"`
-	Name         string `json:"name"`
-	FriendlyName string `json:"friendly_name"`
-	Task         string `json:"task"`
-	Publisher    string `json:"publisher"`
-	Summary      string `json:"summary"`
-	Version      string `json:"version"`
-	RegistryName string `json:"registry_name"`
-}
-
-// HasName checks if the model has the given name.
-func (m *ModelSummary) HasName(name string) bool {
-	return strings.EqualFold(m.FriendlyName, name) || strings.EqualFold(m.Name, name)
-}
-
 type modelCatalogTextLimits struct {
 	MaxOutputTokens    int `json:"maxOutputTokens"`
 	InputContextWindow int `json:"inputContextWindow"`
@@ -135,25 +116,4 @@ type modelCatalogDetailsResponse struct {
 	CreatedTime        string                        `json:"createdTime"`
 	PlaygroundLimits   *modelCatalogPlaygroundLimits `json:"playgroundLimits"`
 	ModelLimits        *modelCatalogLimits           `json:"modelLimits"`
-}
-
-// ModelDetails includes detailed information about a model.
-type ModelDetails struct {
-	Description               string   `json:"description"`
-	Evaluation                string   `json:"evaluation"`
-	License                   string   `json:"license"`
-	LicenseDescription        string   `json:"license_description"`
-	Notes                     string   `json:"notes"`
-	Tags                      []string `json:"tags"`
-	SupportedInputModalities  []string `json:"supported_input_modalities"`
-	SupportedOutputModalities []string `json:"supported_output_modalities"`
-	SupportedLanguages        []string `json:"supported_languages"`
-	MaxOutputTokens           int      `json:"max_output_tokens"`
-	MaxInputTokens            int      `json:"max_input_tokens"`
-	RateLimitTier             string   `json:"rateLimitTier"`
-}
-
-// ContextLimits returns a summary of the context limits for the model.
-func (m *ModelDetails) ContextLimits() string {
-	return fmt.Sprintf("up to %d input tokens and %d output tokens", m.MaxInputTokens, m.MaxOutputTokens)
 }
