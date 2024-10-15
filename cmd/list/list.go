@@ -6,7 +6,6 @@ import (
 
 	"github.com/cli/go-gh/v2/pkg/tableprinter"
 	"github.com/github/gh-models/internal/azuremodels"
-	"github.com/github/gh-models/internal/ux"
 	"github.com/github/gh-models/pkg/command"
 	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
@@ -33,7 +32,7 @@ func NewListCommand(cfg *command.Config) *cobra.Command {
 			// For now, filter to just chat models.
 			// Once other tasks are supported (like embeddings), update the list to show all models, with the task as a column.
 			models = filterToChatModels(models)
-			ux.SortModels(models)
+			azuremodels.SortModels(models)
 
 			if cfg.IsTerminalOutput {
 				cfg.WriteToOut("\n")
