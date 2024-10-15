@@ -93,6 +93,11 @@ type ModelSummary struct {
 	RegistryName string `json:"registry_name"`
 }
 
+// IsChatModel returns true if the model is for chat completions.
+func (m *ModelSummary) IsChatModel() bool {
+	return m.Task == "chat-completion"
+}
+
 // HasName checks if the model has the given name.
 func (m *ModelSummary) HasName(name string) bool {
 	return strings.EqualFold(m.FriendlyName, name) || strings.EqualFold(m.Name, name)

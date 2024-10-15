@@ -397,7 +397,7 @@ func (h *runCommandHandler) getModelNameFromArgs(models []*azuremodels.ModelSumm
 		}
 
 		for _, model := range models {
-			if !ux.IsChatModel(model) {
+			if !model.IsChatModel() {
 				continue
 			}
 			prompt.Options = append(prompt.Options, model.FriendlyName)
