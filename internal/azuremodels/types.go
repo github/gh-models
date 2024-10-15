@@ -98,37 +98,43 @@ func (m *ModelSummary) HasName(name string) bool {
 	return strings.EqualFold(m.FriendlyName, name) || strings.EqualFold(m.Name, name)
 }
 
+type modelCatalogTextLimits struct {
+	MaxOutputTokens    int `json:"maxOutputTokens"`
+	InputContextWindow int `json:"inputContextWindow"`
+}
+
+type modelCatalogLimits struct {
+	SupportedLanguages        []string                `json:"supportedLanguages"`
+	TextLimits                *modelCatalogTextLimits `json:"textLimits"`
+	SupportedInputModalities  []string                `json:"supportedInputModalities"`
+	SupportedOutputModalities []string                `json:"supportedOutputModalities"`
+}
+
+type modelCatalogPlaygroundLimits struct {
+	RateLimitTier string `json:"rateLimitTier"`
+}
+
 type modelCatalogDetailsResponse struct {
-	AssetID            string   `json:"assetId"`
-	Name               string   `json:"name"`
-	DisplayName        string   `json:"displayName"`
-	Publisher          string   `json:"publisher"`
-	Version            string   `json:"version"`
-	RegistryName       string   `json:"registryName"`
-	Evaluation         string   `json:"evaluation"`
-	Summary            string   `json:"summary"`
-	Description        string   `json:"description"`
-	License            string   `json:"license"`
-	LicenseDescription string   `json:"licenseDescription"`
-	Notes              string   `json:"notes"`
-	Keywords           []string `json:"keywords"`
-	InferenceTasks     []string `json:"inferenceTasks"`
-	FineTuningTasks    []string `json:"fineTuningTasks"`
-	Labels             []string `json:"labels"`
-	TradeRestricted    bool     `json:"tradeRestricted"`
-	CreatedTime        string   `json:"createdTime"`
-	PlaygroundLimits   *struct {
-		RateLimitTier string `json:"rateLimitTier"`
-	} `json:"playgroundLimits"`
-	ModelLimits *struct {
-		SupportedLanguages []string `json:"supportedLanguages"`
-		TextLimits         *struct {
-			MaxOutputTokens    int `json:"maxOutputTokens"`
-			InputContextWindow int `json:"inputContextWindow"`
-		} `json:"textLimits"`
-		SupportedInputModalities  []string `json:"supportedInputModalities"`
-		SupportedOutputModalities []string `json:"supportedOutputModalities"`
-	} `json:"modelLimits"`
+	AssetID            string                        `json:"assetId"`
+	Name               string                        `json:"name"`
+	DisplayName        string                        `json:"displayName"`
+	Publisher          string                        `json:"publisher"`
+	Version            string                        `json:"version"`
+	RegistryName       string                        `json:"registryName"`
+	Evaluation         string                        `json:"evaluation"`
+	Summary            string                        `json:"summary"`
+	Description        string                        `json:"description"`
+	License            string                        `json:"license"`
+	LicenseDescription string                        `json:"licenseDescription"`
+	Notes              string                        `json:"notes"`
+	Keywords           []string                      `json:"keywords"`
+	InferenceTasks     []string                      `json:"inferenceTasks"`
+	FineTuningTasks    []string                      `json:"fineTuningTasks"`
+	Labels             []string                      `json:"labels"`
+	TradeRestricted    bool                          `json:"tradeRestricted"`
+	CreatedTime        string                        `json:"createdTime"`
+	PlaygroundLimits   *modelCatalogPlaygroundLimits `json:"playgroundLimits"`
+	ModelLimits        *modelCatalogLimits           `json:"modelLimits"`
 }
 
 // ModelDetails includes detailed information about a model.
