@@ -32,7 +32,8 @@ func NewRootCommand() *cobra.Command {
 		util.WriteToOut(out, "No GitHub token found. Please run 'gh auth login' to authenticate.\n")
 		client = azuremodels.NewUnauthenticatedClient()
 	} else {
-		client = azuremodels.NewAzureClient(token)
+		cfg := azuremodels.NewDefaultAzureClientConfig()
+		client = azuremodels.NewAzureClient(token, cfg)
 	}
 
 	cfg := command.NewConfigWithTerminal(terminal, client)

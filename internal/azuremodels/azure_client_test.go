@@ -11,7 +11,8 @@ func TestAzureClient(t *testing.T) {
 	ctx := context.Background()
 	t.Run("GetModelDetails", func(t *testing.T) {
 		token := "fake-token-123abc"
-		client := NewAzureClient(token)
+		cfg := &AzureClientConfig{}
+		client := NewAzureClient(token, cfg)
 		registry := "foo"
 		modelName := "bar"
 		version := "baz"
