@@ -45,9 +45,8 @@ func TestAzureClient(t *testing.T) {
 		}))
 		defer testServer.Close()
 		cfg := &AzureClientConfig{AzureAiStudioURL: testServer.URL}
-
-		client, err := NewAzureClient("fake-token-123abc", cfg)
-		require.NoError(t, err)
+		httpClient := testServer.Client()
+		client := NewAzureClient(httpClient, "fake-token-123abc", cfg)
 
 		details, err := client.GetModelDetails(ctx, registry, modelName, version)
 
