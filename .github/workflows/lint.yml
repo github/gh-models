@@ -3,11 +3,19 @@ name: "go-linter"
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+    paths:
+      - "**.go"
+      - go.mod
+      - go.sum
   merge_group:
   workflow_dispatch:
   push:
     branches:
       - 'main'
+    paths:
+      - "**.go"
+      - go.mod
+      - go.sum
 
 permissions:
   contents: read
@@ -29,7 +37,7 @@ jobs:
     steps:
       - uses: actions/setup-go@v5
         with:
-          go-version: ${{ vars.GOVERSION }}
+          go-version-file: 'go.mod'
           check-latest: true
       - uses: actions/checkout@v4
       - name: Lint
