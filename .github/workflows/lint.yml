@@ -16,6 +16,7 @@ on:
     paths:
       - "**.go"
       - go.mod
+      - go.sum
       - .github/workflows/lint.yml
 
 permissions:
