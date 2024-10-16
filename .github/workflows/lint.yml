@@ -29,11 +29,6 @@ jobs:
     strategy:
       fail-fast: false
     runs-on: ubuntu-latest
-    env:
-      GOPROXY: https://proxy.golang.org/,direct
-      GOPRIVATE: ""
-      GONOPROXY: ""
-      GONOSUMDB: github.com/github/*
     steps:
       - uses: actions/setup-go@v5
         with:
@@ -41,9 +36,4 @@ jobs:
           check-latest: true
       - uses: actions/checkout@v4
       - name: Lint
-        # This also does checkout, setup-go, and proxy setup.
-        uses: github/go-linter@v1.2.1
-        with:
-          strict: true
-          go-version: ${{ vars.GOVERSION }}
-          goproxy-token: ${{secrets.GOPROXY_TOKEN}}
+        uses: golangci/golangci-lint-action@971e284b6050e8a5849b72094c50ab08da042db8
