@@ -45,7 +45,8 @@ func TestAzureClient(t *testing.T) {
 				err := json.NewEncoder(data).Encode(&ChatCompletion{Choices: []ChatChoice{choice}})
 				require.NoError(t, err)
 				w.WriteHeader(http.StatusOK)
-				w.Write([]byte("data: " + data.String() + "\n\ndata: [DONE]\n"))
+				_, err = w.Write([]byte("data: " + data.String() + "\n\ndata: [DONE]\n"))
+				require.NoError(t, err)
 			}))
 			defer testServer.Close()
 			cfg := &AzureClientConfig{InferenceURL: testServer.URL}
@@ -107,18 +108,21 @@ func TestAzureClient(t *testing.T) {
 				data1 := new(bytes.Buffer)
 				err := json.NewEncoder(data1).Encode(&ChatCompletion{Choices: []ChatChoice{choice1}})
 				require.NoError(t, err)
-				w.Write([]byte("data: " + data1.String() + "\n\n"))
+				_, err = w.Write([]byte("data: " + data1.String() + "\n\n"))
+				require.NoError(t, err)
 				w.(http.Flusher).Flush()
 				time.Sleep(1 * time.Millisecond)
 
 				data2 := new(bytes.Buffer)
 				err = json.NewEncoder(data2).Encode(&ChatCompletion{Choices: []ChatChoice{choice2}})
 				require.NoError(t, err)
-				w.Write([]byte("data: " + data2.String() + "\n\n"))
+				_, err = w.Write([]byte("data: " + data2.String() + "\n\n"))
+				require.NoError(t, err)
 				w.(http.Flusher).Flush()
 				time.Sleep(1 * time.Millisecond)
 
-				w.Write([]byte("data: [DONE]\n"))
+				_, err = w.Write([]byte("data: [DONE]\n"))
+				require.NoError(t, err)
 			}))
 			defer testServer.Close()
 			cfg := &AzureClientConfig{InferenceURL: testServer.URL}
@@ -165,7 +169,8 @@ func TestAzureClient(t *testing.T) {
 			errRespBody := `{"error": "o noes"}`
 			testServer := newTestServerForChatCompletion(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusInternalServerError)
-				w.Write([]byte(errRespBody))
+				_, err := w.Write([]byte(errRespBody))
+				require.NoError(t, err)
 			}))
 			defer testServer.Close()
 			cfg := &AzureClientConfig{InferenceURL: testServer.URL}
@@ -255,7 +260,8 @@ func TestAzureClient(t *testing.T) {
 			errRespBody := `{"error": "o noes"}`
 			testServer := newTestServerForListModels(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte(errRespBody))
+				_, err := w.Write([]byte(errRespBody))
+				require.NoError(t, err)
 			}))
 			defer testServer.Close()
 			cfg := &AzureClientConfig{ModelsURL: testServer.URL}
@@ -336,7 +342,8 @@ func TestAzureClient(t *testing.T) {
 			errRespBody := `{"error": "o noes"}`
 			testServer := newTestServerForModelDetails(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusBadRequest)
-				w.Write([]byte(errRespBody))
+				_, err := w.Write([]byte(errRespBody))
+				require.NoError(t, err)
 			}))
 			defer testServer.Close()
 			cfg := &AzureClientConfig{AzureAiStudioURL: testServer.URL}
