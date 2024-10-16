@@ -31,10 +31,10 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
           check-latest: true
-      - uses: actions/checkout@v4
       - name: Lint
         uses: golangci/golangci-lint-action@971e284b6050e8a5849b72094c50ab08da042db8
