@@ -73,7 +73,7 @@ func TestRun(t *testing.T) {
 
 		require.NoError(t, err)
 		output := outBuf.String()
-		require.Contains(t, output, "Run inference with the specified model")
+		require.Contains(t, output, "Use `gh models run` to run in interactive mode. It will provide a list of the current\nmodels and allow you to select the one you want to run an inference with.")
 		require.Regexp(t, regexp.MustCompile(`--max-tokens string\s+Limit the maximum tokens for the model response\.`), output)
 		require.Regexp(t, regexp.MustCompile(`--system-prompt string\s+Prompt the system\.`), output)
 		require.Regexp(t, regexp.MustCompile(`--temperature string\s+Controls randomness in the response, use lower to be more deterministic\.`), output)

@@ -98,7 +98,7 @@ func TestView(t *testing.T) {
 		err := viewCmd.Help()
 
 		require.NoError(t, err)
-		require.Contains(t, outBuf.String(), "View details about a model")
+		require.Contains(t, outBuf.String(), "Use `gh models view` to run in interactive mode. It will provide a list of the current\nmodels and allow you to select the one you want information about.")
 		require.Empty(t, errBuf.String())
 	})
 }
