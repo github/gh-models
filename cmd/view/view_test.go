@@ -86,4 +86,19 @@ func TestView(t *testing.T) {
 		require.Contains(t, output, "Evaluation:")
 		require.Contains(t, output, modelDetails.Evaluation)
 	})
+
+	t.Run("--help prints usage info", func(t *testing.T) {
+		outBuf := new(bytes.Buffer)
+		errBuf := new(bytes.Buffer)
+		viewCmd := NewViewCommand(nil)
+		viewCmd.SetOut(outBuf)
+		viewCmd.SetErr(errBuf)
+		viewCmd.SetArgs([]string{"--help"})
+
+		err := viewCmd.Help()
+
+		require.NoError(t, err)
+		require.Contains(t, outBuf.String(), "View details about a model")
+		require.Empty(t, errBuf.String())
+	})
 }

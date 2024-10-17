@@ -21,21 +21,22 @@ import (
 type AzureClient struct {
 	client *http.Client
 	token  string
+	cfg    *AzureClientConfig
 }
 
-const (
-	prodInferenceURL = "https://models.inference.ai.azure.com/chat/completions"
-	azureAiStudioURL = "https://api.catalog.azureml.ms"
-	prodModelsURL    = azureAiStudioURL + "/asset-gallery/v1.0/models"
-)
-
-// NewAzureClient returns a new Azure client using the given auth token.
-func NewAzureClient(authToken string) *AzureClient {
-	httpClient, _ := api.DefaultHTTPClient()
-	return &AzureClient{
-		client: httpClient,
-		token:  authToken,
+// NewDefaultAzureClient returns a new Azure client using the given auth token using default API URLs.
+func NewDefaultAzureClient(authToken string) (*AzureClient, error) {
+	httpClient, err := api.DefaultHTTPClient()
+	if err != nil {
+		return nil, err
 	}
+	cfg := NewDefaultAzureClientConfig()
+	return &AzureClient{client: httpClient, token: authToken, cfg: cfg}, nil
+}
+
+// NewAzureClient returns a new Azure client using the given HTTP client, configuration, and auth token.
+func NewAzureClient(httpClient *http.Client, authToken string, cfg *AzureClientConfig) *AzureClient {
+	return &AzureClient{client: httpClient, token: authToken, cfg: cfg}
 }
 
 // GetChatCompletionStream returns a stream of chat completions using the given options.
@@ -54,13 +55,18 @@ func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompl
 
 	body := bytes.NewReader(bodyBytes)
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, prodInferenceURL, body)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.cfg.InferenceURL, body)
 	if err != nil {
 		return nil, err
 	}
 
 	httpReq.Header.Set("Authorization", "Bearer "+c.token)
 	httpReq.Header.Set("Content-Type", "application/json")
+
+	// Azure would like us to send specific user agents to help distinguish
+	// traffic from known sources and other web requests
+	httpReq.Header.Set("x-ms-useragent", "github-cli-models")
+	httpReq.Header.Set("x-ms-user-agent", "github-cli-models") // send both to accommodate various Azure consumers
 
 	resp, err := c.client.Do(httpReq)
 	if err != nil {
@@ -94,7 +100,7 @@ func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompl
 
 // GetModelDetails returns the details of the specified model in a particular registry.
 func (c *AzureClient) GetModelDetails(ctx context.Context, registry, modelName, version string) (*ModelDetails, error) {
-	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", azureAiStudioURL, registry, modelName, version)
+	url := fmt.Sprintf("%s/asset-gallery/v1.0/%s/models/%s/version/%s", c.cfg.AzureAiStudioURL, registry, modelName, version)
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, url, http.NoBody)
 	if err != nil {
 		return nil, err
@@ -184,7 +190,7 @@ func (c *AzureClient) ListModels(ctx context.Context) ([]*ModelSummary, error) {
 		}
 	`))
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, prodModelsURL, body)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.cfg.ModelsURL, body)
 	if err != nil {
 		return nil, err
 	}
