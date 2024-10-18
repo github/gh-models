@@ -24,7 +24,7 @@ func NewListCommand(cfg *command.Config) *cobra.Command {
 		Long: heredoc.Docf(`
 			Returns a list of models that are available to use via the CLI.
 
-			Values from the "MODEL NAME" column can be used as the [model]
+			Values from the "MODEL NAME" column can be used as the %[1]s[model]%[1]s
 			argument in other commands.
 		`, "`"),
 		Args:  cobra.NoArgs,
