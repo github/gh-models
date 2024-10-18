@@ -30,7 +30,7 @@ func NewRootCommand() *cobra.Command {
 			enter a prompt. The extension will then return a response from the model.
 
 			For more information about what you can do with GitHub Models extension, see the manual
-			at https://cli.github.com/manual/gh_models
+			at https://github.com/github/gh-models/blob/main/README.md.
 		`, "`"),
 	}
 

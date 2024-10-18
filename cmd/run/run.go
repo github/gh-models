@@ -194,7 +194,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 		Use:   "run [model] [prompt]",
 		Short: "Run inference with the specified model",
 		Long: heredoc.Docf(`
-			Makes an HTTP request to the Azure API for the selected model with the given prompt.
+			Prompts the specified model with the given prompt.
 
 			Use %[1]sgh models run%[1]s to run in interactive mode. It will provide a list of the current
 			models and allow you to select the one you want to run an inference with. After you select the model

@@ -17,7 +17,7 @@ func NewViewCommand(cfg *command.Config) *cobra.Command {
 		Use:   "view [model]",
 		Short: "View details about a model",
 		Long: heredoc.Docf(`
-			Makes an HTTP request to the Azure API for details on the selected model and prints the response.
+			Returns details about the specified model.
 
 			Use %[1]sgh models view%[1]s to run in interactive mode. It will provide a list of the current
 			models and allow you to select the one you want information about.
