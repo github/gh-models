@@ -29,7 +29,7 @@ func NewRootCommand() *cobra.Command {
 			interactive mode, run %[1]sgh models run%[1]s. This will prompt you to select a model and then
 			to enter a prompt. The extension will then return a response from the model.
 
-			For more information about what you can do with GitHub Models extension see the manual
+			For more information about what you can do with GitHub Models extension, see the manual
 			at https://cli.github.com/manual/gh_models
 		`, "`"),
 	}
