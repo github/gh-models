@@ -7,6 +7,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/command"
+	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
 )
 
@@ -15,6 +16,16 @@ func NewViewCommand(cfg *command.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "view [model]",
 		Short: "View details about a model",
+		Long: heredoc.Docf(`
+			Returns details about the specified model.
+
+			Use %[1]sgh models view%[1]s to run in interactive mode. It will provide a list of the current
+			models and allow you to select the one you want information about.
+
+			If you know which model you want information for, you can run the request in a single command
+			as %[1]sgh models view [model]%[1]s
+		`, "`"),
+		Example: "gh models view gpt-4o",
 		Args:  cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()

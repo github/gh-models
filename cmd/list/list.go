@@ -7,6 +7,7 @@ import (
 	"github.com/cli/go-gh/v2/pkg/tableprinter"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/command"
+	"github.com/MakeNowJust/heredoc"
 	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
 )
@@ -20,6 +21,12 @@ func NewListCommand(cfg *command.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List available models",
+		Long: heredoc.Docf(`
+			Returns a list of models that are available to use via the CLI.
+
+			Values from the "MODEL NAME" column can be used as the %[1]s[model]%[1]s
+			argument in other commands.
+		`, "`"),
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()

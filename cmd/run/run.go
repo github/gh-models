@@ -18,6 +18,7 @@ import (
 	"github.com/github/gh-models/internal/sse"
 	"github.com/github/gh-models/pkg/command"
 	"github.com/github/gh-models/pkg/util"
+	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -192,6 +193,19 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "run [model] [prompt]",
 		Short: "Run inference with the specified model",
+		Long: heredoc.Docf(`
+			Prompts the specified model with the given prompt.
+
+			Use %[1]sgh models run%[1]s to run in interactive mode. It will provide a list of the current
+			models and allow you to select the one you want to run an inference with. After you select the model
+			you will be able to enter the prompt you want to run via the selected model.
+
+			If you know which model you want to run inference with, you can run the request in a single command
+			as %[1]sgh models run [model] [prompt]%[1]s
+
+			The return value will be the response to your prompt from the selected model.
+		`, "`"),
+		Example: "gh models run gpt-4o-mini \"how many types of hyena are there?\"",
 		Args:  cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmdHandler := newRunCommandHandler(cmd, cfg, args)
