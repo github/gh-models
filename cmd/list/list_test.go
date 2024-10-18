@@ -55,7 +55,7 @@ func TestList(t *testing.T) {
 		err := listCmd.Help()
 
 		require.NoError(t, err)
-		require.Contains(t, outBuf.String(), "Returns a list of models that are available to use via the CLI.\n\nValues from the \"MODEL NAME\" column can be used as the [model]\nargument in other commands.")
+		require.Contains(t, outBuf.String(), "Returns a list of models that are available to use via the CLI.\n\nValues from the \"MODEL NAME\" column can be used as the `[model]`\nargument in other commands.")
 		require.Empty(t, errBuf.String())
 	})
 }
