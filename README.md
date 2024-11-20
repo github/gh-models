@@ -15,6 +15,14 @@ After installing the `gh` CLI, from a command-line run:
 gh extension install https://github.com/github/gh-models
 ```
 
+#### Upgrading
+
+If you've previously installed the `gh models` extension and want to update to the latest version, you can run this command:
+
+```sh
+gh extension upgrade github/gh-models
+```
+
 ### Examples
 
 #### Listing models
