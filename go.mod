@@ -8,8 +8,8 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/MakeNowJust/heredoc v1.0.0
 	github.com/briandowns/spinner v1.23.1
-	github.com/cli/cli/v2 v2.62.0
-	github.com/cli/go-gh/v2 v2.11.0
+	github.com/cli/cli/v2 v2.63.0
+	github.com/cli/go-gh/v2 v2.11.1
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
