@@ -5,15 +5,16 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/MakeNowJust/heredoc"
 	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/cmd/list"
+	"github.com/github/gh-models/cmd/prompt"
 	"github.com/github/gh-models/cmd/run"
 	"github.com/github/gh-models/cmd/view"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/command"
 	"github.com/github/gh-models/pkg/util"
-	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
 )
 
@@ -57,6 +58,7 @@ func NewRootCommand() *cobra.Command {
 	cmd.AddCommand(list.NewListCommand(cfg))
 	cmd.AddCommand(run.NewRunCommand(cfg))
 	cmd.AddCommand(view.NewViewCommand(cfg))
+	cmd.AddCommand(prompt.NewPromptCommand(cfg))
 
 	// Cobra does not have a nice way to inject "global" help text, so we have to do it manually.
 	// Copied from https://github.com/spf13/cobra/blob/e94f6d0dd9a5e5738dca6bce03c4b1207ffbc0ec/command.go#L595-L597

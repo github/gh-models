@@ -10,6 +10,7 @@ require (
 	github.com/briandowns/spinner v1.23.1
 	github.com/cli/cli/v2 v2.67.0
 	github.com/cli/go-gh/v2 v2.11.2
+	github.com/cschleiden/promptmd v0.0.0
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
