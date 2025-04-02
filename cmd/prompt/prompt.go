@@ -144,16 +144,21 @@ func NewPromptCommand(cfg *command.Config) *cobra.Command {
 				// systemPrompt: systemPrompt,
 			}
 
-			for _, message := range prompt.Messages {
-				m, err := promptmd.Prepare(message.Message)(vars)
-				if err != nil {
-					return err
-				}
+			pp, err := prompt.Prepare()
+			if err != nil {
+				return fmt.Errorf("failed to prepare prompt: %w", err)
+			}
 
+			msgs, err := pp(vars)
+			if err != nil {
+				return fmt.Errorf("failed to prepare prompt messages: %w", err)
+			}
+
+			for _, message := range msgs {
 				if message.Role == promptmd.RoleSystem {
-					conversation.systemPrompt = m
+					conversation.systemPrompt = message.Message
 				} else {
-					conversation.AddMessage(azuremodels.ChatMessageRole(message.Role), m)
+					conversation.AddMessage(azuremodels.ChatMessageRole(message.Role), message.Message)
 				}
 			}
 

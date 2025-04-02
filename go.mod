@@ -1,8 +1,6 @@
 module github.com/github/gh-models
 
-go 1.23.0
-
-toolchain go1.23.6
+go 1.24.0
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
@@ -10,7 +8,7 @@ require (
 	github.com/briandowns/spinner v1.23.1
 	github.com/cli/cli/v2 v2.67.0
 	github.com/cli/go-gh/v2 v2.11.2
-	github.com/cschleiden/promptmd v0.0.0
+	github.com/cschleiden/promptmd v0.0.1
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
@@ -52,3 +50,5 @@ require (
 	golang.org/x/term v0.28.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace github.com/cschleiden/promptmd => github.com/cschleiden/promptmd/go v0.0.0-20250324051512-3e4bfd668261
