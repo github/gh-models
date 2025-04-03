@@ -64,27 +64,14 @@ func (c *Conversation) Reset() {
 	c.messages = nil
 }
 
-func isPipe(r io.Reader) bool {
-	if f, ok := r.(*os.File); ok {
-		stat, err := f.Stat()
-		if err != nil {
-			return false
-		}
-		if stat.Mode()&os.ModeNamedPipe != 0 {
-			return true
-		}
-	}
-	return false
-}
-
-// NewPromptCommand returns a new gh command for running a model.
+// NewPromptCommand returns a new gh command for prompting a model using a prompt from a file.
 func NewPromptCommand(cfg *command.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "prompt [prompt.md] [key=value]*",
 		Short: "Run inference with the specified model",
 		Long: heredoc.Docf(`
-			Prompts the specified model with the given prompt.
-		`, "`"),
+			Prompts the specified model with the given prompt. Replace any {{placeholders}} in the prompts with "key=value" arguments.
+		`),
 		Example: "gh models prompt my-prompt.prompt.md",
 		Args:    cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -140,9 +127,7 @@ func NewPromptCommand(cfg *command.Config) *cobra.Command {
 				vars[parts[0]] = parts[1]
 			}
 
-			conversation := Conversation{
-				// systemPrompt: systemPrompt,
-			}
+			conversation := Conversation{}
 
 			pp, err := prompt.Prepare()
 			if err != nil {
@@ -209,11 +194,6 @@ func NewPromptCommand(cfg *command.Config) *cobra.Command {
 			return nil
 		},
 	}
-
-	cmd.Flags().String("max-tokens", "", "Limit the maximum tokens for the model response.")
-	cmd.Flags().String("temperature", "", "Controls randomness in the response, use lower to be more deterministic.")
-	cmd.Flags().String("top-p", "", "Controls text diversity by selecting the most probable words until a set probability is reached.")
-	cmd.Flags().String("system-prompt", "", "Prompt the system.")
 
 	return cmd
 }
