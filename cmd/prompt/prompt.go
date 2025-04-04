@@ -20,14 +20,14 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// Conversation represents a conversation between the user and the model.
-type Conversation struct {
+// conversation represents a conversation between the user and the model.
+type conversation struct {
 	messages     []azuremodels.ChatMessage
 	systemPrompt string
 }
 
 // AddMessage adds a message to the conversation.
-func (c *Conversation) AddMessage(role azuremodels.ChatMessageRole, content string) {
+func (c *conversation) AddMessage(role azuremodels.ChatMessageRole, content string) {
 	c.messages = append(c.messages, azuremodels.ChatMessage{
 		Content: util.Ptr(content),
 		Role:    role,
@@ -35,7 +35,7 @@ func (c *Conversation) AddMessage(role azuremodels.ChatMessageRole, content stri
 }
 
 // GetMessages returns the messages in the conversation.
-func (c *Conversation) GetMessages() []azuremodels.ChatMessage {
+func (c *conversation) GetMessages() []azuremodels.ChatMessage {
 	length := len(c.messages)
 	if c.systemPrompt != "" {
 		length++
@@ -60,7 +60,7 @@ func (c *Conversation) GetMessages() []azuremodels.ChatMessage {
 }
 
 // Reset removes messages from the conversation.
-func (c *Conversation) Reset() {
+func (c *conversation) Reset() {
 	c.messages = nil
 }
 
@@ -80,15 +80,13 @@ func NewPromptCommand(cfg *command.Config) *cobra.Command {
 				return nil
 			}
 
-			models, err := cmdHandler.loadModels()
-			if err != nil {
-				return err
-			}
-
 			var promptPath string
-
 			if len(args) > 0 {
 				promptPath = args[0]
+			}
+
+			if promptPath == "" {
+				return fmt.Errorf("prompt file path is required")
 			}
 
 			promptContent, err := os.ReadFile(promptPath)
@@ -110,6 +108,11 @@ func NewPromptCommand(cfg *command.Config) *cobra.Command {
 			}
 
 			if modelName == "" {
+				models, err := cmdHandler.loadModels()
+				if err != nil {
+					return err
+				}
+
 				modelName, err = cmdHandler.promptForModelName(models)
 				if err != nil {
 					return err
@@ -127,7 +130,7 @@ func NewPromptCommand(cfg *command.Config) *cobra.Command {
 				vars[parts[0]] = parts[1]
 			}
 
-			conversation := Conversation{}
+			conversation := conversation{}
 
 			pp, err := prompt.Prepare()
 			if err != nil {
