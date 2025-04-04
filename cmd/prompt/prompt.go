@@ -179,7 +179,7 @@ func NewPromptCommand(cfg *command.Config) *cobra.Command {
 				sp.Stop()
 
 				for _, choice := range completion.Choices {
-					err = cmdHandler.handleCompletionChoice(choice, messageBuilder)
+					err = cmdHandler.handleCompletionChoice(choice, &messageBuilder)
 					if err != nil {
 						return err
 					}
@@ -277,7 +277,7 @@ func (h *runCommandHandler) getChatCompletionStreamReader(req azuremodels.ChatCo
 	return resp.Reader, nil
 }
 
-func (h *runCommandHandler) handleCompletionChoice(choice azuremodels.ChatChoice, messageBuilder strings.Builder) error {
+func (h *runCommandHandler) handleCompletionChoice(choice azuremodels.ChatChoice, messageBuilder *strings.Builder) error {
 	// Streamed responses from the OpenAI API have their data in `.Delta`, while
 	// non-streamed responses use `.Message`, so let's support both
 	if choice.Delta != nil && choice.Delta.Content != nil {

@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/MakeNowJust/heredoc"
 	"github.com/briandowns/spinner"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/internal/sse"
 	"github.com/github/gh-models/pkg/command"
 	"github.com/github/gh-models/pkg/util"
-	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -206,7 +206,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			The return value will be the response to your prompt from the selected model.
 		`, "`"),
 		Example: "gh models run gpt-4o-mini \"how many types of hyena are there?\"",
-		Args:  cobra.ArbitraryArgs,
+		Args:    cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmdHandler := newRunCommandHandler(cmd, cfg, args)
 			if cmdHandler == nil {
@@ -345,7 +345,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 					sp.Stop()
 
 					for _, choice := range completion.Choices {
-						err = cmdHandler.handleCompletionChoice(choice, messageBuilder)
+						err = cmdHandler.handleCompletionChoice(choice, &messageBuilder)
 						if err != nil {
 							return err
 						}
@@ -517,7 +517,7 @@ func (h *runCommandHandler) handleUnrecognizedPrompt(prompt string) {
 	h.writeToOut("Unknown command '" + prompt + "'. See /help for supported commands.\n")
 }
 
-func (h *runCommandHandler) handleCompletionChoice(choice azuremodels.ChatChoice, messageBuilder strings.Builder) error {
+func (h *runCommandHandler) handleCompletionChoice(choice azuremodels.ChatChoice, messageBuilder *strings.Builder) error {
 	// Streamed responses from the OpenAI API have their data in `.Delta`, while
 	// non-streamed responses use `.Message`, so let's support both
 	if choice.Delta != nil && choice.Delta.Content != nil {
