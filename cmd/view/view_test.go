@@ -49,7 +49,7 @@ func TestView(t *testing.T) {
 		buf := new(bytes.Buffer)
 		cfg := command.NewConfig(buf, buf, client, true, 80)
 		viewCmd := NewViewCommand(cfg)
-		viewCmd.SetArgs([]string{modelSummary.Name})
+		viewCmd.SetArgs([]string{azuremodels.FormatIdentifier(modelSummary.Publisher, modelSummary.Name)})
 
 		_, err := viewCmd.ExecuteC()
 

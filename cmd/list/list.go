@@ -4,10 +4,10 @@ package list
 import (
 	"fmt"
 
+	"github.com/MakeNowJust/heredoc"
 	"github.com/cli/go-gh/v2/pkg/tableprinter"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/command"
-	"github.com/MakeNowJust/heredoc"
 	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
 )
@@ -27,7 +27,7 @@ func NewListCommand(cfg *command.Config) *cobra.Command {
 			Values from the "MODEL NAME" column can be used as the %[1]s[model]%[1]s
 			argument in other commands.
 		`, "`"),
-		Args:  cobra.NoArgs,
+		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			client := cfg.Client
@@ -49,12 +49,12 @@ func NewListCommand(cfg *command.Config) *cobra.Command {
 
 			printer := cfg.NewTablePrinter()
 
-			printer.AddHeader([]string{"DISPLAY NAME", "MODEL NAME"}, tableprinter.WithColor(lightGrayUnderline))
+			printer.AddHeader([]string{"ID", "DISPLAY NAME"}, tableprinter.WithColor(lightGrayUnderline))
 			printer.EndRow()
 
 			for _, model := range models {
+				printer.AddField(azuremodels.FormatIdentifier(model.Publisher, model.Name))
 				printer.AddField(model.FriendlyName)
-				printer.AddField(model.Name)
 				printer.EndRow()
 			}
 

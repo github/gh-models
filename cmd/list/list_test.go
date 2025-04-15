@@ -39,9 +39,9 @@ func TestList(t *testing.T) {
 		output := buf.String()
 		require.Contains(t, output, "Showing 1 available chat models")
 		require.Contains(t, output, "DISPLAY NAME")
-		require.Contains(t, output, "MODEL NAME")
+		require.Contains(t, output, "ID")
 		require.Contains(t, output, modelSummary.FriendlyName)
-		require.Contains(t, output, modelSummary.Name)
+		require.Contains(t, output, azuremodels.FormatIdentifier(modelSummary.Publisher, modelSummary.Name))
 	})
 
 	t.Run("--help prints usage info", func(t *testing.T) {

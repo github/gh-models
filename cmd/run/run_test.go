@@ -50,7 +50,7 @@ func TestRun(t *testing.T) {
 		buf := new(bytes.Buffer)
 		cfg := command.NewConfig(buf, buf, client, true, 80)
 		runCmd := NewRunCommand(cfg)
-		runCmd.SetArgs([]string{modelSummary.Name, "this is my prompt"})
+		runCmd.SetArgs([]string{azuremodels.FormatIdentifier(modelSummary.Publisher, modelSummary.Name), "this is my prompt"})
 
 		_, err := runCmd.ExecuteC()
 

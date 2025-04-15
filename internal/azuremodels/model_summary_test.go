@@ -18,27 +18,26 @@ func TestModelSummary(t *testing.T) {
 	})
 
 	t.Run("HasName", func(t *testing.T) {
-		model := &ModelSummary{Name: "foo123", FriendlyName: "Foo 123"}
+		model := &ModelSummary{Name: "foo123", Publisher: "bar"}
 
-		require.True(t, model.HasName(model.Name))
-		require.True(t, model.HasName("FOO123"))
-		require.True(t, model.HasName(model.FriendlyName))
-		require.True(t, model.HasName("fOo 123"))
+		require.True(t, model.HasName(FormatIdentifier(model.Publisher, model.Name)))
+		require.True(t, model.HasName("BaR/foO123"))
 		require.False(t, model.HasName("completely different value"))
 		require.False(t, model.HasName("foo"))
+		require.False(t, model.HasName("bar"))
 	})
 
-	t.Run("SortModels sorts given slice in-place by friendly name, case-insensitive", func(t *testing.T) {
-		modelA := &ModelSummary{Name: "z", FriendlyName: "AARDVARK"}
-		modelB := &ModelSummary{Name: "y", FriendlyName: "betta"}
-		modelC := &ModelSummary{Name: "x", FriendlyName: "Cat"}
-		models := []*ModelSummary{modelB, modelA, modelC}
+	t.Run("SortModels sorts given slice in-place by publisher/name", func(t *testing.T) {
+		modelA := &ModelSummary{Publisher: "a", Name: "z"}
+		modelB := &ModelSummary{Publisher: "a", Name: "Y"}
+		modelC := &ModelSummary{Publisher: "b", Name: "x"}
+		models := []*ModelSummary{modelC, modelB, modelA}
 
 		SortModels(models)
 
 		require.Equal(t, 3, len(models))
-		require.Equal(t, "AARDVARK", models[0].FriendlyName)
-		require.Equal(t, "betta", models[1].FriendlyName)
-		require.Equal(t, "Cat", models[2].FriendlyName)
+		require.Equal(t, "Y", models[0].Name)
+		require.Equal(t, "z", models[1].Name)
+		require.Equal(t, "x", models[2].Name)
 	})
 }

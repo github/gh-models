@@ -1,6 +1,9 @@
 package azuremodels
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // ModelDetails includes detailed information about a model.
 type ModelDetails struct {
@@ -21,4 +24,16 @@ type ModelDetails struct {
 // ContextLimits returns a summary of the context limits for the model.
 func (m *ModelDetails) ContextLimits() string {
 	return fmt.Sprintf("up to %d input tokens and %d output tokens", m.MaxInputTokens, m.MaxOutputTokens)
+}
+
+// FormatIdentifier formats the model identifier based on the publisher and model name.
+func FormatIdentifier(publisher, name string) string {
+	formatPart := func(s string) string {
+		// Replace spaces with dashes and convert to lowercase
+		result := strings.ToLower(s)
+		result = strings.ReplaceAll(result, " ", "-")
+		return result
+	}
+
+	return fmt.Sprintf("%s/%s", formatPart(publisher), formatPart(name))
 }

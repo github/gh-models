@@ -33,15 +33,15 @@ gh models list
 
 Example output:
 ```shell
-Name                          Friendly Name                 Publisher
-AI21-Jamba-Instruct           AI21-Jamba-Instruct           AI21 Labs
-gpt-4o                        OpenAI GPT-4o                 Azure OpenAI Service
-gpt-4o-mini                   OpenAI GPT-4o mini            Azure OpenAI Service
-Cohere-command-r              Cohere Command R              cohere
-Cohere-command-r-plus         Cohere Command R+             cohere
+ID                              DISPLAY NAME
+ai21-labs/ai21-jamba-1.5-large  AI21 Jamba 1.5 Large
+openai/gpt-4.1                  OpenAI GPT-4.1
+openai/gpt-4o-mini              OpenAI GPT-4o mini
+cohere/cohere-command-r         Cohere Command R
+deepseek/deepseek-v3-0324       Deepseek-V3-0324
 ```
 
-Use the value in the "Name" column when specifying the model on the command-line.
+Use the value in the "ID" column when specifying the model on the command-line.
 
 #### Running inference
 
@@ -58,12 +58,12 @@ In REPL mode, use `/help` to list available commands. Otherwise just type your p
 
 Run the extension in single-shot mode. This will print the model output and exit.
 ```shell
-gh models run gpt-4o-mini "why is the sky blue?"
+gh models run openai/gpt-4o-mini "why is the sky blue?"
 ```
 
 Run the extension with output from a command. This uses single-shot mode.
 ```shell
-cat README.md | gh models run gpt-4o-mini "summarize this text"
+cat README.md | gh models run openai/gpt-4o-mini "summarize this text"
 ```
 
 ## Notice

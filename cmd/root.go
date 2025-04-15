@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/MakeNowJust/heredoc"
 	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/term"
 	"github.com/github/gh-models/cmd/list"
@@ -13,7 +14,6 @@ import (
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/command"
 	"github.com/github/gh-models/pkg/util"
-	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
 )
 
