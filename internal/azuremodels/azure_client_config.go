@@ -1,7 +1,7 @@
 package azuremodels
 
 const (
-	defaultInferenceURL     = "https://models.inference.ai.azure.com/chat/completions"
+	defaultInferenceURL     = "https://models.github.ai/inference/chat/completions"
 	defaultAzureAiStudioURL = "https://api.catalog.azureml.ms"
 	defaultModelsURL        = defaultAzureAiStudioURL + "/asset-gallery/v1.0/models"
 )

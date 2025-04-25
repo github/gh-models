@@ -25,7 +25,8 @@ func (m *ModelSummary) IsChatModel() bool {
 
 // HasName checks if the model has the given name.
 func (m *ModelSummary) HasName(name string) bool {
-	return strings.EqualFold(m.FriendlyName, name) || strings.EqualFold(m.Name, name)
+	modelID := FormatIdentifier(m.Publisher, m.Name)
+	return strings.EqualFold(modelID, name)
 }
 
 var (
@@ -49,9 +50,9 @@ func SortModels(models []*ModelSummary) {
 
 		// Otherwise, sort by friendly name
 		// Note: sometimes the casing returned by the API is inconsistent, so sort using lowercase values.
-		friendlyNameI := strings.ToLower(models[i].FriendlyName)
-		friendlyNameJ := strings.ToLower(models[j].FriendlyName)
+		idI := FormatIdentifier(models[i].Publisher, models[i].Name)
+		idJ := FormatIdentifier(models[j].Publisher, models[j].Name)
 
-		return friendlyNameI < friendlyNameJ
+		return idI < idJ
 	})
 }

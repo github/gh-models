@@ -13,12 +13,12 @@ import (
 	"time"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/MakeNowJust/heredoc"
 	"github.com/briandowns/spinner"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/internal/sse"
 	"github.com/github/gh-models/pkg/command"
 	"github.com/github/gh-models/pkg/util"
-	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 )
@@ -205,8 +205,8 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 
 			The return value will be the response to your prompt from the selected model.
 		`, "`"),
-		Example: "gh models run gpt-4o-mini \"how many types of hyena are there?\"",
-		Args:  cobra.ArbitraryArgs,
+		Example: "gh models run openai/gpt-4o-mini \"how many types of hyena are there?\"",
+		Args:    cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cmdHandler := newRunCommandHandler(cmd, cfg, args)
 			if cmdHandler == nil {
@@ -413,7 +413,7 @@ func (h *runCommandHandler) getModelNameFromArgs(models []*azuremodels.ModelSumm
 			if !model.IsChatModel() {
 				continue
 			}
-			prompt.Options = append(prompt.Options, model.FriendlyName)
+			prompt.Options = append(prompt.Options, azuremodels.FormatIdentifier(model.Publisher, model.Name))
 		}
 
 		err := survey.AskOne(prompt, &modelName, survey.WithPageSize(10))
@@ -438,7 +438,6 @@ func validateModelName(modelName string, models []*azuremodels.ModelSummary) (st
 	foundMatch := false
 	for _, model := range models {
 		if model.HasName(modelName) {
-			modelName = model.Name
 			foundMatch = true
 			break
 		}

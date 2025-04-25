@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
+	"github.com/MakeNowJust/heredoc"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/command"
-	"github.com/MakeNowJust/heredoc"
 	"github.com/spf13/cobra"
 )
 
@@ -25,8 +25,8 @@ func NewViewCommand(cfg *command.Config) *cobra.Command {
 			If you know which model you want information for, you can run the request in a single command
 			as %[1]sgh models view [model]%[1]s
 		`, "`"),
-		Example: "gh models view gpt-4o",
-		Args:  cobra.ArbitraryArgs,
+		Example: "gh models view openai/gpt-4.1",
+		Args:    cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			client := cfg.Client
@@ -50,7 +50,7 @@ func NewViewCommand(cfg *command.Config) *cobra.Command {
 					if !model.IsChatModel() {
 						continue
 					}
-					prompt.Options = append(prompt.Options, model.FriendlyName)
+					prompt.Options = append(prompt.Options, azuremodels.FormatIdentifier(model.Publisher, model.Name))
 				}
 
 				err = survey.AskOne(prompt, &modelName, survey.WithPageSize(10))
