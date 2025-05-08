@@ -134,7 +134,6 @@ messages:
 		runCmd.SetArgs([]string{
 			"--file", tmp.Name(),
 			azuremodels.FormatIdentifier("openai", "test-model"),
-			"foo?",
 		})
 
 		_, err = runCmd.ExecuteC()
@@ -143,11 +142,85 @@ messages:
 		require.Equal(t, 3, len(capturedReq.Messages))
 		require.Equal(t, "You are a text summarizer.", *capturedReq.Messages[0].Content)
 		require.Equal(t, "Hello there!", *capturedReq.Messages[1].Content)
-		require.Equal(t, "foo?", *capturedReq.Messages[2].Content)
 
 		require.NotNil(t, capturedReq.Temperature)
 		require.Equal(t, 0.5, *capturedReq.Temperature)
 
 		require.Contains(t, out.String(), reply) // response streamed to output
+	})
+
+	t.Run("--file with {{input}} placeholder is substituted with stdin", func(t *testing.T) {
+		const yamlBody = `
+name: Summarizer
+description: Summarizes input text
+model: openai/test-model
+messages:
+  - role: system
+    content: You are a text summarizer.
+  - role: user
+    content: "{{input}}"
+`
+
+		tmp, err := os.CreateTemp(t.TempDir(), "*.prompt.yml")
+		require.NoError(t, err)
+		_, err = tmp.WriteString(yamlBody)
+		require.NoError(t, err)
+		require.NoError(t, tmp.Close())
+
+		client := azuremodels.NewMockClient()
+		modelSummary := &azuremodels.ModelSummary{
+			Name:      "test-model",
+			Publisher: "openai",
+			Task:      "chat-completion",
+		}
+		client.MockListModels = func(ctx context.Context) ([]*azuremodels.ModelSummary, error) {
+			return []*azuremodels.ModelSummary{modelSummary}, nil
+		}
+
+		var capturedReq azuremodels.ChatCompletionOptions
+		reply := "Summary - bar"
+		chatCompletion := azuremodels.ChatCompletion{
+			Choices: []azuremodels.ChatChoice{{
+				Message: &azuremodels.ChatChoiceMessage{
+					Content: util.Ptr(reply),
+					Role:    util.Ptr(string(azuremodels.ChatMessageRoleAssistant)),
+				},
+			}},
+		}
+		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions) (*azuremodels.ChatCompletionResponse, error) {
+			capturedReq = opt
+			return &azuremodels.ChatCompletionResponse{
+				Reader: sse.NewMockEventReader([]azuremodels.ChatCompletion{chatCompletion}),
+			}, nil
+		}
+
+		// create a pipe to fake stdin so that isPipe(os.Stdin)==true
+		r, w, err := os.Pipe()
+		require.NoError(t, err)
+		oldStdin := os.Stdin
+		os.Stdin = r
+		defer func() { os.Stdin = oldStdin }()
+		piped := "Hello there!"
+		go func() {
+			_, _ = w.Write([]byte(piped))
+			_ = w.Close()
+		}()
+
+		out := new(bytes.Buffer)
+		cfg := command.NewConfig(out, out, client, true, 100)
+		runCmd := NewRunCommand(cfg)
+		runCmd.SetArgs([]string{
+			"--file", tmp.Name(),
+			azuremodels.FormatIdentifier("openai", "test-model"),
+		})
+
+		_, err = runCmd.ExecuteC()
+		require.NoError(t, err)
+
+		require.Len(t, capturedReq.Messages, 3)
+		require.Equal(t, "You are a text summarizer.", *capturedReq.Messages[0].Content)
+		require.Equal(t, piped, *capturedReq.Messages[1].Content) // {{input}} -> "Hello there!"
+
+		require.Contains(t, out.String(), reply)
 	})
 }

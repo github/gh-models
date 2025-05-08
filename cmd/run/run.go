@@ -260,6 +260,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 
 			initialPrompt := ""
 			singleShot := false
+			pipedContent := ""
 
 			if len(args) > 1 {
 				initialPrompt = strings.Join(args[1:], " ")
@@ -269,8 +270,11 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			if isPipe(os.Stdin) {
 				promptFromPipe, _ := io.ReadAll(os.Stdin)
 				if len(promptFromPipe) > 0 {
-					initialPrompt = initialPrompt + "\n" + string(promptFromPipe)
-					singleShot = true
+					pipedContent = strings.TrimSpace(string(promptFromPipe))
+					if pf == nil {
+						initialPrompt = initialPrompt + "\n" + pipedContent
+						singleShot = true
+					}
 				}
 			}
 
@@ -283,22 +287,28 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 				systemPrompt: systemPrompt,
 			}
 
-			// preload conversation & parameters from YAML
+			// If a prompt file is passed, load the messages from the file, templating {{input}} from stdin
 			if pf != nil {
 				for _, m := range pf.Messages {
+					content := m.Content
+					if pipedContent != "" && strings.ToLower(m.Role) == "user" {
+						content = strings.ReplaceAll(content, "{{input}}", pipedContent)
+					}
 					switch strings.ToLower(m.Role) {
 					case "system":
 						if conversation.systemPrompt == "" {
-							conversation.systemPrompt = m.Content
+							conversation.systemPrompt = content
 						} else {
-							conversation.AddMessage(azuremodels.ChatMessageRoleSystem, m.Content)
+							conversation.AddMessage(azuremodels.ChatMessageRoleSystem, content)
 						}
 					case "user":
-						conversation.AddMessage(azuremodels.ChatMessageRoleUser, m.Content)
+						conversation.AddMessage(azuremodels.ChatMessageRoleUser, content)
 					case "assistant":
-						conversation.AddMessage(azuremodels.ChatMessageRoleAssistant, m.Content)
+						conversation.AddMessage(azuremodels.ChatMessageRoleAssistant, content)
 					}
 				}
+
+				initialPrompt = ""
 			}
 
 			mp := ModelParameters{}
@@ -320,7 +330,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 					initialPrompt = ""
 				}
 
-				if prompt == "" {
+				if prompt == "" && pf == nil {
 					fmt.Printf(">>> ")
 					reader := bufio.NewReader(os.Stdin)
 					prompt, err = reader.ReadString('\n')
@@ -331,7 +341,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 
 				prompt = strings.TrimSpace(prompt)
 
-				if prompt == "" {
+				if prompt == "" && pf == nil {
 					continue
 				}
 
@@ -419,7 +429,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 
 				conversation.AddMessage(azuremodels.ChatMessageRoleAssistant, messageBuilder.String())
 
-				if singleShot {
+				if singleShot || pf != nil {
 					break
 				}
 			}
