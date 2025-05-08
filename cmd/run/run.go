@@ -272,7 +272,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 				if len(promptFromPipe) > 0 {
 					pipedContent = strings.TrimSpace(string(promptFromPipe))
 					if pf == nil {
-						initialPrompt = pipedContent
+						initialPrompt = initialPrompt + "\n" + pipedContent
 						singleShot = true
 					}
 				}
@@ -287,7 +287,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 				systemPrompt: systemPrompt,
 			}
 
-			// If a prompt file is passed, load the messages from the file
+			// If a prompt file is passed, load the messages from the file, templating {{input}} from stdin
 			if pf != nil {
 				for _, m := range pf.Messages {
 					content := m.Content
