@@ -3,6 +3,7 @@ package run
 import (
 	"bytes"
 	"context"
+	"os"
 	"regexp"
 	"testing"
 
@@ -79,5 +80,74 @@ func TestRun(t *testing.T) {
 		require.Regexp(t, regexp.MustCompile(`--temperature string\s+Controls randomness in the response, use lower to be more deterministic\.`), output)
 		require.Regexp(t, regexp.MustCompile(`--top-p string\s+Controls text diversity by selecting the most probable words until a set probability is reached\.`), output)
 		require.Empty(t, errBuf.String())
+	})
+
+	t.Run("--file pre-loads YAML from file", func(t *testing.T) {
+		const yamlBody = `
+name: Text Summarizer
+description: Summarizes input text concisely
+model: openai/test-model
+modelParameters:
+  temperature: 0.5
+messages:
+  - role: system
+    content: You are a text summarizer.
+  - role: user
+    content: Hello there!
+`
+		tmp, err := os.CreateTemp(t.TempDir(), "*.prompt.yml")
+		require.NoError(t, err)
+		_, err = tmp.WriteString(yamlBody)
+		require.NoError(t, err)
+		require.NoError(t, tmp.Close())
+
+		client := azuremodels.NewMockClient()
+		modelSummary := &azuremodels.ModelSummary{
+			Name:      "test-model",
+			Publisher: "openai",
+			Task:      "chat-completion",
+		}
+		client.MockListModels = func(ctx context.Context) ([]*azuremodels.ModelSummary, error) {
+			return []*azuremodels.ModelSummary{modelSummary}, nil
+		}
+
+		var capturedReq azuremodels.ChatCompletionOptions
+		reply := "Summary - foo"
+		chatCompletion := azuremodels.ChatCompletion{
+			Choices: []azuremodels.ChatChoice{{
+				Message: &azuremodels.ChatChoiceMessage{
+					Content: util.Ptr(reply),
+					Role:    util.Ptr(string(azuremodels.ChatMessageRoleAssistant)),
+				},
+			}},
+		}
+		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions) (*azuremodels.ChatCompletionResponse, error) {
+			capturedReq = opt
+			return &azuremodels.ChatCompletionResponse{
+				Reader: sse.NewMockEventReader([]azuremodels.ChatCompletion{chatCompletion}),
+			}, nil
+		}
+
+		out := new(bytes.Buffer)
+		cfg := command.NewConfig(out, out, client, true, 100)
+		runCmd := NewRunCommand(cfg)
+		runCmd.SetArgs([]string{
+			"--file", tmp.Name(),
+			azuremodels.FormatIdentifier("openai", "test-model"),
+			"foo?",
+		})
+
+		_, err = runCmd.ExecuteC()
+		require.NoError(t, err)
+
+		require.Equal(t, 3, len(capturedReq.Messages))
+		require.Equal(t, "You are a text summarizer.", *capturedReq.Messages[0].Content)
+		require.Equal(t, "Hello there!", *capturedReq.Messages[1].Content)
+		require.Equal(t, "foo?", *capturedReq.Messages[2].Content)
+
+		require.NotNil(t, capturedReq.Temperature)
+		require.Equal(t, 0.5, *capturedReq.Temperature)
+
+		require.Contains(t, out.String(), reply) // response streamed to output
 	})
 }
