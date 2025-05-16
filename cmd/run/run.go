@@ -270,10 +270,12 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			if isPipe(os.Stdin) {
 				promptFromPipe, _ := io.ReadAll(os.Stdin)
 				if len(promptFromPipe) > 0 {
+					singleShot = true
 					pipedContent = strings.TrimSpace(string(promptFromPipe))
-					if pf == nil {
+					if initialPrompt != "" {
 						initialPrompt = initialPrompt + "\n" + pipedContent
-						singleShot = true
+					} else {
+						initialPrompt = pipedContent
 					}
 				}
 			}
@@ -291,8 +293,8 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			if pf != nil {
 				for _, m := range pf.Messages {
 					content := m.Content
-					if pipedContent != "" && strings.ToLower(m.Role) == "user" {
-						content = strings.ReplaceAll(content, "{{input}}", pipedContent)
+					if strings.ToLower(m.Role) == "user" {
+						content = strings.ReplaceAll(content, "{{input}}", initialPrompt)
 					}
 					switch strings.ToLower(m.Role) {
 					case "system":
