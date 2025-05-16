@@ -222,7 +222,7 @@ messages:
 
 		require.Len(t, capturedReq.Messages, 3)
 		require.Equal(t, "You are a text summarizer.", *capturedReq.Messages[0].Content)
-		require.Equal(t, initialPrompt+"\n"+piped, *capturedReq.Messages[1].Content) // {{input}} -> "Hello there!"
+		require.Equal(t, initialPrompt+"\n"+piped, *capturedReq.Messages[1].Content) // {{input}} -> "Please summarize the provided text.\nHello there!"
 
 		require.Contains(t, out.String(), reply)
 	})
