@@ -270,6 +270,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			if isPipe(os.Stdin) {
 				promptFromPipe, _ := io.ReadAll(os.Stdin)
 				if len(promptFromPipe) > 0 {
+					singleShot = true
 					pipedContent = strings.TrimSpace(string(promptFromPipe))
 					if initialPrompt != "" {
 						initialPrompt = initialPrompt + "\n" + pipedContent
