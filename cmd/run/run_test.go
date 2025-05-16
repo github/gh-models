@@ -149,7 +149,7 @@ messages:
 		require.Contains(t, out.String(), reply) // response streamed to output
 	})
 
-	t.Run("--file with {{input}} placeholder is substituted with stdin", func(t *testing.T) {
+	t.Run("--file with {{input}} placeholder is substituted with initial prompt and stdin", func(t *testing.T) {
 		const yamlBody = `
 name: Summarizer
 description: Summarizes input text
@@ -208,10 +208,13 @@ messages:
 
 		out := new(bytes.Buffer)
 		cfg := command.NewConfig(out, out, client, true, 100)
+
+		initialPrompt := "Please summarize the provided text."
 		runCmd := NewRunCommand(cfg)
 		runCmd.SetArgs([]string{
 			"--file", tmp.Name(),
 			azuremodels.FormatIdentifier("openai", "test-model"),
+			initialPrompt,
 		})
 
 		_, err = runCmd.ExecuteC()
@@ -219,7 +222,7 @@ messages:
 
 		require.Len(t, capturedReq.Messages, 3)
 		require.Equal(t, "You are a text summarizer.", *capturedReq.Messages[0].Content)
-		require.Equal(t, piped, *capturedReq.Messages[1].Content) // {{input}} -> "Hello there!"
+		require.Equal(t, initialPrompt+"\n"+piped, *capturedReq.Messages[1].Content) // {{input}} -> "Hello there!"
 
 		require.Contains(t, out.String(), reply)
 	})
