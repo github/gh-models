@@ -326,56 +326,18 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 					initialPrompt = ""
 				}
 
-				if prompt == "" && pf == nil {
-					fmt.Printf(">>> ")
-					reader := bufio.NewReader(os.Stdin)
-					prompt, err = reader.ReadString('\n')
-					if err != nil {
+				if singleShot {
+					if prompt != "" {
+						conversation.AddMessage(azuremodels.ChatMessageRoleUser, prompt)
+					}
+				} else {
+					conversation, err = cmdHandler.ChatWithUser(conversation, mp)
+					if errors.Is(err, ExitChatError) {
+						break
+					} else if err != nil {
 						return err
 					}
 				}
-
-				prompt = strings.TrimSpace(prompt)
-
-				if prompt == "" && pf == nil {
-					continue
-				}
-
-				if strings.HasPrefix(prompt, "/") {
-					if prompt == "/bye" || prompt == "/exit" || prompt == "/quit" {
-						break
-					}
-
-					if prompt == "/parameters" {
-						cmdHandler.handleParametersPrompt(conversation, mp)
-						continue
-					}
-
-					if prompt == "/reset" || prompt == "/clear" {
-						cmdHandler.handleResetPrompt(conversation)
-						continue
-					}
-
-					if strings.HasPrefix(prompt, "/set ") {
-						cmdHandler.handleSetPrompt(prompt, mp)
-						continue
-					}
-
-					if strings.HasPrefix(prompt, "/system-prompt ") {
-						conversation = cmdHandler.handleSystemPrompt(prompt, conversation)
-						continue
-					}
-
-					if prompt == "/help" {
-						cmdHandler.handleHelpPrompt()
-						continue
-					}
-
-					cmdHandler.handleUnrecognizedPrompt(prompt)
-					continue
-				}
-
-				conversation.AddMessage(azuremodels.ChatMessageRoleUser, prompt)
 
 				req := azuremodels.ChatCompletionOptions{
 					Messages: conversation.GetMessages(),
@@ -611,4 +573,58 @@ func (h *runCommandHandler) handleCompletionChoice(choice azuremodels.ChatChoice
 
 func (h *runCommandHandler) writeToOut(message string) {
 	h.cfg.WriteToOut(message)
+}
+
+var ExitChatError = errors.New("exiting chat")
+
+func (h *runCommandHandler) ChatWithUser(conversation Conversation, mp ModelParameters) (Conversation, error) {
+	fmt.Printf(">>> ")
+	reader := bufio.NewReader(os.Stdin)
+
+	prompt, err := reader.ReadString('\n')
+	if err != nil {
+		return conversation, err
+	}
+
+	prompt = strings.TrimSpace(prompt)
+	if prompt == "" {
+		return conversation, nil
+	}
+
+	if strings.HasPrefix(prompt, "/") {
+		if prompt == "/bye" || prompt == "/exit" || prompt == "/quit" {
+			return conversation, ExitChatError
+		}
+
+		if prompt == "/parameters" {
+			h.handleParametersPrompt(conversation, mp)
+			return conversation, nil
+		}
+
+		if prompt == "/reset" || prompt == "/clear" {
+			h.handleResetPrompt(conversation)
+			return conversation, nil
+		}
+
+		if strings.HasPrefix(prompt, "/set ") {
+			h.handleSetPrompt(prompt, mp)
+			return conversation, nil
+		}
+
+		if strings.HasPrefix(prompt, "/system-prompt ") {
+			conversation = h.handleSystemPrompt(prompt, conversation)
+			return conversation, nil
+		}
+
+		if prompt == "/help" {
+			h.handleHelpPrompt()
+			return conversation, nil
+		}
+
+		h.handleUnrecognizedPrompt(prompt)
+		return conversation, nil
+	}
+
+	conversation.AddMessage(azuremodels.ChatMessageRoleUser, prompt)
+	return conversation, nil
 }
