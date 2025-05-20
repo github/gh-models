@@ -293,17 +293,11 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			if pf != nil {
 				for _, m := range pf.Messages {
 					content := m.Content
-					if strings.ToLower(m.Role) == "user" {
-						content = strings.ReplaceAll(content, "{{input}}", initialPrompt)
-					}
 					switch strings.ToLower(m.Role) {
 					case "system":
-						if conversation.systemPrompt == "" {
-							conversation.systemPrompt = content
-						} else {
-							conversation.AddMessage(azuremodels.ChatMessageRoleSystem, content)
-						}
+						conversation.systemPrompt = content
 					case "user":
+						content = strings.ReplaceAll(content, "{{input}}", initialPrompt)
 						conversation.AddMessage(azuremodels.ChatMessageRoleUser, content)
 					case "assistant":
 						conversation.AddMessage(azuremodels.ChatMessageRoleAssistant, content)
