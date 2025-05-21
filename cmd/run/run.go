@@ -289,8 +289,12 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 				systemPrompt: systemPrompt,
 			}
 
-			// If a prompt file is passed, load the messages from the file, templating {{input}} from stdin
-			if pf != nil {
+			// If there is no prompt file, add the initialPrompt to the conversation.
+			// If a prompt file is passed, load the messages from the file, templating {{input}}
+			// using the initialPrompt.
+			if pf == nil {
+				conversation.AddMessage(azuremodels.ChatMessageRoleUser, initialPrompt)
+			} else {
 				for _, m := range pf.Messages {
 					content := m.Content
 					switch strings.ToLower(m.Role) {
@@ -303,8 +307,6 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 						conversation.AddMessage(azuremodels.ChatMessageRoleAssistant, content)
 					}
 				}
-
-				initialPrompt = ""
 			}
 
 			mp := ModelParameters{}
@@ -320,17 +322,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			}
 
 			for {
-				prompt := ""
-				if initialPrompt != "" {
-					prompt = initialPrompt
-					initialPrompt = ""
-				}
-
-				if singleShot {
-					if prompt != "" {
-						conversation.AddMessage(azuremodels.ChatMessageRoleUser, prompt)
-					}
-				} else {
+				if !singleShot {
 					conversation, err = cmdHandler.ChatWithUser(conversation, mp)
 					if errors.Is(err, ExitChatError) {
 						break
