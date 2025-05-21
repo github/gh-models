@@ -326,6 +326,8 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 					conversation, err = cmdHandler.ChatWithUser(conversation, mp)
 					if errors.Is(err, ExitChatError) {
 						break
+					} else if errors.Is(err, io.EOF) {
+						break
 					} else if err != nil {
 						return err
 					}
