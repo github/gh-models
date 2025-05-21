@@ -139,7 +139,7 @@ messages:
 		_, err = runCmd.ExecuteC()
 		require.NoError(t, err)
 
-		require.Equal(t, 3, len(capturedReq.Messages))
+		require.Equal(t, 2, len(capturedReq.Messages))
 		require.Equal(t, "You are a text summarizer.", *capturedReq.Messages[0].Content)
 		require.Equal(t, "Hello there!", *capturedReq.Messages[1].Content)
 
@@ -220,7 +220,7 @@ messages:
 		_, err = runCmd.ExecuteC()
 		require.NoError(t, err)
 
-		require.Len(t, capturedReq.Messages, 3)
+		require.Len(t, capturedReq.Messages, 2)
 		require.Equal(t, "You are a text summarizer.", *capturedReq.Messages[0].Content)
 		require.Equal(t, initialPrompt+"\n"+piped, *capturedReq.Messages[1].Content) // {{input}} -> "Please summarize the provided text.\nHello there!"
 

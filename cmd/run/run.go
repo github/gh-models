@@ -258,19 +258,19 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 				return err
 			}
 
+			interactiveMode := true
 			initialPrompt := ""
-			singleShot := false
 			pipedContent := ""
 
 			if len(args) > 1 {
 				initialPrompt = strings.Join(args[1:], " ")
-				singleShot = true
+				interactiveMode = false
 			}
 
 			if isPipe(os.Stdin) {
 				promptFromPipe, _ := io.ReadAll(os.Stdin)
 				if len(promptFromPipe) > 0 {
-					singleShot = true
+					interactiveMode = false
 					pipedContent = strings.TrimSpace(string(promptFromPipe))
 					if initialPrompt != "" {
 						initialPrompt = initialPrompt + "\n" + pipedContent
@@ -295,6 +295,8 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			if pf == nil {
 				conversation.AddMessage(azuremodels.ChatMessageRoleUser, initialPrompt)
 			} else {
+				interactiveMode = false
+
 				for _, m := range pf.Messages {
 					content := m.Content
 					switch strings.ToLower(m.Role) {
@@ -322,7 +324,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			}
 
 			for {
-				if !singleShot {
+				if interactiveMode {
 					conversation, err = cmdHandler.ChatWithUser(conversation, mp)
 					if errors.Is(err, ExitChatError) {
 						break
@@ -381,7 +383,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 
 				conversation.AddMessage(azuremodels.ChatMessageRoleAssistant, messageBuilder.String())
 
-				if singleShot || pf != nil {
+				if !interactiveMode {
 					break
 				}
 			}
