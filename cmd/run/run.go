@@ -326,7 +326,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			for {
 				if interactiveMode {
 					conversation, err = cmdHandler.ChatWithUser(conversation, mp)
-					if errors.Is(err, ExitChatError) {
+					if errors.Is(err, ErrExitChat) {
 						break
 					} else if errors.Is(err, io.EOF) {
 						break
@@ -571,7 +571,7 @@ func (h *runCommandHandler) writeToOut(message string) {
 	h.cfg.WriteToOut(message)
 }
 
-var ExitChatError = errors.New("exiting chat")
+var ErrExitChat = errors.New("exiting chat")
 
 func (h *runCommandHandler) ChatWithUser(conversation Conversation, mp ModelParameters) (Conversation, error) {
 	fmt.Printf(">>> ")
@@ -589,7 +589,7 @@ func (h *runCommandHandler) ChatWithUser(conversation Conversation, mp ModelPara
 
 	if strings.HasPrefix(prompt, "/") {
 		if prompt == "/bye" || prompt == "/exit" || prompt == "/quit" {
-			return conversation, ExitChatError
+			return conversation, ErrExitChat
 		}
 
 		if prompt == "/parameters" {
