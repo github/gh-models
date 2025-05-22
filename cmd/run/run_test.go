@@ -317,7 +317,6 @@ messages:
 			"--max-tokens", "150",
 			"--temperature", "0.1",
 			"--top-p", "0.3",
-			azuremodels.FormatIdentifier("openai", "example-model"),
 		})
 
 		_, err = runCmd.ExecuteC()
