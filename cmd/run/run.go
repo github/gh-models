@@ -314,15 +314,16 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			}
 
 			mp := ModelParameters{}
-			err = mp.PopulateFromFlags(cmd.Flags())
-			if err != nil {
-				return err
-			}
 
 			if pf != nil {
 				mp.maxTokens = pf.ModelParameters.MaxTokens
 				mp.temperature = pf.ModelParameters.Temperature
 				mp.topP = pf.ModelParameters.TopP
+			}
+
+			err = mp.PopulateFromFlags(cmd.Flags())
+			if err != nil {
+				return err
 			}
 
 			for {
