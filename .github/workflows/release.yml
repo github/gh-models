@@ -25,3 +25,4 @@ jobs:
           go_version_file: go.mod
           release_tag: ${{ github.event.inputs.release_tag || '' }}
           generate_attestations: true
+          release_android: true
