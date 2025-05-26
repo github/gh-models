@@ -11,6 +11,6 @@ if [ -z $TAG ]; then
 fi
 shift
 
-BINARIES="gh-models-darwin-amd64 gh-models-darwin-arm64 gh-models-linux-amd64 gh-models-windows-amd64.exe gh-models-android-arm64"
+BINARIES="gh-models-darwin-amd64 gh-models-darwin-arm64 gh-models-linux-amd64 gh-models-windows-amd64.exe gh-models-android-arm64 gh-models-android-amd64"
 
 gh release upload $* $TAG $BINARIES
