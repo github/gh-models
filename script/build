@@ -29,7 +29,6 @@ fi
 if [[ "$OS" == "linux" || "$OS" == "all" ]]; then
     GOOS=linux GOARCH=amd64 build
     GOOS=android GOARCH=arm64 build
-    GOOS=android GOARCH=amd64 build
 fi
 
 if [[ "$OS" == "darwin" || "$OS" == "all" ]]; then
