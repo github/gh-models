@@ -26,3 +26,4 @@ jobs:
           release_tag: ${{ github.event.inputs.release_tag || '' }}
           generate_attestations: true
           release_android: true
+          android_sdk_version: 34
