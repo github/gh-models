@@ -61,7 +61,7 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 			    - name: contains-hello
 			      string:
 			        contains: "hello"
-		`, "`"),
+		`),
 		Example: "gh models eval prompt.yml",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -75,10 +75,9 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 
 			// Run evaluation
 			handler := &evalCommandHandler{
-				cfg:                 cfg,
-				client:              cfg.Client,
-				evalFile:            evalFile,
-				similarityEvaluator: NewSimilarityEvaluator(),
+				cfg:      cfg,
+				client:   cfg.Client,
+				evalFile: evalFile,
 			}
 
 			return handler.runEvaluation(cmd.Context())
@@ -89,10 +88,9 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 }
 
 type evalCommandHandler struct {
-	cfg                 *command.Config
-	client              azuremodels.Client
-	evalFile            *EvaluationPromptFile
-	similarityEvaluator *SimilarityEvaluator
+	cfg      *command.Config
+	client   azuremodels.Client
+	evalFile *EvaluationPromptFile
 }
 
 func loadEvaluationPromptFile(filePath string) (*EvaluationPromptFile, error) {
@@ -428,19 +426,18 @@ func (h *evalCommandHandler) runLLMEvaluator(ctx context.Context, name string, e
 }
 
 func (h *evalCommandHandler) runPluginEvaluator(ctx context.Context, name, plugin string, testCase map[string]interface{}, response string) (EvaluationResult, error) {
-	// For now, we'll implement basic support for github/similarity
-	if plugin == "github/similarity" {
-		return h.runSimilarityEvaluator(name, testCase, response)
+	// Handle built-in evaluators like github/similarity, github/coherence, etc.
+	if strings.HasPrefix(plugin, "github/") {
+		evaluatorName := strings.TrimPrefix(plugin, "github/")
+		if builtinEvaluator, exists := BuiltInEvaluators[evaluatorName]; exists {
+			return h.runLLMEvaluator(ctx, name, builtinEvaluator, testCase, response)
+		}
 	}
 
 	return EvaluationResult{
 		EvaluatorName: name,
 		Score:         0.0,
 		Passed:        false,
-		Details:       fmt.Sprintf("Plugin evaluator '%s' not yet implemented", plugin),
+		Details:       fmt.Sprintf("Plugin evaluator '%s' not found", plugin),
 	}, nil
-}
-
-func (h *evalCommandHandler) runSimilarityEvaluator(name string, testCase map[string]interface{}, response string) (EvaluationResult, error) {
-	return h.similarityEvaluator.Evaluate(name, testCase, response)
 }

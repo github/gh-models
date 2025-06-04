@@ -1,0 +1,25 @@
+name: Test Built-in Evaluators
+description: Testing the new LLM-based built-in evaluators
+model: openai/gpt-4o
+modelParameters:
+  temperature: 0.5
+  maxTokens: 100
+testData:
+  - input: 'What is photosynthesis?'
+    expected: 'Photosynthesis is the process by which plants convert sunlight into energy using chlorophyll, converting carbon dioxide and water into glucose and oxygen.'
+messages:
+  - role: system
+    content: You are a helpful assistant that provides accurate scientific information.
+  - role: user
+    content: '{{input}}'
+evaluators:
+  - name: similarity test
+    uses: github/similarity
+  - name: coherence test
+    uses: github/coherence
+  - name: fluency test
+    uses: github/fluency
+  - name: relevance test
+    uses: github/relevance
+  - name: groundedness test
+    uses: github/groundedness

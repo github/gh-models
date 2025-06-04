@@ -140,21 +140,41 @@ evaluators:
 		}
 	})
 
-	t.Run("similarity evaluator works", func(t *testing.T) {
-		handler := &evalCommandHandler{}
-		testCase := map[string]interface{}{
-			"expected": "hello world",
+	t.Run("plugin evaluator works with github/similarity", func(t *testing.T) {
+		out := new(bytes.Buffer)
+		client := azuremodels.NewMockClient()
+		cfg := command.NewConfig(out, out, client, true, 100)
+
+		// Mock a response that returns "4" for the LLM evaluator
+		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions) (*azuremodels.ChatCompletionResponse, error) {
+			reader := sse.NewMockEventReader([]azuremodels.ChatCompletion{
+				{
+					Choices: []azuremodels.ChatChoice{
+						{
+							Message: &azuremodels.ChatChoiceMessage{
+								Content: func() *string { s := "4"; return &s }(),
+							},
+						},
+					},
+				},
+			})
+			return &azuremodels.ChatCompletionResponse{Reader: reader}, nil
 		}
 
-		result, err := handler.runSimilarityEvaluator("similarity", testCase, "hello world")
-		require.NoError(t, err)
-		require.True(t, result.Passed)
-		require.Equal(t, 1.0, result.Score)
+		handler := &evalCommandHandler{
+			cfg:    cfg,
+			client: client,
+		}
+		testCase := map[string]interface{}{
+			"input":    "test question",
+			"expected": "test answer",
+		}
 
-		result, err = handler.runSimilarityEvaluator("similarity", testCase, "completely different text")
+		result, err := handler.runPluginEvaluator(context.Background(), "similarity", "github/similarity", testCase, "test response")
 		require.NoError(t, err)
-		require.False(t, result.Passed)
-		require.True(t, result.Score < 0.7)
+		require.Equal(t, "similarity", result.EvaluatorName)
+		require.Equal(t, 0.75, result.Score) // Score for choice "4"
+		require.True(t, result.Passed)
 	})
 
 	t.Run("command creation works", func(t *testing.T) {
