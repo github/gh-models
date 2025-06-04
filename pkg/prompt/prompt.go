@@ -2,9 +2,9 @@
 package prompt
 
 import (
+	"fmt"
 	"os"
 	"strings"
-	"text/template"
 
 	"gopkg.in/yaml.v3"
 )
@@ -79,21 +79,35 @@ func LoadFromFile(filePath string) (*File, error) {
 	return &promptFile, nil
 }
 
-// TemplateString templates a string with the given data using Go's text/template
+// TemplateString templates a string with the given data using simple {{variable}} replacement
 func TemplateString(templateStr string, data interface{}) (string, error) {
-	tmpl, err := template.New("template").Option("missingkey=zero").Parse(templateStr)
-	if err != nil {
-		return "", err
+	result := templateStr
+
+	// Convert data to map[string]interface{} if it's not already
+	var dataMap map[string]interface{}
+	switch d := data.(type) {
+	case map[string]interface{}:
+		dataMap = d
+	case map[string]string:
+		dataMap = make(map[string]interface{})
+		for k, v := range d {
+			dataMap[k] = v
+		}
+	default:
+		// If it's not a map, we can't template it
+		return result, nil
 	}
 
-	var result strings.Builder
-	if err := tmpl.Execute(&result, data); err != nil {
-		return "", err
+	// Replace all {{variable}} patterns with values from the data map
+	for key, value := range dataMap {
+		placeholder := "{{" + key + "}}"
+		if valueStr, ok := value.(string); ok {
+			result = strings.ReplaceAll(result, placeholder, valueStr)
+		} else {
+			// Convert non-string values to string
+			result = strings.ReplaceAll(result, placeholder, fmt.Sprintf("%v", value))
+		}
 	}
 
-	// Replace "<no value>" with empty string for missing template variables
-	resultStr := result.String()
-	resultStr = strings.ReplaceAll(resultStr, "<no value>", "")
-
-	return resultStr, nil
+	return result, nil
 }

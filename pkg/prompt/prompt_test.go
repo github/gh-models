@@ -62,7 +62,7 @@ evaluators:
 			"age":  25,
 		}
 
-		result, err := TemplateString("Hello {{.name}}, you are {{.age}} years old", testData)
+		result, err := TemplateString("Hello {{name}}, you are {{age}} years old", testData)
 		require.NoError(t, err)
 		require.Equal(t, "Hello World, you are 25 years old", result)
 	})
@@ -72,9 +72,9 @@ evaluators:
 			"name": "World",
 		}
 
-		result, err := TemplateString("Hello {{.name}}, you are {{.missing}} years old", testData)
+		result, err := TemplateString("Hello {{name}}, you are {{missing}} years old", testData)
 		require.NoError(t, err)
-		require.Equal(t, "Hello World, you are  years old", result)
+		require.Equal(t, "Hello World, you are {{missing}} years old", result)
 	})
 
 	t.Run("handles file not found", func(t *testing.T) {

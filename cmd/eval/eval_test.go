@@ -62,7 +62,7 @@ evaluators:
 		evalFile := &prompt.File{
 			Messages: []prompt.Message{
 				{Role: "system", Content: "You are helpful."},
-				{Role: "user", Content: "Process {{.input}} and return {{.expected}}"},
+				{Role: "user", Content: "Process {{input}} and return {{expected}}"},
 			},
 		}
 
@@ -177,7 +177,7 @@ testData:
     expected: "test response"
 messages:
   - role: user
-    content: "{{.input}}"
+    content: "{{input}}"
 evaluators:
   - name: contains-test
     string:
@@ -233,7 +233,7 @@ testData:
     expected: "expected but not returned"
 messages:
   - role: user
-    content: "{{.input}}"
+    content: "{{input}}"
 evaluators:
   - name: contains-nonexistent
     string:
