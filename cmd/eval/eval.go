@@ -62,7 +62,7 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 			      string:
 			        contains: "hello"
 		`),
-		Example: "gh models eval prompt.yml",
+		Example: "gh models eval my_prompt.prompt.yml",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			promptFilePath := args[0]
@@ -99,9 +99,6 @@ func loadEvaluationPromptFile(filePath string) (*EvaluationPromptFile, error) {
 		return nil, fmt.Errorf("failed to load prompt file: %w", err)
 	}
 
-	fmt.Printf("Loaded file with name='%s', model='%s', testData count=%d\n",
-		evalFile.Name, evalFile.Model, len(evalFile.TestData))
-
 	return evalFile, nil
 }
 
@@ -112,7 +109,6 @@ func (h *evalCommandHandler) runEvaluation(ctx context.Context) error {
 	h.cfg.WriteToOut(fmt.Sprintf("Test cases: %d\n", len(h.evalFile.TestData)))
 	h.cfg.WriteToOut("\n")
 
-	var allResults []TestResult
 	passedTests := 0
 	totalTests := len(h.evalFile.TestData)
 
@@ -123,8 +119,6 @@ func (h *evalCommandHandler) runEvaluation(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("test case %d failed: %w", i+1, err)
 		}
-
-		allResults = append(allResults, result)
 
 		// Check if all evaluators passed
 		testPassed := true
