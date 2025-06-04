@@ -101,8 +101,7 @@ func loadEvaluationPromptFile(filePath string) (*EvaluationPromptFile, error) {
 		return nil, fmt.Errorf("failed to load prompt file: %w", err)
 	}
 
-	// Debug output
-	fmt.Printf("DEBUG: Loaded file with name='%s', model='%s', testData count=%d\n",
+	fmt.Printf("Loaded file with name='%s', model='%s', testData count=%d\n",
 		evalFile.Name, evalFile.Model, len(evalFile.TestData))
 
 	return evalFile, nil
@@ -164,8 +163,12 @@ func (h *evalCommandHandler) runEvaluation(ctx context.Context) error {
 
 	// Summary
 	h.cfg.WriteToOut("Evaluation Summary:\n")
-	h.cfg.WriteToOut(fmt.Sprintf("Passed: %d/%d (%.1f%%)\n",
-		passedTests, totalTests, float64(passedTests)/float64(totalTests)*100))
+	if totalTests == 0 {
+		h.cfg.WriteToOut("Passed: 0/0 (0.0%)\n")
+	} else {
+		h.cfg.WriteToOut(fmt.Sprintf("Passed: %d/%d (%.1f%%)\n",
+			passedTests, totalTests, float64(passedTests)/float64(totalTests)*100))
+	}
 
 	if passedTests == totalTests {
 		h.cfg.WriteToOut("🎉 All tests passed!\n")
