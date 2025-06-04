@@ -140,8 +140,12 @@ func (h *evalCommandHandler) runEvaluation(ctx context.Context) error {
 			h.cfg.WriteToOut("  ✓ PASSED\n")
 		} else {
 			h.cfg.WriteToOut("  ✗ FAILED\n")
-			// Show model response when test fails
-			h.cfg.WriteToOut(fmt.Sprintf("    Model Response: %s\n", result.ModelResponse))
+			// Show the first 100 characters of the model response when test fails
+			preview := result.ModelResponse
+			if len(preview) > 100 {
+				preview = preview[:100] + "..."
+			}
+			h.cfg.WriteToOut(fmt.Sprintf("    Model Response: %s\n", preview))
 		}
 
 		// Show evaluation details
