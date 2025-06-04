@@ -149,7 +149,7 @@ messages:
 		require.Contains(t, out.String(), reply) // response streamed to output
 	})
 
-	t.Run("--file with {{input}} placeholder is substituted with initial prompt and stdin", func(t *testing.T) {
+	t.Run("--file with {{.input}} placeholder is substituted with initial prompt and stdin", func(t *testing.T) {
 		const yamlBody = `
 name: Summarizer
 description: Summarizes input text
@@ -158,7 +158,7 @@ messages:
   - role: system
     content: You are a text summarizer.
   - role: user
-    content: "{{input}}"
+    content: "{{.input}}"
 `
 
 		tmp, err := os.CreateTemp(t.TempDir(), "*.prompt.yml")
@@ -222,7 +222,7 @@ messages:
 
 		require.Len(t, capturedReq.Messages, 2)
 		require.Equal(t, "You are a text summarizer.", *capturedReq.Messages[0].Content)
-		require.Equal(t, initialPrompt+"\n"+piped, *capturedReq.Messages[1].Content) // {{input}} -> "Please summarize the provided text.\nHello there!"
+		require.Equal(t, initialPrompt+"\n"+piped, *capturedReq.Messages[1].Content) // {{.input}} -> "Please summarize the provided text.\nHello there!"
 
 		require.Contains(t, out.String(), reply)
 	})
