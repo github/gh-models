@@ -13,7 +13,7 @@ messages:
   - role: system
     content: You are a helpful assistant.
   - role: user
-    content: "{{.input}}"
+    content: "{{input}}"
 evaluators:
   - name: contains-impossible
     string:

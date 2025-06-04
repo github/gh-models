@@ -21,7 +21,7 @@ messages:
   - role: system
     content: You are a helpful assistant.
   - role: user
-    content: "Hello {{.name}}"
+    content: "Hello {{name}}"
 testData:
   - name: "Alice"
   - name: "Bob"
@@ -47,7 +47,7 @@ evaluators:
 		require.Equal(t, "system", promptFile.Messages[0].Role)
 		require.Equal(t, "You are a helpful assistant.", promptFile.Messages[0].Content)
 		require.Equal(t, "user", promptFile.Messages[1].Role)
-		require.Equal(t, "Hello {{.name}}", promptFile.Messages[1].Content)
+		require.Equal(t, "Hello {{name}}", promptFile.Messages[1].Content)
 		require.Len(t, promptFile.TestData, 2)
 		require.Equal(t, "Alice", promptFile.TestData[0]["name"])
 		require.Equal(t, "Bob", promptFile.TestData[1]["name"])

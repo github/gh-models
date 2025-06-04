@@ -13,7 +13,7 @@ messages:
   - role: system
     content: You are a helpful assistant that responds to greetings and farewells.
   - role: user
-    content: 'Please respond to this message appropriately: {{.input}}'
+    content: 'Please respond to this message appropriately: {{input}}'
 evaluators:
   - name: string evaluator
     string:
