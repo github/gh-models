@@ -18,10 +18,10 @@ import (
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/internal/sse"
 	"github.com/github/gh-models/pkg/command"
+	"github.com/github/gh-models/pkg/prompt"
 	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"gopkg.in/yaml.v3"
 )
 
 // ModelParameters represents the parameters that can be set for a model run.
@@ -189,22 +189,6 @@ func isPipe(r io.Reader) bool {
 	return false
 }
 
-// promptFile mirrors the format of .prompt.yml
-type promptFile struct {
-	Name            string `yaml:"name"`
-	Description     string `yaml:"description"`
-	Model           string `yaml:"model"`
-	ModelParameters struct {
-		MaxTokens   *int     `yaml:"maxTokens"`
-		Temperature *float64 `yaml:"temperature"`
-		TopP        *float64 `yaml:"topP"`
-	} `yaml:"modelParameters"`
-	Messages []struct {
-		Role    string `yaml:"role"`
-		Content string `yaml:"content"`
-	} `yaml:"messages"`
-}
-
 // NewRunCommand returns a new gh command for running a model.
 func NewRunCommand(cfg *command.Config) *cobra.Command {
 	cmd := &cobra.Command{
@@ -226,17 +210,13 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 		Args:    cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			filePath, _ := cmd.Flags().GetString("file")
-			var pf *promptFile
+			var pf *prompt.File
 			if filePath != "" {
-				b, err := os.ReadFile(filePath)
+				var err error
+				pf, err = prompt.LoadFromFile(filePath)
 				if err != nil {
 					return err
 				}
-				p := promptFile{}
-				if err := yaml.Unmarshal(b, &p); err != nil {
-					return err
-				}
-				pf = &p
 				// Inject model name as the first positional arg if user didn't supply one
 				if pf.Model != "" && len(args) == 0 {
 					args = append([]string{pf.Model}, args...)
@@ -297,13 +277,21 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			} else {
 				interactiveMode = false
 
+				// Template the messages with the input
+				templateData := map[string]interface{}{
+					"input": initialPrompt,
+				}
+
 				for _, m := range pf.Messages {
-					content := m.Content
+					content, err := prompt.TemplateString(m.Content, templateData)
+					if err != nil {
+						return err
+					}
+
 					switch strings.ToLower(m.Role) {
 					case "system":
 						conversation.systemPrompt = content
 					case "user":
-						content = strings.ReplaceAll(content, "{{input}}", initialPrompt)
 						conversation.AddMessage(azuremodels.ChatMessageRoleUser, content)
 					case "assistant":
 						conversation.AddMessage(azuremodels.ChatMessageRoleAssistant, content)

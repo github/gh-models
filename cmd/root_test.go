@@ -19,6 +19,7 @@ func TestRoot(t *testing.T) {
 		require.NoError(t, err)
 		output := buf.String()
 		require.Regexp(t, regexp.MustCompile(`Usage:\n\s+gh models \[command\]`), output)
+		require.Regexp(t, regexp.MustCompile(`eval\s+Evaluate prompts using test data and evaluators`), output)
 		require.Regexp(t, regexp.MustCompile(`list\s+List available models`), output)
 		require.Regexp(t, regexp.MustCompile(`run\s+Run inference with the specified model`), output)
 		require.Regexp(t, regexp.MustCompile(`view\s+View details about a model`), output)
