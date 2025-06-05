@@ -1,0 +1,91 @@
+# This is a sample GitHub Actions workflow file that runs prompt evaluations
+# on pull requests when prompt files are changed. It uses the `gh-models` CLI to evaluate prompts
+# and comments the results back on the pull request.
+# The workflow is triggered by pull requests that modify any `.prompt.yml` files.
+
+
+name: Run evaluations for changed prompts
+
+permissions:
+  models: read
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+    paths:
+      - '**/*.prompt.yml'
+
+jobs:
+  evaluate-model:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup gh-models
+        run: gh extension install github/gh-models
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Find changed prompt files
+        id: find-prompts
+        run: |
+          # Get the list of changed files that match *.prompt.yml pattern
+          changed_prompts=$(git diff --name-only origin/${{ github.base_ref }}..HEAD | grep '\.prompt\.yml$' | head -1)
+          
+          if [[ -z "$changed_prompts" ]]; then
+            echo "No prompt files found in the changes"
+            exit 1
+          fi
+          
+          echo "first_prompt=$changed_prompts" >> "$GITHUB_OUTPUT"
+          echo "Found changed prompt file: $changed_prompts"
+
+      - name: Run model evaluation
+        id: eval
+        run: |
+          set -e
+          PROMPT_FILE="${{ steps.find-prompts.outputs.first_prompt }}"
+          echo "## Model Evaluation Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "Evaluating: $PROMPT_FILE" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          if gh models eval "$PROMPT_FILE" > eval_output.txt 2>&1; then
+            echo "✅ All evaluations passed!"   >> "$GITHUB_STEP_SUMMARY"
+            cat  eval_output.txt               >> "$GITHUB_STEP_SUMMARY"
+            echo "eval_status=success"         >> "$GITHUB_OUTPUT"
+          else
+            echo "❌ Some evaluations failed!" >> "$GITHUB_STEP_SUMMARY"
+            cat  eval_output.txt               >> "$GITHUB_STEP_SUMMARY"
+            echo "eval_status=failure"         >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Comment on PR with evaluation results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.readFileSync('eval_output.txt', 'utf8');
+            const evalStatus = '${{ steps.eval.outputs.eval_status }}';
+            const statusMessage = evalStatus === 'success' 
+              ? '✅ Evaluation passed' 
+              : '❌ Evaluation failed';
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner:        context.repo.owner,
+              repo:         context.repo.repo,
+              body: `## ${statusMessage}
+
+              \`\`\`
+              ${output}
+              \`\`\`
+
+              Review the evaluation results above for more details.`
+            });
