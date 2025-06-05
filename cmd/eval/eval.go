@@ -286,16 +286,9 @@ func (h *evalCommandHandler) templateMessages(testCase map[string]interface{}) (
 			return nil, fmt.Errorf("failed to template message content: %w", err)
 		}
 
-		var role azuremodels.ChatMessageRole
-		switch strings.ToLower(msg.Role) {
-		case "system":
-			role = azuremodels.ChatMessageRoleSystem
-		case "user":
-			role = azuremodels.ChatMessageRoleUser
-		case "assistant":
-			role = azuremodels.ChatMessageRoleAssistant
-		default:
-			return nil, fmt.Errorf("unknown message role: %s", msg.Role)
+		role, err := prompt.GetAzureChatMessageRole(msg.Role)
+		if err != nil {
+			return nil, err
 		}
 
 		messages = append(messages, azuremodels.ChatMessage{
