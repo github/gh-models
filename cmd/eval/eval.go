@@ -82,7 +82,7 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			promptFilePath := args[0]
-			
+
 			// Get the json flag
 			jsonOutput, err := cmd.Flags().GetBool("json")
 			if err != nil {
@@ -150,7 +150,7 @@ func (h *evalCommandHandler) runEvaluation(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("test case %d failed: %w", i+1, err)
 		}
-		
+
 		testResults = append(testResults, result)
 
 		// Check if all evaluators passed
