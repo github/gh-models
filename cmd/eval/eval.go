@@ -3,6 +3,7 @@ package eval
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -14,6 +15,23 @@ import (
 	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
 )
+
+// EvaluationSummary represents the overall evaluation summary
+type EvaluationSummary struct {
+	Name        string       `json:"name"`
+	Description string       `json:"description"`
+	Model       string       `json:"model"`
+	TestResults []TestResult `json:"testResults"`
+	Summary     Summary      `json:"summary"`
+}
+
+// Summary represents the evaluation summary statistics
+type Summary struct {
+	TotalTests  int     `json:"totalTests"`
+	PassedTests int     `json:"passedTests"`
+	FailedTests int     `json:"failedTests"`
+	PassRate    float64 `json:"passRate"`
+}
 
 // TestResult represents the result of running a test case
 type TestResult struct {
@@ -64,6 +82,12 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			promptFilePath := args[0]
+			
+			// Get the json flag
+			jsonOutput, err := cmd.Flags().GetBool("json")
+			if err != nil {
+				return err
+			}
 
 			// Load the evaluation prompt file
 			evalFile, err := loadEvaluationPromptFile(promptFilePath)
@@ -73,22 +97,25 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 
 			// Run evaluation
 			handler := &evalCommandHandler{
-				cfg:      cfg,
-				client:   cfg.Client,
-				evalFile: evalFile,
+				cfg:        cfg,
+				client:     cfg.Client,
+				evalFile:   evalFile,
+				jsonOutput: jsonOutput,
 			}
 
 			return handler.runEvaluation(cmd.Context())
 		},
 	}
 
+	cmd.Flags().Bool("json", false, "Output results in JSON format")
 	return cmd
 }
 
 type evalCommandHandler struct {
-	cfg      *command.Config
-	client   azuremodels.Client
-	evalFile *prompt.File
+	cfg        *command.Config
+	client     azuremodels.Client
+	evalFile   *prompt.File
+	jsonOutput bool
 }
 
 func loadEvaluationPromptFile(filePath string) (*prompt.File, error) {
@@ -101,22 +128,30 @@ func loadEvaluationPromptFile(filePath string) (*prompt.File, error) {
 }
 
 func (h *evalCommandHandler) runEvaluation(ctx context.Context) error {
-	h.cfg.WriteToOut(fmt.Sprintf("Running evaluation: %s\n", h.evalFile.Name))
-	h.cfg.WriteToOut(fmt.Sprintf("Description: %s\n", h.evalFile.Description))
-	h.cfg.WriteToOut(fmt.Sprintf("Model: %s\n", h.evalFile.Model))
-	h.cfg.WriteToOut(fmt.Sprintf("Test cases: %d\n", len(h.evalFile.TestData)))
-	h.cfg.WriteToOut("\n")
+	// Print header info only for human-readable output
+	if !h.jsonOutput {
+		h.cfg.WriteToOut(fmt.Sprintf("Running evaluation: %s\n", h.evalFile.Name))
+		h.cfg.WriteToOut(fmt.Sprintf("Description: %s\n", h.evalFile.Description))
+		h.cfg.WriteToOut(fmt.Sprintf("Model: %s\n", h.evalFile.Model))
+		h.cfg.WriteToOut(fmt.Sprintf("Test cases: %d\n", len(h.evalFile.TestData)))
+		h.cfg.WriteToOut("\n")
+	}
 
+	var testResults []TestResult
 	passedTests := 0
 	totalTests := len(h.evalFile.TestData)
 
 	for i, testCase := range h.evalFile.TestData {
-		h.cfg.WriteToOut(fmt.Sprintf("Running test case %d/%d...\n", i+1, totalTests))
+		if !h.jsonOutput {
+			h.cfg.WriteToOut(fmt.Sprintf("Running test case %d/%d...\n", i+1, totalTests))
+		}
 
 		result, err := h.runTestCase(ctx, testCase)
 		if err != nil {
 			return fmt.Errorf("test case %d failed: %w", i+1, err)
 		}
+		
+		testResults = append(testResults, result)
 
 		// Check if all evaluators passed
 		testPassed := true
@@ -129,39 +164,84 @@ func (h *evalCommandHandler) runEvaluation(ctx context.Context) error {
 
 		if testPassed {
 			passedTests++
-			h.cfg.WriteToOut("  ✓ PASSED\n")
-		} else {
-			h.cfg.WriteToOut("  ✗ FAILED\n")
-			// Show the first 100 characters of the model response when test fails
-			preview := result.ModelResponse
-			if len(preview) > 100 {
-				preview = preview[:100] + "..."
-			}
-			h.cfg.WriteToOut(fmt.Sprintf("    Model Response: %s\n", preview))
 		}
 
-		// Show evaluation details
-		for _, evalResult := range result.EvaluationResults {
-			status := "✓"
-			if !evalResult.Passed {
-				status = "✗"
-			}
-			h.cfg.WriteToOut(fmt.Sprintf("    %s %s (score: %.2f)\n",
-				status, evalResult.EvaluatorName, evalResult.Score))
-			if evalResult.Details != "" {
-				h.cfg.WriteToOut(fmt.Sprintf("      %s\n", evalResult.Details))
-			}
+		if !h.jsonOutput {
+			h.printTestResult(result, testPassed)
 		}
-		h.cfg.WriteToOut("\n")
 	}
 
+	// Calculate pass rate
+	passRate := 0.0
+	if totalTests > 0 {
+		passRate = float64(passedTests) / float64(totalTests) * 100
+	}
+
+	if h.jsonOutput {
+		// Output JSON format
+		summary := EvaluationSummary{
+			Name:        h.evalFile.Name,
+			Description: h.evalFile.Description,
+			Model:       h.evalFile.Model,
+			TestResults: testResults,
+			Summary: Summary{
+				TotalTests:  totalTests,
+				PassedTests: passedTests,
+				FailedTests: totalTests - passedTests,
+				PassRate:    passRate,
+			},
+		}
+
+		jsonData, err := json.MarshalIndent(summary, "", "  ")
+		if err != nil {
+			return fmt.Errorf("failed to marshal JSON: %w", err)
+		}
+
+		h.cfg.WriteToOut(string(jsonData) + "\n")
+	} else {
+		// Output human-readable format summary
+		h.printSummary(passedTests, totalTests, passRate)
+	}
+
+	return nil
+}
+
+func (h *evalCommandHandler) printTestResult(result TestResult, testPassed bool) {
+	if testPassed {
+		h.cfg.WriteToOut("  ✓ PASSED\n")
+	} else {
+		h.cfg.WriteToOut("  ✗ FAILED\n")
+		// Show the first 100 characters of the model response when test fails
+		preview := result.ModelResponse
+		if len(preview) > 100 {
+			preview = preview[:100] + "..."
+		}
+		h.cfg.WriteToOut(fmt.Sprintf("    Model Response: %s\n", preview))
+	}
+
+	// Show evaluation details
+	for _, evalResult := range result.EvaluationResults {
+		status := "✓"
+		if !evalResult.Passed {
+			status = "✗"
+		}
+		h.cfg.WriteToOut(fmt.Sprintf("    %s %s (score: %.2f)\n",
+			status, evalResult.EvaluatorName, evalResult.Score))
+		if evalResult.Details != "" {
+			h.cfg.WriteToOut(fmt.Sprintf("      %s\n", evalResult.Details))
+		}
+	}
+	h.cfg.WriteToOut("\n")
+}
+
+func (h *evalCommandHandler) printSummary(passedTests, totalTests int, passRate float64) {
 	// Summary
 	h.cfg.WriteToOut("Evaluation Summary:\n")
 	if totalTests == 0 {
 		h.cfg.WriteToOut("Passed: 0/0 (0.0%)\n")
 	} else {
 		h.cfg.WriteToOut(fmt.Sprintf("Passed: %d/%d (%.1f%%)\n",
-			passedTests, totalTests, float64(passedTests)/float64(totalTests)*100))
+			passedTests, totalTests, passRate))
 	}
 
 	if passedTests == totalTests {
@@ -169,8 +249,6 @@ func (h *evalCommandHandler) runEvaluation(ctx context.Context) error {
 	} else {
 		h.cfg.WriteToOut("❌ Some tests failed.\n")
 	}
-
-	return nil
 }
 
 func (h *evalCommandHandler) runTestCase(ctx context.Context, testCase map[string]interface{}) (TestResult, error) {
