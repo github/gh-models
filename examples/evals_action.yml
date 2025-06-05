@@ -37,7 +37,8 @@ jobs:
           
           if [[ -z "$changed_prompts" ]]; then
             echo "No prompt files found in the changes"
-            exit 1
+            echo "skip_evaluation=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
           
           echo "first_prompt=$changed_prompts" >> "$GITHUB_OUTPUT"
