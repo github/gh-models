@@ -312,22 +312,7 @@ func (h *evalCommandHandler) templateString(templateStr string, data map[string]
 }
 
 func (h *evalCommandHandler) callModel(ctx context.Context, messages []azuremodels.ChatMessage) (string, error) {
-	req := azuremodels.ChatCompletionOptions{
-		Messages: messages,
-		Model:    h.evalFile.Model,
-		Stream:   false,
-	}
-
-	// Apply model parameters
-	if h.evalFile.ModelParameters.MaxTokens != nil {
-		req.MaxTokens = h.evalFile.ModelParameters.MaxTokens
-	}
-	if h.evalFile.ModelParameters.Temperature != nil {
-		req.Temperature = h.evalFile.ModelParameters.Temperature
-	}
-	if h.evalFile.ModelParameters.TopP != nil {
-		req.TopP = h.evalFile.ModelParameters.TopP
-	}
+	req := h.evalFile.BuildChatCompletionOptions(messages)
 
 	resp, err := h.client.GetChatCompletionStream(ctx, req)
 	if err != nil {
