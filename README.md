@@ -80,6 +80,8 @@ gh models eval my_prompt.prompt.yml --json
 
 The JSON output includes detailed test results, evaluation scores, and summary statistics that can be processed by other tools or CI/CD pipelines.
 
+Learn more about `.prompt.yml` files here: [Storing prompts in GitHub repositories](https://docs.github.com/en/github-models/use-github-models/storing-prompts-in-github-repositories)
+
 ## Notice
 
 Remember when interacting with a model you are experimenting with AI, so content mistakes are possible. The feature is
