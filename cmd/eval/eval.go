@@ -76,6 +76,9 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 			      string:
 			        contains: "hello"
 
+			By default, results are displayed in a human-readable format. Use the --json flag
+			to output structured JSON data for programmatic use or integration with CI/CD pipelines.
+
 			See https://docs.github.com/github-models/use-github-models/storing-prompts-in-github-repositories#supported-file-format for more information.
 		`),
 		Example: "gh models eval my_prompt.prompt.yml",
@@ -172,7 +175,7 @@ func (h *evalCommandHandler) runEvaluation(ctx context.Context) error {
 	}
 
 	// Calculate pass rate
-	passRate := 0.0
+	passRate := 100.0
 	if totalTests > 0 {
 		passRate = float64(passedTests) / float64(totalTests) * 100
 	}
@@ -238,9 +241,9 @@ func (h *evalCommandHandler) printSummary(passedTests, totalTests int, passRate 
 	// Summary
 	h.cfg.WriteToOut("Evaluation Summary:\n")
 	if totalTests == 0 {
-		h.cfg.WriteToOut("Passed: 0/0 (0.0%)\n")
+		h.cfg.WriteToOut("Passed: 0/0 (0.00%)\n")
 	} else {
-		h.cfg.WriteToOut(fmt.Sprintf("Passed: %d/%d (%.1f%%)\n",
+		h.cfg.WriteToOut(fmt.Sprintf("Passed: %d/%d (%.2f%%)\n",
 			passedTests, totalTests, passRate))
 	}
 

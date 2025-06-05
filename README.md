@@ -66,6 +66,20 @@ Run the extension with output from a command. This uses single-shot mode.
 cat README.md | gh models run openai/gpt-4o-mini "summarize this text"
 ```
 
+#### Evaluating prompts
+
+Run evaluation tests against a model using a `.prompt.yml` file:
+```shell
+gh models eval my_prompt.prompt.yml
+```
+
+The evaluation will run test cases defined in the prompt file and display results in a human-readable format. For programmatic use, you can output results in JSON format:
+```shell
+gh models eval my_prompt.prompt.yml --json
+```
+
+The JSON output includes detailed test results, evaluation scores, and summary statistics that can be processed by other tools or CI/CD pipelines.
+
 ## Notice
 
 Remember when interacting with a model you are experimenting with AI, so content mistakes are possible. The feature is
