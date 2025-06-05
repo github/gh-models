@@ -15,10 +15,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// EvaluationPromptFile represents the structure of a prompt.yml file for evaluation
-// It extends the base prompt.File with evaluation-specific fields
-type EvaluationPromptFile = prompt.File
-
 // TestResult represents the result of running a test case
 type TestResult struct {
 	TestCase          map[string]interface{} `json:"testCase"`
@@ -61,6 +57,8 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 			    - name: contains-hello
 			      string:
 			        contains: "hello"
+
+			See https://docs.github.com/github-models/use-github-models/storing-prompts-in-github-repositories#supported-file-format for more information.
 		`),
 		Example: "gh models eval my_prompt.prompt.yml",
 		Args:    cobra.ExactArgs(1),
@@ -90,10 +88,10 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 type evalCommandHandler struct {
 	cfg      *command.Config
 	client   azuremodels.Client
-	evalFile *EvaluationPromptFile
+	evalFile *prompt.File
 }
 
-func loadEvaluationPromptFile(filePath string) (*EvaluationPromptFile, error) {
+func loadEvaluationPromptFile(filePath string) (*prompt.File, error) {
 	evalFile, err := prompt.LoadFromFile(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load prompt file: %w", err)
