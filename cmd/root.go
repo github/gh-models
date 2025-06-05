@@ -8,6 +8,7 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/cli/go-gh/v2/pkg/auth"
 	"github.com/cli/go-gh/v2/pkg/term"
+	"github.com/github/gh-models/cmd/eval"
 	"github.com/github/gh-models/cmd/list"
 	"github.com/github/gh-models/cmd/run"
 	"github.com/github/gh-models/cmd/view"
@@ -54,6 +55,7 @@ func NewRootCommand() *cobra.Command {
 
 	cfg := command.NewConfigWithTerminal(terminal, client)
 
+	cmd.AddCommand(eval.NewEvalCommand(cfg))
 	cmd.AddCommand(list.NewListCommand(cfg))
 	cmd.AddCommand(run.NewRunCommand(cfg))
 	cmd.AddCommand(view.NewViewCommand(cfg))

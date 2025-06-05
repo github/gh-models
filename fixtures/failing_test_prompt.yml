@@ -1,0 +1,23 @@
+name: Failing Evaluation Test
+description: Test that will fail to demonstrate model response logging
+model: openai/gpt-4o
+modelParameters:
+  temperature: 0.7
+  maxTokens: 150
+testData:
+  - input: "What is the capital of France?"
+    expected: "Paris"
+  - input: "What is 2 + 2?"
+    expected: "4"
+messages:
+  - role: system
+    content: You are a helpful assistant.
+  - role: user
+    content: "{{input}}"
+evaluators:
+  - name: contains-impossible
+    string:
+      contains: "this-text-will-never-appear-in-any-response"
+  - name: starts-with-wrong
+    string:
+      startsWith: "ZZZZZ"

@@ -1,0 +1,12 @@
+name: "Test Single Evaluator"
+description: "Testing a single built-in evaluator"
+model: "openai/gpt-4o"
+testData:
+  - input: "What is machine learning?"
+    expected: "Machine learning is a subset of artificial intelligence that enables computers to learn and make decisions from data without being explicitly programmed."
+messages:
+  - role: user
+    content: "{{input}}"
+evaluators:
+  - name: "fluency-test"
+    uses: "github/fluency"
