@@ -3,6 +3,7 @@ package eval
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -297,5 +298,258 @@ evaluators:
 		require.Contains(t, output, "Running test case")
 		require.Contains(t, output, "FAILED")
 		require.Contains(t, output, "Model Response: actual model response")
+	})
+
+	t.Run("json output format", func(t *testing.T) {
+		const yamlBody = `
+name: JSON Test Evaluation
+description: Testing JSON output format
+model: openai/gpt-4o
+testData:
+  - input: "hello"
+    expected: "hello world"
+  - input: "test"
+    expected: "test response"
+messages:
+  - role: user
+    content: "Respond to: {{input}}"
+evaluators:
+  - name: contains-hello
+    string:
+      contains: "hello"
+  - name: exact-match
+    string:
+      equals: "hello world"
+`
+
+		tmpDir := t.TempDir()
+		promptFile := filepath.Join(tmpDir, "test.prompt.yml")
+		err := os.WriteFile(promptFile, []byte(yamlBody), 0644)
+		require.NoError(t, err)
+
+		client := azuremodels.NewMockClient()
+
+		// Mock responses for both test cases
+		callCount := 0
+		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions) (*azuremodels.ChatCompletionResponse, error) {
+			callCount++
+			var response string
+			if callCount == 1 {
+				response = "hello world" // This will pass both evaluators
+			} else {
+				response = "test output" // This will fail both evaluators
+			}
+
+			reader := sse.NewMockEventReader([]azuremodels.ChatCompletion{
+				{
+					Choices: []azuremodels.ChatChoice{
+						{
+							Message: &azuremodels.ChatChoiceMessage{
+								Content: &response,
+							},
+						},
+					},
+				},
+			})
+			return &azuremodels.ChatCompletionResponse{Reader: reader}, nil
+		}
+
+		out := new(bytes.Buffer)
+		cfg := command.NewConfig(out, out, client, true, 100)
+
+		cmd := NewEvalCommand(cfg)
+		cmd.SetArgs([]string{"--json", promptFile})
+
+		err = cmd.Execute()
+		require.NoError(t, err)
+
+		output := out.String()
+
+		// Verify JSON structure
+		var result EvaluationSummary
+		err = json.Unmarshal([]byte(output), &result)
+		require.NoError(t, err)
+
+		// Verify top-level fields
+		require.Equal(t, "JSON Test Evaluation", result.Name)
+		require.Equal(t, "Testing JSON output format", result.Description)
+		require.Equal(t, "openai/gpt-4o", result.Model)
+		require.Len(t, result.TestResults, 2)
+
+		// Verify summary
+		require.Equal(t, 2, result.Summary.TotalTests)
+		require.Equal(t, 1, result.Summary.PassedTests)
+		require.Equal(t, 1, result.Summary.FailedTests)
+		require.Equal(t, 50.0, result.Summary.PassRate)
+
+		// Verify first test case (should pass)
+		testResult1 := result.TestResults[0]
+		require.Equal(t, "hello world", testResult1.ModelResponse)
+		require.Len(t, testResult1.EvaluationResults, 2)
+		require.True(t, testResult1.EvaluationResults[0].Passed)
+		require.True(t, testResult1.EvaluationResults[1].Passed)
+		require.Equal(t, 1.0, testResult1.EvaluationResults[0].Score)
+		require.Equal(t, 1.0, testResult1.EvaluationResults[1].Score)
+
+		// Verify second test case (should fail)
+		testResult2 := result.TestResults[1]
+		require.Equal(t, "test output", testResult2.ModelResponse)
+		require.Len(t, testResult2.EvaluationResults, 2)
+		require.False(t, testResult2.EvaluationResults[0].Passed)
+		require.False(t, testResult2.EvaluationResults[1].Passed)
+		require.Equal(t, 0.0, testResult2.EvaluationResults[0].Score)
+		require.Equal(t, 0.0, testResult2.EvaluationResults[1].Score)
+
+		// Verify that human-readable text is NOT in the output
+		require.NotContains(t, output, "Running evaluation:")
+		require.NotContains(t, output, "✓ PASSED")
+		require.NotContains(t, output, "✗ FAILED")
+		require.NotContains(t, output, "Evaluation Summary:")
+	})
+
+	t.Run("json output vs human-readable output", func(t *testing.T) {
+		const yamlBody = `
+name: Output Comparison Test
+description: Compare JSON vs human-readable output
+model: openai/gpt-4o
+testData:
+  - input: "hello"
+messages:
+  - role: user
+    content: "Say: {{input}}"
+evaluators:
+  - name: simple-check
+    string:
+      contains: "hello"
+`
+
+		tmpDir := t.TempDir()
+		promptFile := filepath.Join(tmpDir, "test.prompt.yml")
+		err := os.WriteFile(promptFile, []byte(yamlBody), 0644)
+		require.NoError(t, err)
+
+		client := azuremodels.NewMockClient()
+		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions) (*azuremodels.ChatCompletionResponse, error) {
+			response := "hello world"
+			reader := sse.NewMockEventReader([]azuremodels.ChatCompletion{
+				{
+					Choices: []azuremodels.ChatChoice{
+						{
+							Message: &azuremodels.ChatChoiceMessage{
+								Content: &response,
+							},
+						},
+					},
+				},
+			})
+			return &azuremodels.ChatCompletionResponse{Reader: reader}, nil
+		}
+
+		// Test human-readable output
+		humanOut := new(bytes.Buffer)
+		humanCfg := command.NewConfig(humanOut, humanOut, client, true, 100)
+		humanCmd := NewEvalCommand(humanCfg)
+		humanCmd.SetArgs([]string{promptFile})
+
+		err = humanCmd.Execute()
+		require.NoError(t, err)
+
+		humanOutput := humanOut.String()
+		require.Contains(t, humanOutput, "Running evaluation:")
+		require.Contains(t, humanOutput, "Output Comparison Test")
+		require.Contains(t, humanOutput, "✓ PASSED")
+		require.Contains(t, humanOutput, "Evaluation Summary:")
+		require.Contains(t, humanOutput, "🎉 All tests passed!")
+
+		// Test JSON output
+		jsonOut := new(bytes.Buffer)
+		jsonCfg := command.NewConfig(jsonOut, jsonOut, client, true, 100)
+		jsonCmd := NewEvalCommand(jsonCfg)
+		jsonCmd.SetArgs([]string{"--json", promptFile})
+
+		err = jsonCmd.Execute()
+		require.NoError(t, err)
+
+		jsonOutput := jsonOut.String()
+
+		// Verify JSON is valid
+		var result EvaluationSummary
+		err = json.Unmarshal([]byte(jsonOutput), &result)
+		require.NoError(t, err)
+
+		// Verify JSON doesn't contain human-readable elements
+		require.NotContains(t, jsonOutput, "Running evaluation:")
+		require.NotContains(t, jsonOutput, "✓ PASSED")
+		require.NotContains(t, jsonOutput, "Evaluation Summary:")
+		require.NotContains(t, jsonOutput, "🎉")
+
+		// Verify JSON contains the right data
+		require.Equal(t, "Output Comparison Test", result.Name)
+		require.Equal(t, 1, result.Summary.TotalTests)
+		require.Equal(t, 1, result.Summary.PassedTests)
+	})
+
+	t.Run("json flag works with failing tests", func(t *testing.T) {
+		const yamlBody = `
+name: JSON Failing Test
+description: Testing JSON with failing evaluators
+model: openai/gpt-4o
+testData:
+  - input: "hello"
+messages:
+  - role: user
+    content: "{{input}}"
+evaluators:
+  - name: impossible-check
+    string:
+      contains: "impossible_string_that_wont_match"
+`
+
+		tmpDir := t.TempDir()
+		promptFile := filepath.Join(tmpDir, "test.prompt.yml")
+		err := os.WriteFile(promptFile, []byte(yamlBody), 0644)
+		require.NoError(t, err)
+
+		client := azuremodels.NewMockClient()
+		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions) (*azuremodels.ChatCompletionResponse, error) {
+			response := "hello world"
+			reader := sse.NewMockEventReader([]azuremodels.ChatCompletion{
+				{
+					Choices: []azuremodels.ChatChoice{
+						{
+							Message: &azuremodels.ChatChoiceMessage{
+								Content: &response,
+							},
+						},
+					},
+				},
+			})
+			return &azuremodels.ChatCompletionResponse{Reader: reader}, nil
+		}
+
+		out := new(bytes.Buffer)
+		cfg := command.NewConfig(out, out, client, true, 100)
+
+		cmd := NewEvalCommand(cfg)
+		cmd.SetArgs([]string{"--json", promptFile})
+
+		err = cmd.Execute()
+		require.NoError(t, err)
+
+		output := out.String()
+
+		var result EvaluationSummary
+		err = json.Unmarshal([]byte(output), &result)
+		require.NoError(t, err)
+
+		// Verify failing test is properly represented
+		require.Equal(t, 1, result.Summary.TotalTests)
+		require.Equal(t, 0, result.Summary.PassedTests)
+		require.Equal(t, 1, result.Summary.FailedTests)
+		require.Equal(t, 0.0, result.Summary.PassRate)
+
+		require.Len(t, result.TestResults, 1)
+		require.False(t, result.TestResults[0].EvaluationResults[0].Passed)
+		require.Equal(t, 0.0, result.TestResults[0].EvaluationResults[0].Score)
 	})
 }

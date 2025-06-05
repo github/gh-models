@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/github/gh-models/internal/azuremodels"
 	"gopkg.in/yaml.v3"
 )
 
@@ -110,4 +111,40 @@ func TemplateString(templateStr string, data interface{}) (string, error) {
 	}
 
 	return result, nil
+}
+
+// GetAzureChatMessageRole converts a role string to azuremodels.ChatMessageRole
+func GetAzureChatMessageRole(role string) (azuremodels.ChatMessageRole, error) {
+	switch strings.ToLower(role) {
+	case "system":
+		return azuremodels.ChatMessageRoleSystem, nil
+	case "user":
+		return azuremodels.ChatMessageRoleUser, nil
+	case "assistant":
+		return azuremodels.ChatMessageRoleAssistant, nil
+	default:
+		return "", fmt.Errorf("unknown message role: %s", role)
+	}
+}
+
+// BuildChatCompletionOptions creates a ChatCompletionOptions with the file's model and parameters
+func (f *File) BuildChatCompletionOptions(messages []azuremodels.ChatMessage) azuremodels.ChatCompletionOptions {
+	req := azuremodels.ChatCompletionOptions{
+		Messages: messages,
+		Model:    f.Model,
+		Stream:   false,
+	}
+
+	// Apply model parameters
+	if f.ModelParameters.MaxTokens != nil {
+		req.MaxTokens = f.ModelParameters.MaxTokens
+	}
+	if f.ModelParameters.Temperature != nil {
+		req.Temperature = f.ModelParameters.Temperature
+	}
+	if f.ModelParameters.TopP != nil {
+		req.TopP = f.ModelParameters.TopP
+	}
+
+	return req
 }

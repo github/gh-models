@@ -288,12 +288,17 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 						return err
 					}
 
-					switch strings.ToLower(m.Role) {
-					case "system":
+					role, err := prompt.GetAzureChatMessageRole(m.Role)
+					if err != nil {
+						return err
+					}
+
+					switch role {
+					case azuremodels.ChatMessageRoleSystem:
 						conversation.systemPrompt = content
-					case "user":
+					case azuremodels.ChatMessageRoleUser:
 						conversation.AddMessage(azuremodels.ChatMessageRoleUser, content)
-					case "assistant":
+					case azuremodels.ChatMessageRoleAssistant:
 						conversation.AddMessage(azuremodels.ChatMessageRoleAssistant, content)
 					}
 				}
