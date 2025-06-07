@@ -291,7 +291,7 @@ evaluators:
 		cmd.SetArgs([]string{promptFile})
 
 		err = cmd.Execute()
-		require.NoError(t, err)
+		require.ErrorIs(t, err, FailedTests)
 
 		output := out.String()
 		require.Contains(t, output, "Failing Test")
@@ -361,7 +361,7 @@ evaluators:
 		cmd.SetArgs([]string{"--json", promptFile})
 
 		err = cmd.Execute()
-		require.NoError(t, err)
+		require.ErrorIs(t, err, FailedTests)
 
 		output := out.String()
 
@@ -534,7 +534,7 @@ evaluators:
 		cmd.SetArgs([]string{"--json", promptFile})
 
 		err = cmd.Execute()
-		require.NoError(t, err)
+		require.ErrorIs(t, err, FailedTests)
 
 		output := out.String()
 

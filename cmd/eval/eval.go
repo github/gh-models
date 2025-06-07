@@ -48,6 +48,8 @@ type EvaluationResult struct {
 	Details       string  `json:"details,omitempty"`
 }
 
+var FailedTests = errors.New("❌ Some tests failed.")
+
 // NewEvalCommand returns a new command to evaluate prompts against models
 func NewEvalCommand(cfg *command.Config) *cobra.Command {
 	cmd := &cobra.Command{
@@ -106,7 +108,14 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 				jsonOutput: jsonOutput,
 			}
 
-			return handler.runEvaluation(cmd.Context())
+			err = handler.runEvaluation(cmd.Context())
+			if err == FailedTests {
+				// Cobra by default will show the help message when an error occurs,
+				// which is not what we want for failed evaluations.
+				// Instead, we just want to exit with a non-zero code.
+				cmd.SilenceUsage = true
+			}
+			return err
 		},
 	}
 
@@ -206,6 +215,10 @@ func (h *evalCommandHandler) runEvaluation(ctx context.Context) error {
 		h.printSummary(passedTests, totalTests, passRate)
 	}
 
+	if totalTests-passedTests > 0 {
+		return FailedTests
+	}
+
 	return nil
 }
 
@@ -249,8 +262,6 @@ func (h *evalCommandHandler) printSummary(passedTests, totalTests int, passRate 
 
 	if passedTests == totalTests {
 		h.cfg.WriteToOut("🎉 All tests passed!\n")
-	} else {
-		h.cfg.WriteToOut("❌ Some tests failed.\n")
 	}
 }
 
