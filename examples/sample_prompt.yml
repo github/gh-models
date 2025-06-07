@@ -6,8 +6,10 @@ modelParameters:
   maxTokens: 50
 testData:
   - input: 'hello world'
+    string: hello
     expected: 'greeting response'
   - input: 'goodbye world'
+    string: goodbye
     expected: 'farewell response'
 messages:
   - role: system
@@ -17,6 +19,6 @@ messages:
 evaluators:
   - name: string evaluator
     string:
-      contains: world
+      contains: '{{string}}'
   - name: similarity check
     uses: github/similarity

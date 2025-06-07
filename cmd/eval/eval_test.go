@@ -129,7 +129,7 @@ evaluators:
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				result, err := handler.runStringEvaluator("test", tt.evaluator, tt.response)
+				result, err := handler.runStringEvaluator("test", tt.evaluator, map[string]interface{}{}, tt.response)
 				require.NoError(t, err)
 				require.Equal(t, tt.expected, result.Passed)
 				if tt.expected {
