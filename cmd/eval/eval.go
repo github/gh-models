@@ -356,7 +356,7 @@ func (h *evalCommandHandler) runEvaluators(ctx context.Context, testCase map[str
 func (h *evalCommandHandler) runSingleEvaluator(ctx context.Context, evaluator prompt.Evaluator, testCase map[string]interface{}, response string) (EvaluationResult, error) {
 	switch {
 	case evaluator.String != nil:
-		return h.runStringEvaluator(evaluator.Name, *evaluator.String, response)
+		return h.runStringEvaluator(evaluator.Name, *evaluator.String, testCase, response)
 	case evaluator.LLM != nil:
 		return h.runLLMEvaluator(ctx, evaluator.Name, *evaluator.LLM, testCase, response)
 	case evaluator.Uses != "":
@@ -366,23 +366,39 @@ func (h *evalCommandHandler) runSingleEvaluator(ctx context.Context, evaluator p
 	}
 }
 
-func (h *evalCommandHandler) runStringEvaluator(name string, eval prompt.StringEvaluator, response string) (EvaluationResult, error) {
+func (h *evalCommandHandler) runStringEvaluator(name string, eval prompt.StringEvaluator, testCase map[string]interface{}, response string) (EvaluationResult, error) {
 	var passed bool
 	var details string
 
 	switch {
 	case eval.Equals != "":
-		passed = response == eval.Equals
-		details = fmt.Sprintf("Expected exact match: '%s'", eval.Equals)
+		equals, err := h.templateString(eval.Equals, testCase)
+		if err != nil {
+			return EvaluationResult{}, fmt.Errorf("failed to template message content: %w", err)
+		}
+		passed = response == equals
+		details = fmt.Sprintf("Expected exact match: '%s'", equals)
 	case eval.Contains != "":
-		passed = strings.Contains(strings.ToLower(response), strings.ToLower(eval.Contains))
-		details = fmt.Sprintf("Expected to contain: '%s'", eval.Contains)
+		contains, err := h.templateString(eval.Contains, testCase)
+		if err != nil {
+			return EvaluationResult{}, fmt.Errorf("failed to template message content: %w", err)
+		}
+		passed = strings.Contains(strings.ToLower(response), strings.ToLower(contains))
+		details = fmt.Sprintf("Expected to contain: '%s'", contains)
 	case eval.StartsWith != "":
-		passed = strings.HasPrefix(strings.ToLower(response), strings.ToLower(eval.StartsWith))
-		details = fmt.Sprintf("Expected to start with: '%s'", eval.StartsWith)
+		startsWith, err := h.templateString(eval.StartsWith, testCase)
+		if err != nil {
+			return EvaluationResult{}, fmt.Errorf("failed to template message content: %w", err)
+		}
+		passed = strings.HasPrefix(strings.ToLower(response), strings.ToLower(startsWith))
+		details = fmt.Sprintf("Expected to start with: '%s'", startsWith)
 	case eval.EndsWith != "":
-		passed = strings.HasSuffix(strings.ToLower(response), strings.ToLower(eval.EndsWith))
-		details = fmt.Sprintf("Expected to end with: '%s'", eval.EndsWith)
+		endsWith, err := h.templateString(eval.EndsWith, testCase)
+		if err != nil {
+			return EvaluationResult{}, fmt.Errorf("failed to template message content: %w", err)
+		}
+		passed = strings.HasSuffix(strings.ToLower(response), strings.ToLower(endsWith))
+		details = fmt.Sprintf("Expected to end with: '%s'", endsWith)
 	default:
 		return EvaluationResult{}, errors.New("no string evaluation criteria specified")
 	}
