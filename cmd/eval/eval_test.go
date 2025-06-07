@@ -88,6 +88,7 @@ evaluators:
 			evaluator prompt.StringEvaluator
 			response  string
 			expected  bool
+			variables map[string]interface{}
 		}{
 			{
 				name:      "contains match",
@@ -125,11 +126,25 @@ evaluators:
 				response:  "hello world",
 				expected:  true,
 			},
+			{
+				name:      "contains with variable",
+				evaluator: prompt.StringEvaluator{Contains: "{{expected}}"},
+				response:  "hello world",
+				expected:  true,
+				variables: map[string]interface{}{"expected": "world"},
+			},
+			{
+				name:      "fails with variable not match",
+				evaluator: prompt.StringEvaluator{Contains: "{{expected}}"},
+				response:  "hello world",
+				expected:  false,
+				variables: map[string]interface{}{"expected": "goodbye"},
+			},
 		}
 
 		for _, tt := range tests {
 			t.Run(tt.name, func(t *testing.T) {
-				result, err := handler.runStringEvaluator("test", tt.evaluator, map[string]interface{}{}, tt.response)
+				result, err := handler.runStringEvaluator("test", tt.evaluator, tt.variables, tt.response)
 				require.NoError(t, err)
 				require.Equal(t, tt.expected, result.Passed)
 				if tt.expected {
