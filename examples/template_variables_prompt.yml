@@ -1,0 +1,12 @@
+# Example demonstrating arbitrary template variables
+name: Template Variables Example
+description: Shows how to use custom template variables in prompt files
+model: openai/gpt-4o
+modelParameters:
+  temperature: 0.3
+  maxTokens: 200
+messages:
+  - role: system
+    content: You are {{persona}}, a helpful assistant specializing in {{domain}}.
+  - role: user
+    content: Hello {{name}}! I need help with {{topic}}. {{input}}
