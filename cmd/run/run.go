@@ -204,10 +204,16 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			If you know which model you want to run inference with, you can run the request in a single command
 			as %[1]sgh models run [model] [prompt]%[1]s
 
+			When using prompt files, you can pass template variables using the %[1]s--var%[1]s flag:
+			%[1]sgh models run --file prompt.yml --var name=Alice --var topic=AI%[1]s
+
 			The return value will be the response to your prompt from the selected model.
 		`, "`"),
-		Example: "gh models run openai/gpt-4o-mini \"how many types of hyena are there?\"",
-		Args:    cobra.ArbitraryArgs,
+		Example: heredoc.Doc(`
+			gh models run openai/gpt-4o-mini "how many types of hyena are there?"
+			gh models run --file prompt.yml --var name=Alice --var topic="machine learning"
+		`),
+		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			filePath, _ := cmd.Flags().GetString("file")
 			var pf *prompt.File
@@ -221,6 +227,12 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 				if pf.Model != "" && len(args) == 0 {
 					args = append([]string{pf.Model}, args...)
 				}
+			}
+
+			// Parse template variables from flags
+			templateVars, err := parseTemplateVariables(cmd.Flags())
+			if err != nil {
+				return err
 			}
 
 			cmdHandler := newRunCommandHandler(cmd, cfg, args)
@@ -270,16 +282,22 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			}
 
 			// If there is no prompt file, add the initialPrompt to the conversation.
-			// If a prompt file is passed, load the messages from the file, templating {{input}}
-			// using the initialPrompt.
+			// If a prompt file is passed, load the messages from the file, templating variables
+			// using the provided template variables and initialPrompt.
 			if pf == nil {
 				conversation.AddMessage(azuremodels.ChatMessageRoleUser, initialPrompt)
 			} else {
 				interactiveMode = false
 
-				// Template the messages with the input
-				templateData := map[string]interface{}{
-					"input": initialPrompt,
+				// Template the messages with the variables
+				templateData := make(map[string]interface{})
+
+				// Add the input variable (backward compatibility)
+				templateData["input"] = initialPrompt
+
+				// Add custom variables
+				for key, value := range templateVars {
+					templateData[key] = value
 				}
 
 				for _, m := range pf.Messages {
@@ -385,12 +403,50 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 	}
 
 	cmd.Flags().String("file", "", "Path to a .prompt.yml file.")
+	cmd.Flags().StringSlice("var", []string{}, "Template variables for prompt files (can be used multiple times: --var name=value)")
 	cmd.Flags().String("max-tokens", "", "Limit the maximum tokens for the model response.")
 	cmd.Flags().String("temperature", "", "Controls randomness in the response, use lower to be more deterministic.")
 	cmd.Flags().String("top-p", "", "Controls text diversity by selecting the most probable words until a set probability is reached.")
 	cmd.Flags().String("system-prompt", "", "Prompt the system.")
 
 	return cmd
+}
+
+// parseTemplateVariables parses template variables from the --var flags
+func parseTemplateVariables(flags *pflag.FlagSet) (map[string]string, error) {
+	varFlags, err := flags.GetStringSlice("var")
+	if err != nil {
+		return nil, err
+	}
+
+	templateVars := make(map[string]string)
+	for _, varFlag := range varFlags {
+		// Handle empty strings
+		if strings.TrimSpace(varFlag) == "" {
+			continue
+		}
+
+		parts := strings.SplitN(varFlag, "=", 2)
+		if len(parts) != 2 {
+			return nil, fmt.Errorf("invalid variable format '%s', expected 'key=value'", varFlag)
+		}
+
+		key := strings.TrimSpace(parts[0])
+		value := parts[1] // Don't trim value to preserve intentional whitespace
+
+		if key == "" {
+			return nil, fmt.Errorf("variable key cannot be empty in '%s'", varFlag)
+		}
+
+		// Check for duplicate keys
+		if _, exists := templateVars[key]; exists {
+			return nil, fmt.Errorf("duplicate variable key '%s'", key)
+		}
+
+		templateVars[key] = value
+	}
+
+	return templateVars, nil
 }
 
 type runCommandHandler struct {
@@ -445,7 +501,7 @@ func (h *runCommandHandler) getModelNameFromArgs(models []*azuremodels.ModelSumm
 }
 
 func validateModelName(modelName string, models []*azuremodels.ModelSummary) (string, error) {
-	noMatchErrorMessage := "The specified model name is not found. Run 'gh models list' to see available models or 'gh models run' to select interactively."
+	noMatchErrorMessage := fmt.Sprintf("The specified model '%s' is not found. Run 'gh models list' to see available models or 'gh models run' to select interactively.", modelName)
 
 	if modelName == "" {
 		return "", errors.New(noMatchErrorMessage)

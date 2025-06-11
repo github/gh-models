@@ -11,6 +11,7 @@ import (
 	"github.com/github/gh-models/internal/sse"
 	"github.com/github/gh-models/pkg/command"
 	"github.com/github/gh-models/pkg/util"
+	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
 )
 
@@ -330,4 +331,75 @@ messages:
 		require.Equal(t, "System message", *capturedReq.Messages[0].Content)
 		require.Equal(t, "User message", *capturedReq.Messages[1].Content)
 	})
+}
+
+func TestParseTemplateVariables(t *testing.T) {
+	tests := []struct {
+		name      string
+		varFlags  []string
+		expected  map[string]string
+		expectErr bool
+	}{
+		{
+			name:     "empty vars",
+			varFlags: []string{},
+			expected: map[string]string{},
+		},
+		{
+			name:     "single var",
+			varFlags: []string{"name=John"},
+			expected: map[string]string{"name": "John"},
+		},
+		{
+			name:     "multiple vars",
+			varFlags: []string{"name=John", "age=25", "city=New York"},
+			expected: map[string]string{"name": "John", "age": "25", "city": "New York"},
+		},
+		{
+			name:     "multi-word values",
+			varFlags: []string{"full_name=John Smith", "description=A senior developer"},
+			expected: map[string]string{"full_name": "John Smith", "description": "A senior developer"},
+		},
+		{
+			name:     "value with equals sign",
+			varFlags: []string{"equation=x = y + 2"},
+			expected: map[string]string{"equation": "x = y + 2"},
+		},
+		{
+			name:     "empty strings are skipped",
+			varFlags: []string{"", "name=John", "  "},
+			expected: map[string]string{"name": "John"},
+		},
+		{
+			name:      "invalid format - no equals",
+			varFlags:  []string{"invalid"},
+			expectErr: true,
+		},
+		{
+			name:      "invalid format - empty key",
+			varFlags:  []string{"=value"},
+			expectErr: true,
+		},
+		{
+			name:      "duplicate keys",
+			varFlags:  []string{"name=John", "name=Jane"},
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			flags := pflag.NewFlagSet("test", pflag.ContinueOnError)
+			flags.StringSlice("var", tt.varFlags, "test flag")
+
+			result, err := parseTemplateVariables(flags)
+
+			if tt.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expected, result)
+			}
+		})
+	}
 }

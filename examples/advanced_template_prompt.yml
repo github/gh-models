@@ -1,0 +1,27 @@
+# Advanced Template Variables Example
+name: Advanced Template Example
+description: Demonstrates advanced usage of template variables
+model: openai/gpt-4o-mini
+modelParameters:
+  temperature: 0.7
+  maxTokens: 300
+messages:
+  - role: system
+    content: |
+      You are {{assistant_persona}}, a {{expertise_level}} {{domain}} specialist.
+      Your communication style should be {{tone}} and {{formality_level}}.
+      
+      Context: You are helping {{user_name}} who works as a {{user_role}} at {{company}}.
+      
+  - role: user
+    content: |
+      Hello! I'm {{user_name}} from {{company}}.
+      
+      Background: {{background_info}}
+      
+      Question: {{input}}
+      
+      Please provide your response considering my role as {{user_role}} and 
+      make it appropriate for a {{formality_level}} setting.
+      
+      Additional context: {{additional_context}}
