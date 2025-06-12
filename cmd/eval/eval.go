@@ -48,6 +48,10 @@ type EvaluationResult struct {
 	Details       string  `json:"details,omitempty"`
 }
 
+type Organization struct {
+	Name string `json:"name"`
+}
+
 var FailedTests = errors.New("❌ Some tests failed.")
 
 // NewEvalCommand returns a new command to evaluate prompts against models
@@ -66,7 +70,7 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 
 			Example prompt.yml structure:
 			  name: My Evaluation
-			  model: gpt-4o
+			  model: openai/gpt-4o
 			  testData:
 			    - input: "Hello world"
 			      expected: "Hello there"
@@ -94,6 +98,9 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 				return err
 			}
 
+			// Get the org flag
+			org, _ := cmd.Flags().GetString("org")
+
 			// Load the evaluation prompt file
 			evalFile, err := loadEvaluationPromptFile(promptFilePath)
 			if err != nil {
@@ -106,6 +113,7 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 				client:     cfg.Client,
 				evalFile:   evalFile,
 				jsonOutput: jsonOutput,
+				org:        org,
 			}
 
 			err = handler.runEvaluation(cmd.Context())
@@ -120,6 +128,7 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 	}
 
 	cmd.Flags().Bool("json", false, "Output results in JSON format")
+	cmd.Flags().String("org", "", "Organization to attribute usage to (omitting will attribute usage to the current actor")
 	return cmd
 }
 
@@ -128,6 +137,7 @@ type evalCommandHandler struct {
 	client     azuremodels.Client
 	evalFile   *prompt.File
 	jsonOutput bool
+	org        string
 }
 
 func loadEvaluationPromptFile(filePath string) (*prompt.File, error) {
@@ -321,7 +331,7 @@ func (h *evalCommandHandler) templateString(templateStr string, data map[string]
 func (h *evalCommandHandler) callModel(ctx context.Context, messages []azuremodels.ChatMessage) (string, error) {
 	req := h.evalFile.BuildChatCompletionOptions(messages)
 
-	resp, err := h.client.GetChatCompletionStream(ctx, req)
+	resp, err := h.client.GetChatCompletionStream(ctx, req, h.org)
 	if err != nil {
 		return "", err
 	}
@@ -460,7 +470,7 @@ func (h *evalCommandHandler) runLLMEvaluator(ctx context.Context, name string, e
 		Stream:   false,
 	}
 
-	resp, err := h.client.GetChatCompletionStream(ctx, req)
+	resp, err := h.client.GetChatCompletionStream(ctx, req, h.org)
 	if err != nil {
 		return EvaluationResult{}, fmt.Errorf("failed to call evaluation model: %w", err)
 	}
