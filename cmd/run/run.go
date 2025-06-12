@@ -216,6 +216,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 		Args: cobra.ArbitraryArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			filePath, _ := cmd.Flags().GetString("file")
+			org, _ := cmd.Flags().GetString("org")
 			var pf *prompt.File
 			if filePath != "" {
 				var err error
@@ -357,7 +358,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 				//nolint:gocritic,revive // TODO
 				defer sp.Stop()
 
-				reader, err := cmdHandler.getChatCompletionStreamReader(req)
+				reader, err := cmdHandler.getChatCompletionStreamReader(req, org)
 				if err != nil {
 					return err
 				}
@@ -408,6 +409,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 	cmd.Flags().String("temperature", "", "Controls randomness in the response, use lower to be more deterministic.")
 	cmd.Flags().String("top-p", "", "Controls text diversity by selecting the most probable words until a set probability is reached.")
 	cmd.Flags().String("system-prompt", "", "Prompt the system.")
+	cmd.Flags().String("org", "", "Organization to attribute usage to (omitting will attribute usage to the current actor")
 
 	return cmd
 }
@@ -522,8 +524,8 @@ func validateModelName(modelName string, models []*azuremodels.ModelSummary) (st
 	return modelName, nil
 }
 
-func (h *runCommandHandler) getChatCompletionStreamReader(req azuremodels.ChatCompletionOptions) (sse.Reader[azuremodels.ChatCompletion], error) {
-	resp, err := h.client.GetChatCompletionStream(h.ctx, req)
+func (h *runCommandHandler) getChatCompletionStreamReader(req azuremodels.ChatCompletionOptions, org string) (sse.Reader[azuremodels.ChatCompletion], error) {
+	resp, err := h.client.GetChatCompletionStream(h.ctx, req, org)
 	if err != nil {
 		return nil, err
 	}

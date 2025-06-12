@@ -26,12 +26,13 @@ type ChatMessage struct {
 
 // ChatCompletionOptions represents available options for a chat completion request.
 type ChatCompletionOptions struct {
-	MaxTokens   *int          `json:"max_tokens,omitempty"`
-	Messages    []ChatMessage `json:"messages"`
-	Model       string        `json:"model"`
-	Stream      bool          `json:"stream,omitempty"`
-	Temperature *float64      `json:"temperature,omitempty"`
-	TopP        *float64      `json:"top_p,omitempty"`
+	MaxTokens    *int          `json:"max_tokens,omitempty"`
+	Messages     []ChatMessage `json:"messages"`
+	Model        string        `json:"model"`
+	Stream       bool          `json:"stream,omitempty"`
+	Temperature  *float64      `json:"temperature,omitempty"`
+	TopP         *float64      `json:"top_p,omitempty"`
+	Organization *string       `json:"organization,omitempty"`
 }
 
 // ChatChoiceMessage is a message from a choice in a chat conversation.

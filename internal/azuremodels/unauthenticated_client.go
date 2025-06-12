@@ -15,7 +15,7 @@ func NewUnauthenticatedClient() *UnauthenticatedClient {
 }
 
 // GetChatCompletionStream returns an error because this functionality requires authentication.
-func (c *UnauthenticatedClient) GetChatCompletionStream(ctx context.Context, opt ChatCompletionOptions) (*ChatCompletionResponse, error) {
+func (c *UnauthenticatedClient) GetChatCompletionStream(ctx context.Context, opt ChatCompletionOptions, org string) (*ChatCompletionResponse, error) {
 	return nil, errors.New("not authenticated")
 }
 
