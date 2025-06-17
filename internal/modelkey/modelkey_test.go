@@ -120,16 +120,16 @@ func TestModelKey_String(t *testing.T) {
 		expected string
 	}{
 		{
-			name: "standard format with azureml provider",
+			name: "standard format with azureml provider - should omit provider",
 			modelKey: &ModelKey{
 				Provider:  "azureml",
 				Publisher: "openai",
 				ModelName: "gpt-4",
 			},
-			expected: "azureml/openai/gpt-4",
+			expected: "openai/gpt-4",
 		},
 		{
-			name: "custom provider",
+			name: "custom provider - should include provider",
 			modelKey: &ModelKey{
 				Provider:  "custom",
 				Publisher: "microsoft",
@@ -138,31 +138,58 @@ func TestModelKey_String(t *testing.T) {
 			expected: "custom/microsoft/phi-3",
 		},
 		{
-			name: "model name with hyphens",
+			name: "azureml provider with hyphens - should omit provider",
 			modelKey: &ModelKey{
 				Provider:  "azureml",
 				Publisher: "cohere",
 				ModelName: "command-r-plus",
 			},
-			expected: "azureml/cohere/command-r-plus",
+			expected: "cohere/command-r-plus",
 		},
 		{
-			name: "model name with underscores",
+			name: "azureml provider with underscores - should omit provider",
 			modelKey: &ModelKey{
 				Provider:  "azureml",
 				Publisher: "ai21",
 				ModelName: "jamba_instruct",
 			},
-			expected: "azureml/ai21/jamba_instruct",
+			expected: "ai21/jamba_instruct",
 		},
 		{
-			name: "long provider name",
+			name: "non-azureml provider - should include provider",
 			modelKey: &ModelKey{
 				Provider:  "custom-provider",
 				Publisher: "test-publisher",
 				ModelName: "test-model",
 			},
 			expected: "custom-provider/test-publisher/test-model",
+		},
+		{
+			name: "azureml provider with uppercase and spaces - should format and omit provider",
+			modelKey: &ModelKey{
+				Provider:  "azureml",
+				Publisher: "Open AI",
+				ModelName: "GPT 4",
+			},
+			expected: "open-ai/gpt-4",
+		},
+		{
+			name: "non-azureml provider with uppercase and spaces - should format and include provider",
+			modelKey: &ModelKey{
+				Provider:  "Custom Provider",
+				Publisher: "Test Publisher",
+				ModelName: "Test Model Name",
+			},
+			expected: "custom-provider/test-publisher/test-model-name",
+		},
+		{
+			name: "mixed case with multiple spaces",
+			modelKey: &ModelKey{
+				Provider:  "azureml",
+				Publisher: "Microsoft Corporation",
+				ModelName: "Phi 3 Mini Instruct",
+			},
+			expected: "microsoft-corporation/phi-3-mini-instruct",
 		},
 	}
 

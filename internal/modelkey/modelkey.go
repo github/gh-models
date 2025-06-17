@@ -45,7 +45,32 @@ func ParseModelKey(modelKey string) (*ModelKey, error) {
 	}
 }
 
-// String returns the string representation of the ModelKey in the format provider/publisher/model-name
+// String returns the string representation of the ModelKey.
 func (mk *ModelKey) String() string {
-	return fmt.Sprintf("%s/%s/%s", mk.Provider, mk.Publisher, mk.ModelName)
+	provider := formatPart(mk.Provider)
+	publisher := formatPart(mk.Publisher)
+	modelName := formatPart(mk.ModelName)
+
+	if provider == "azureml" {
+		return fmt.Sprintf("%s/%s", publisher, modelName)
+	}
+
+	return fmt.Sprintf("%s/%s/%s", provider, publisher, modelName)
+}
+
+func formatPart(s string) string {
+	s = strings.ToLower(s)
+	s = strings.ReplaceAll(s, " ", "-")
+
+	return s
+}
+
+func FormatIdentifier(provider, publisher, name string) string {
+	mk := &ModelKey{
+		Provider:  provider,
+		Publisher: publisher,
+		ModelName: name,
+	}
+
+	return mk.String()
 }
