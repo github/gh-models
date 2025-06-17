@@ -48,10 +48,6 @@ type EvaluationResult struct {
 	Details       string  `json:"details,omitempty"`
 }
 
-type Organization struct {
-	Name string `json:"name"`
-}
-
 var FailedTests = errors.New("❌ Some tests failed.")
 
 // NewEvalCommand returns a new command to evaluate prompts against models
