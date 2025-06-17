@@ -112,3 +112,64 @@ func TestParseModelKey(t *testing.T) {
 		})
 	}
 }
+
+func TestModelKey_String(t *testing.T) {
+	tests := []struct {
+		name     string
+		modelKey *ModelKey
+		expected string
+	}{
+		{
+			name: "standard format with azureml provider",
+			modelKey: &ModelKey{
+				Provider:  "azureml",
+				Publisher: "openai",
+				ModelName: "gpt-4",
+			},
+			expected: "azureml/openai/gpt-4",
+		},
+		{
+			name: "custom provider",
+			modelKey: &ModelKey{
+				Provider:  "custom",
+				Publisher: "microsoft",
+				ModelName: "phi-3",
+			},
+			expected: "custom/microsoft/phi-3",
+		},
+		{
+			name: "model name with hyphens",
+			modelKey: &ModelKey{
+				Provider:  "azureml",
+				Publisher: "cohere",
+				ModelName: "command-r-plus",
+			},
+			expected: "azureml/cohere/command-r-plus",
+		},
+		{
+			name: "model name with underscores",
+			modelKey: &ModelKey{
+				Provider:  "azureml",
+				Publisher: "ai21",
+				ModelName: "jamba_instruct",
+			},
+			expected: "azureml/ai21/jamba_instruct",
+		},
+		{
+			name: "long provider name",
+			modelKey: &ModelKey{
+				Provider:  "custom-provider",
+				Publisher: "test-publisher",
+				ModelName: "test-model",
+			},
+			expected: "custom-provider/test-publisher/test-model",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.modelKey.String()
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}

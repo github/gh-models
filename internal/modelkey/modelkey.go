@@ -44,3 +44,8 @@ func ParseModelKey(modelKey string) (*ModelKey, error) {
 		return nil, fmt.Errorf("invalid model key format: %s", modelKey)
 	}
 }
+
+// String returns the string representation of the ModelKey in the format provider/publisher/model-name
+func (mk *ModelKey) String() string {
+	return fmt.Sprintf("%s/%s/%s", mk.Provider, mk.Publisher, mk.ModelName)
+}
