@@ -16,6 +16,7 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/briandowns/spinner"
 	"github.com/github/gh-models/internal/azuremodels"
+	"github.com/github/gh-models/internal/modelkey"
 	"github.com/github/gh-models/internal/sse"
 	"github.com/github/gh-models/pkg/command"
 	"github.com/github/gh-models/pkg/prompt"
@@ -513,9 +514,21 @@ func validateModelName(modelName string, models []*azuremodels.ModelSummary) (st
 		return "", errors.New(noMatchErrorMessage)
 	}
 
+	parsedModel, err := modelkey.ParseModelKey(modelName)
+	if err != nil {
+		return "", fmt.Errorf("invalid model format: %w", err)
+	}
+
+	if parsedModel.Provider == "custom" {
+		// Skip validation for custom provider
+		return parsedModel.String(), nil
+	}
+
+	// For non-custom providers, validate the model exists
+	expectedModelID := azuremodels.FormatIdentifier(parsedModel.Publisher, parsedModel.ModelName)
 	foundMatch := false
 	for _, model := range models {
-		if model.HasName(modelName) {
+		if model.HasName(expectedModelID) {
 			foundMatch = true
 			break
 		}
@@ -525,7 +538,7 @@ func validateModelName(modelName string, models []*azuremodels.ModelSummary) (st
 		return "", errors.New(noMatchErrorMessage)
 	}
 
-	return modelName, nil
+	return expectedModelID, nil
 }
 
 func (h *runCommandHandler) getChatCompletionStreamReader(req azuremodels.ChatCompletionOptions, org string) (sse.Reader[azuremodels.ChatCompletion], error) {
