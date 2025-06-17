@@ -87,8 +87,11 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 
 			See https://docs.github.com/github-models/use-github-models/storing-prompts-in-github-repositories#supported-file-format for more information.
 		`),
-		Example: "gh models eval my_prompt.prompt.yml",
-		Args:    cobra.ExactArgs(1),
+		Example: heredoc.Doc(`
+			gh models eval my_prompt.prompt.yml
+			gh models eval --org my-org my_prompt.prompt.yml
+		`),
+		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			promptFilePath := args[0]
 

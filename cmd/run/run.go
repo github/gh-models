@@ -207,10 +207,14 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			When using prompt files, you can pass template variables using the %[1]s--var%[1]s flag:
 			%[1]sgh models run --file prompt.yml --var name=Alice --var topic=AI%[1]s
 
+			When running inference against an organization, pass the organization name using the %[1]s--org%[1]s flag:
+			%[1]sgh models run --org my-org openai/gpt-4o-mini "What is AI?"%[1]s
+
 			The return value will be the response to your prompt from the selected model.
 		`, "`"),
 		Example: heredoc.Doc(`
 			gh models run openai/gpt-4o-mini "how many types of hyena are there?"
+			gh models run --org my-org openai/gpt-4o-mini "how many types of hyena are there?"
 			gh models run --file prompt.yml --var name=Alice --var topic="machine learning"
 		`),
 		Args: cobra.ArbitraryArgs,
