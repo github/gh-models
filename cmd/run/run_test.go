@@ -403,3 +403,56 @@ func TestParseTemplateVariables(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateModelName(t *testing.T) {
+	tests := []struct {
+		name          string
+		modelName     string
+		expectedModel string
+		expectError   bool
+	}{
+		{
+			name:          "custom provider skips validation",
+			modelName:     "custom/mycompany/custom-model",
+			expectedModel: "custom/mycompany/custom-model",
+			expectError:   false,
+		},
+		{
+			name:          "azureml provider requires validation",
+			modelName:     "openai/gpt-4",
+			expectedModel: "openai/gpt-4",
+			expectError:   false,
+		},
+		{
+			name:        "invalid model format",
+			modelName:   "invalid-format",
+			expectError: true,
+		},
+		{
+			name:        "nonexistent azureml model",
+			modelName:   "nonexistent/model",
+			expectError: true,
+		},
+	}
+
+	// Create a mock model for testing
+	mockModel := &azuremodels.ModelSummary{
+		Name:      "gpt-4",
+		Publisher: "openai",
+		Task:      "chat-completion",
+	}
+	models := []*azuremodels.ModelSummary{mockModel}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := validateModelName(tt.modelName, models)
+
+			if tt.expectError {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expectedModel, result)
+			}
+		})
+	}
+}

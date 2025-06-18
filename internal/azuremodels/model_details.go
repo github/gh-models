@@ -2,7 +2,8 @@ package azuremodels
 
 import (
 	"fmt"
-	"strings"
+
+	"github.com/github/gh-models/internal/modelkey"
 )
 
 // ModelDetails includes detailed information about a model.
@@ -28,12 +29,5 @@ func (m *ModelDetails) ContextLimits() string {
 
 // FormatIdentifier formats the model identifier based on the publisher and model name.
 func FormatIdentifier(publisher, name string) string {
-	formatPart := func(s string) string {
-		// Replace spaces with dashes and convert to lowercase
-		result := strings.ToLower(s)
-		result = strings.ReplaceAll(result, " ", "-")
-		return result
-	}
-
-	return fmt.Sprintf("%s/%s", formatPart(publisher), formatPart(name))
+	return modelkey.FormatIdentifier("azureml", publisher, name)
 }
