@@ -40,7 +40,7 @@ func NewAzureClient(httpClient *http.Client, authToken string, cfg *AzureClientC
 }
 
 // GetChatCompletionStream returns a stream of chat completions using the given options.
-func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompletionOptions) (*ChatCompletionResponse, error) {
+func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompletionOptions, org string) (*ChatCompletionResponse, error) {
 	// Check for o1 models, which don't support streaming
 	if req.Model == "o1-mini" || req.Model == "o1-preview" || req.Model == "o1" {
 		req.Stream = false
@@ -55,7 +55,14 @@ func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompl
 
 	body := bytes.NewReader(bodyBytes)
 
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.cfg.InferenceURL, body)
+	var inferenceURL string
+	if org != "" {
+		inferenceURL = fmt.Sprintf("%s/orgs/%s/%s", c.cfg.InferenceRoot, org, c.cfg.InferencePath)
+	} else {
+		inferenceURL = c.cfg.InferenceRoot + "/" + c.cfg.InferencePath
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, inferenceURL, body)
 	if err != nil {
 		return nil, err
 	}

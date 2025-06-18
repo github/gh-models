@@ -45,7 +45,7 @@ func TestRun(t *testing.T) {
 			Reader: sse.NewMockEventReader([]azuremodels.ChatCompletion{chatCompletion}),
 		}
 		getChatCompletionCallCount := 0
-		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
 			getChatCompletionCallCount++
 			return chatResp, nil
 		}
@@ -122,7 +122,7 @@ messages:
 				},
 			}},
 		}
-		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
 			capturedReq = opt
 			return &azuremodels.ChatCompletionResponse{
 				Reader: sse.NewMockEventReader([]azuremodels.ChatCompletion{chatCompletion}),
@@ -188,7 +188,7 @@ messages:
 				},
 			}},
 		}
-		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
 			capturedReq = opt
 			return &azuremodels.ChatCompletionResponse{
 				Reader: sse.NewMockEventReader([]azuremodels.ChatCompletion{chatCompletion}),
@@ -278,7 +278,7 @@ messages:
 			}},
 		}
 
-		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
 			capturedReq = opt
 			return &azuremodels.ChatCompletionResponse{
 				Reader: sse.NewMockEventReader([]azuremodels.ChatCompletion{chatCompletion}),
