@@ -53,7 +53,7 @@ func NewListCommand(cfg *command.Config) *cobra.Command {
 			printer.EndRow()
 
 			for _, model := range models {
-				printer.AddField(azuremodels.FormatIdentifier(model.Publisher, model.Name))
+				printer.AddField(model.ID)
 				printer.AddField(model.FriendlyName)
 				printer.EndRow()
 			}

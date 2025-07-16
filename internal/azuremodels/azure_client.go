@@ -9,9 +9,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/cli/go-gh/v2/pkg/api"
+	"github.com/github/gh-models/internal/modelkey"
 	"github.com/github/gh-models/internal/sse"
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
@@ -185,19 +187,7 @@ func lowercaseStrings(input []string) []string {
 
 // ListModels returns a list of available models.
 func (c *AzureClient) ListModels(ctx context.Context) ([]*ModelSummary, error) {
-	body := bytes.NewReader([]byte(`
-		{
-			"filters": [
-				{ "field": "freePlayground", "values": ["true"], "operator": "eq"},
-				{ "field": "labels", "values": ["latest"], "operator": "eq"}
-			],
-			"order": [
-				{ "field": "displayName", "direction": "asc" }
-			]
-		}
-	`))
-
-	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, c.cfg.ModelsURL, body)
+	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet, c.cfg.ModelsURL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -218,28 +208,34 @@ func (c *AzureClient) ListModels(ctx context.Context) ([]*ModelSummary, error) {
 	decoder := json.NewDecoder(resp.Body)
 	decoder.UseNumber()
 
-	var searchResponse modelCatalogSearchResponse
-	err = decoder.Decode(&searchResponse)
+	var catalog githubModelCatalogResponse
+	err = decoder.Decode(&catalog)
 	if err != nil {
 		return nil, err
 	}
 
-	models := make([]*ModelSummary, 0, len(searchResponse.Summaries))
-	for _, summary := range searchResponse.Summaries {
+	models := make([]*ModelSummary, 0, len(catalog))
+	for _, catalogModel := range catalog {
+		// Determine task from supported modalities - if it supports text input/output, it's likely a chat model
 		inferenceTask := ""
-		if len(summary.InferenceTasks) > 0 {
-			inferenceTask = summary.InferenceTasks[0]
+		if slices.Contains(catalogModel.SupportedInputModalities, "text") && slices.Contains(catalogModel.SupportedOutputModalities, "text") {
+			inferenceTask = "chat-completion"
+		}
+
+		modelKey, err := modelkey.ParseModelKey(catalogModel.ID)
+		if err != nil {
+			return nil, fmt.Errorf("parsing model key %q: %w", catalogModel.ID, err)
 		}
 
 		models = append(models, &ModelSummary{
-			ID:           summary.AssetID,
-			Name:         summary.Name,
-			FriendlyName: summary.DisplayName,
+			ID:           catalogModel.ID,
+			Name:         modelKey.ModelName,
+			Registry:     catalogModel.Registry,
+			FriendlyName: catalogModel.Name,
 			Task:         inferenceTask,
-			Publisher:    summary.Publisher,
-			Summary:      summary.Summary,
-			Version:      summary.Version,
-			RegistryName: summary.RegistryName,
+			Publisher:    catalogModel.Publisher,
+			Summary:      catalogModel.Summary,
+			Version:      catalogModel.Version,
 		})
 	}
 

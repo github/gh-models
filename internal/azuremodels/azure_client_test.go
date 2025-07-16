@@ -194,38 +194,39 @@ func TestAzureClient(t *testing.T) {
 			return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				require.Equal(t, "application/json", r.Header.Get("Content-Type"))
 				require.Equal(t, "/", r.URL.Path)
-				require.Equal(t, http.MethodPost, r.Method)
+				require.Equal(t, http.MethodGet, r.Method)
 
 				handlerFn(w, r)
 			}))
 		}
 
 		t.Run("happy path", func(t *testing.T) {
-			summary1 := modelCatalogSearchSummary{
-				AssetID:        "test-id-1",
-				Name:           "test-model-1",
-				DisplayName:    "I Can't Believe It's Not a Real Model",
-				InferenceTasks: []string{"this model has an inference task but the other model will not"},
-				Publisher:      "OpenAI",
-				Summary:        "This is a test model",
-				Version:        "1.0",
-				RegistryName:   "azure-openai",
+			summary1 := githubModelSummary{
+				ID:                        "openai/gpt-4.1",
+				Name:                      "OpenAI GPT-4.1",
+				Publisher:                 "OpenAI",
+				Summary:                   "gpt-4.1 outperforms gpt-4o across the board",
+				Version:                   "1",
+				RateLimitTier:             "high",
+				SupportedInputModalities:  []string{"text", "image"},
+				SupportedOutputModalities: []string{"text"},
+				Tags:                      []string{"multipurpose", "multilingual", "multimodal"},
 			}
-			summary2 := modelCatalogSearchSummary{
-				AssetID:      "test-id-2",
-				Name:         "test-model-2",
-				DisplayName:  "Down the Rabbit-Hole",
-				Publisher:    "Project Gutenberg",
-				Summary:      "The first chapter of Alice's Adventures in Wonderland by Lewis Carroll.",
-				Version:      "THE MILLENNIUM FULCRUM EDITION 3.0",
-				RegistryName: "proj-gutenberg-website",
+			summary2 := githubModelSummary{
+				ID:                        "openai/gpt-4.1-mini",
+				Name:                      "OpenAI GPT-4.1-mini",
+				Publisher:                 "OpenAI",
+				Summary:                   "gpt-4.1-mini outperform gpt-4o-mini across the board",
+				Version:                   "2",
+				RateLimitTier:             "low",
+				SupportedInputModalities:  []string{"text", "image"},
+				SupportedOutputModalities: []string{"text"},
+				Tags:                      []string{"multipurpose", "multilingual", "multimodal"},
 			}
-			searchResponse := &modelCatalogSearchResponse{
-				Summaries: []modelCatalogSearchSummary{summary1, summary2},
-			}
+			githubResponse := githubModelCatalogResponse{summary1, summary2}
 			testServer := newTestServerForListModels(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
-				err := json.NewEncoder(w).Encode(searchResponse)
+				err := json.NewEncoder(w).Encode(githubResponse)
 				require.NoError(t, err)
 			}))
 			defer testServer.Close()
@@ -238,22 +239,20 @@ func TestAzureClient(t *testing.T) {
 			require.NoError(t, err)
 			require.NotNil(t, models)
 			require.Equal(t, 2, len(models))
-			require.Equal(t, summary1.AssetID, models[0].ID)
-			require.Equal(t, summary2.AssetID, models[1].ID)
-			require.Equal(t, summary1.Name, models[0].Name)
-			require.Equal(t, summary2.Name, models[1].Name)
-			require.Equal(t, summary1.DisplayName, models[0].FriendlyName)
-			require.Equal(t, summary2.DisplayName, models[1].FriendlyName)
-			require.Equal(t, summary1.InferenceTasks[0], models[0].Task)
-			require.Empty(t, models[1].Task)
+			require.Equal(t, summary1.ID, models[0].ID)
+			require.Equal(t, summary2.ID, models[1].ID)
+			require.Equal(t, "gpt-4.1", models[0].Name)
+			require.Equal(t, "gpt-4.1-mini", models[1].Name)
+			require.Equal(t, summary1.Name, models[0].FriendlyName)
+			require.Equal(t, summary2.Name, models[1].FriendlyName)
+			require.Equal(t, "chat-completion", models[0].Task)
+			require.Equal(t, "chat-completion", models[1].Task)
 			require.Equal(t, summary1.Publisher, models[0].Publisher)
 			require.Equal(t, summary2.Publisher, models[1].Publisher)
 			require.Equal(t, summary1.Summary, models[0].Summary)
 			require.Equal(t, summary2.Summary, models[1].Summary)
-			require.Equal(t, summary1.Version, models[0].Version)
-			require.Equal(t, summary2.Version, models[1].Version)
-			require.Equal(t, summary1.RegistryName, models[0].RegistryName)
-			require.Equal(t, summary2.RegistryName, models[1].RegistryName)
+			require.Equal(t, "1", models[0].Version)
+			require.Equal(t, "2", models[1].Version)
 		})
 
 		t.Run("handles non-OK status", func(t *testing.T) {

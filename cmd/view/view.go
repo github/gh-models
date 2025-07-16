@@ -50,7 +50,7 @@ func NewViewCommand(cfg *command.Config) *cobra.Command {
 					if !model.IsChatModel() {
 						continue
 					}
-					prompt.Options = append(prompt.Options, azuremodels.FormatIdentifier(model.Publisher, model.Name))
+					prompt.Options = append(prompt.Options, model.ID)
 				}
 
 				err = survey.AskOne(prompt, &modelName, survey.WithPageSize(10))
@@ -61,13 +61,12 @@ func NewViewCommand(cfg *command.Config) *cobra.Command {
 			case len(args) >= 1:
 				modelName = args[0]
 			}
-
 			modelSummary, err := getModelByName(modelName, models)
 			if err != nil {
 				return err
 			}
 
-			modelDetails, err := client.GetModelDetails(ctx, modelSummary.RegistryName, modelSummary.Name, modelSummary.Version)
+			modelDetails, err := client.GetModelDetails(ctx, modelSummary.Registry, modelSummary.Name, modelSummary.Version)
 			if err != nil {
 				return err
 			}
