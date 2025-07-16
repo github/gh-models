@@ -1,6 +1,7 @@
 package azuremodels
 
 import (
+	"fmt"
 	"slices"
 	"sort"
 	"strings"
@@ -10,12 +11,12 @@ import (
 type ModelSummary struct {
 	ID           string `json:"id"`
 	Name         string `json:"name"`
+	Registry     string `json:"registry"`
 	FriendlyName string `json:"friendly_name"`
 	Task         string `json:"task"`
 	Publisher    string `json:"publisher"`
 	Summary      string `json:"summary"`
 	Version      string `json:"version"`
-	RegistryName string `json:"registry_name"`
 }
 
 // IsChatModel returns true if the model is for chat completions.
@@ -25,8 +26,7 @@ func (m *ModelSummary) IsChatModel() bool {
 
 // HasName checks if the model has the given name.
 func (m *ModelSummary) HasName(name string) bool {
-	modelID := FormatIdentifier(m.Publisher, m.Name)
-	return strings.EqualFold(modelID, name)
+	return strings.EqualFold(m.ID, name)
 }
 
 var (
@@ -50,8 +50,8 @@ func SortModels(models []*ModelSummary) {
 
 		// Otherwise, sort by friendly name
 		// Note: sometimes the casing returned by the API is inconsistent, so sort using lowercase values.
-		idI := FormatIdentifier(models[i].Publisher, models[i].Name)
-		idJ := FormatIdentifier(models[j].Publisher, models[j].Name)
+		idI := strings.ToLower(fmt.Sprintf("%s/%s", models[i].Publisher, models[i].Name))
+		idJ := strings.ToLower(fmt.Sprintf("%s/%s", models[j].Publisher, models[j].Name))
 
 		return idI < idJ
 	})

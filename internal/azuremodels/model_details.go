@@ -2,8 +2,6 @@ package azuremodels
 
 import (
 	"fmt"
-
-	"github.com/github/gh-models/internal/modelkey"
 )
 
 // ModelDetails includes detailed information about a model.
@@ -25,9 +23,4 @@ type ModelDetails struct {
 // ContextLimits returns a summary of the context limits for the model.
 func (m *ModelDetails) ContextLimits() string {
 	return fmt.Sprintf("up to %d input tokens and %d output tokens", m.MaxInputTokens, m.MaxOutputTokens)
-}
-
-// FormatIdentifier formats the model identifier based on the publisher and model name.
-func FormatIdentifier(publisher, name string) string {
-	return modelkey.FormatIdentifier("azureml", publisher, name)
 }

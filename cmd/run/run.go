@@ -492,7 +492,8 @@ func (h *runCommandHandler) getModelNameFromArgs(models []*azuremodels.ModelSumm
 			if !model.IsChatModel() {
 				continue
 			}
-			prompt.Options = append(prompt.Options, azuremodels.FormatIdentifier(model.Publisher, model.Name))
+
+			prompt.Options = append(prompt.Options, model.ID)
 		}
 
 		err := survey.AskOne(prompt, &modelName, survey.WithPageSize(10))
@@ -525,7 +526,7 @@ func validateModelName(modelName string, models []*azuremodels.ModelSummary) (st
 	}
 
 	// For non-custom providers, validate the model exists
-	expectedModelID := azuremodels.FormatIdentifier(parsedModel.Publisher, parsedModel.ModelName)
+	expectedModelID := parsedModel.String()
 	foundMatch := false
 	for _, model := range models {
 		if model.HasName(expectedModelID) {

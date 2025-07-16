@@ -19,14 +19,13 @@ func TestRun(t *testing.T) {
 	t.Run("NewRunCommand happy path", func(t *testing.T) {
 		client := azuremodels.NewMockClient()
 		modelSummary := &azuremodels.ModelSummary{
-			ID:           "test-id-1",
+			ID:           "openai/test-model-1",
 			Name:         "test-model-1",
 			FriendlyName: "Test Model 1",
 			Task:         "chat-completion",
 			Publisher:    "OpenAI",
 			Summary:      "This is a test model",
 			Version:      "1.0",
-			RegistryName: "azure-openai",
 		}
 		listModelsCallCount := 0
 		client.MockListModels = func(ctx context.Context) ([]*azuremodels.ModelSummary, error) {
@@ -52,7 +51,7 @@ func TestRun(t *testing.T) {
 		buf := new(bytes.Buffer)
 		cfg := command.NewConfig(buf, buf, client, true, 80)
 		runCmd := NewRunCommand(cfg)
-		runCmd.SetArgs([]string{azuremodels.FormatIdentifier(modelSummary.Publisher, modelSummary.Name), "this is my prompt"})
+		runCmd.SetArgs([]string{modelSummary.ID, "this is my prompt"})
 
 		_, err := runCmd.ExecuteC()
 
@@ -104,6 +103,7 @@ messages:
 
 		client := azuremodels.NewMockClient()
 		modelSummary := &azuremodels.ModelSummary{
+			ID:        "openai/test-model",
 			Name:      "test-model",
 			Publisher: "openai",
 			Task:      "chat-completion",
@@ -134,7 +134,7 @@ messages:
 		runCmd := NewRunCommand(cfg)
 		runCmd.SetArgs([]string{
 			"--file", tmp.Name(),
-			azuremodels.FormatIdentifier("openai", "test-model"),
+			"openai/test-model",
 		})
 
 		_, err = runCmd.ExecuteC()
@@ -170,6 +170,7 @@ messages:
 
 		client := azuremodels.NewMockClient()
 		modelSummary := &azuremodels.ModelSummary{
+			ID:        "openai/test-model",
 			Name:      "test-model",
 			Publisher: "openai",
 			Task:      "chat-completion",
@@ -214,7 +215,7 @@ messages:
 		runCmd := NewRunCommand(cfg)
 		runCmd.SetArgs([]string{
 			"--file", tmp.Name(),
-			azuremodels.FormatIdentifier("openai", "test-model"),
+			"openai/test-model",
 			initialPrompt,
 		})
 
@@ -252,11 +253,13 @@ messages:
 
 		client := azuremodels.NewMockClient()
 		modelSummary := &azuremodels.ModelSummary{
+			ID:        "openai/example-model",
 			Name:      "example-model",
 			Publisher: "openai",
 			Task:      "chat-completion",
 		}
 		modelSummary2 := &azuremodels.ModelSummary{
+			ID:        "openai/example-model-4o-mini-plus",
 			Name:      "example-model-4o-mini-plus",
 			Publisher: "openai",
 			Task:      "chat-completion",
@@ -437,6 +440,7 @@ func TestValidateModelName(t *testing.T) {
 
 	// Create a mock model for testing
 	mockModel := &azuremodels.ModelSummary{
+		ID:        "openai/gpt-4",
 		Name:      "gpt-4",
 		Publisher: "openai",
 		Task:      "chat-completion",

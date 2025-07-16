@@ -1,8 +1,6 @@
 package azuremodels
 
 import (
-	"encoding/json"
-
 	"github.com/github/gh-models/internal/sse"
 )
 
@@ -63,20 +61,21 @@ type ChatCompletionResponse struct {
 	Reader sse.Reader[ChatCompletion]
 }
 
-type modelCatalogSearchResponse struct {
-	Summaries []modelCatalogSearchSummary `json:"summaries"`
-}
+// GitHub Models API response types
+type githubModelCatalogResponse []githubModelSummary
 
-type modelCatalogSearchSummary struct {
-	AssetID        string      `json:"assetId"`
-	DisplayName    string      `json:"displayName"`
-	InferenceTasks []string    `json:"inferenceTasks"`
-	Name           string      `json:"name"`
-	Popularity     json.Number `json:"popularity"`
-	Publisher      string      `json:"publisher"`
-	RegistryName   string      `json:"registryName"`
-	Version        string      `json:"version"`
-	Summary        string      `json:"summary"`
+type githubModelSummary struct {
+	ID                        string   `json:"id"`
+	Name                      string   `json:"name"`
+	Version                   string   `json:"version"`
+	Publisher                 string   `json:"publisher"`
+	Registry                  string   `json:"registry"`
+	HtmlURL                   string   `json:"html_url"`
+	Summary                   string   `json:"summary"`
+	RateLimitTier             string   `json:"rate_limit_tier"`
+	SupportedInputModalities  []string `json:"supported_input_modalities"`
+	SupportedOutputModalities []string `json:"supported_output_modalities"`
+	Tags                      []string `json:"tags"`
 }
 
 type modelCatalogTextLimits struct {

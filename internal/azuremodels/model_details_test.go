@@ -12,12 +12,4 @@ func TestModelDetails(t *testing.T) {
 		result := details.ContextLimits()
 		require.Equal(t, "up to 123 input tokens and 456 output tokens", result)
 	})
-
-	t.Run("FormatIdentifier", func(t *testing.T) {
-		publisher := "Open AI"
-		name := "GPT 3"
-		expected := "open-ai/gpt-3"
-		result := FormatIdentifier(publisher, name)
-		require.Equal(t, expected, result)
-	})
 }
