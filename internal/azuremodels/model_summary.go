@@ -9,14 +9,15 @@ import (
 
 // ModelSummary includes basic information about a model.
 type ModelSummary struct {
-	ID           string `json:"id"`
-	Name         string `json:"name"`
-	Registry     string `json:"registry"`
-	FriendlyName string `json:"friendly_name"`
-	Task         string `json:"task"`
-	Publisher    string `json:"publisher"`
-	Summary      string `json:"summary"`
-	Version      string `json:"version"`
+	ID           string   `json:"id"`
+	Name         string   `json:"name"`
+	Registry     string   `json:"registry"`
+	FriendlyName string   `json:"friendly_name"`
+	Task         string   `json:"task"`
+	Publisher    string   `json:"publisher"`
+	Summary      string   `json:"summary"`
+	Version      string   `json:"version"`
+	Capabilities []string `json:"capabilities"`
 }
 
 // IsChatModel returns true if the model is for chat completions.
@@ -27,6 +28,10 @@ func (m *ModelSummary) IsChatModel() bool {
 // HasName checks if the model has the given name.
 func (m *ModelSummary) HasName(name string) bool {
 	return strings.EqualFold(m.ID, name)
+}
+
+func (m ModelSummary) SupportsStreaming() bool {
+	return slices.Contains(m.Capabilities, "streaming")
 }
 
 var (

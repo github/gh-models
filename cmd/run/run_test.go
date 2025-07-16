@@ -449,13 +449,13 @@ func TestValidateModelName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := validateModelName(tt.modelName, models)
+			result, err := getModel(tt.modelName, models)
 
 			if tt.expectError {
 				require.Error(t, err)
 			} else {
 				require.NoError(t, err)
-				require.Equal(t, tt.expectedModel, result)
+				require.Equal(t, tt.expectedModel, result.ID)
 			}
 		})
 	}

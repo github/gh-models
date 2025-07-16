@@ -76,6 +76,7 @@ type githubModelSummary struct {
 	SupportedInputModalities  []string `json:"supported_input_modalities"`
 	SupportedOutputModalities []string `json:"supported_output_modalities"`
 	Tags                      []string `json:"tags"`
+	Capabilities              []string `json:"capabilities"`
 }
 
 type modelCatalogTextLimits struct {

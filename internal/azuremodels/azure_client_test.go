@@ -41,11 +41,8 @@ func TestAzureClient(t *testing.T) {
 			testServer := newTestServerForChatCompletion(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				require.Equal(t, "Bearer "+authToken, r.Header.Get("Authorization"))
 
-				data := new(bytes.Buffer)
-				err := json.NewEncoder(data).Encode(&ChatCompletion{Choices: []ChatChoice{choice}})
-				require.NoError(t, err)
 				w.WriteHeader(http.StatusOK)
-				_, err = w.Write([]byte("data: " + data.String() + "\n\ndata: [DONE]\n"))
+				err := json.NewEncoder(w).Encode(&ChatCompletion{Choices: []ChatChoice{choice}})
 				require.NoError(t, err)
 			}))
 			defer testServer.Close()
@@ -206,6 +203,7 @@ func TestAzureClient(t *testing.T) {
 				Name:                      "OpenAI GPT-4.1",
 				Publisher:                 "OpenAI",
 				Summary:                   "gpt-4.1 outperforms gpt-4o across the board",
+				Version:                   "1",
 				RateLimitTier:             "high",
 				SupportedInputModalities:  []string{"text", "image"},
 				SupportedOutputModalities: []string{"text"},
@@ -216,6 +214,7 @@ func TestAzureClient(t *testing.T) {
 				Name:                      "OpenAI GPT-4.1-mini",
 				Publisher:                 "OpenAI",
 				Summary:                   "gpt-4.1-mini outperform gpt-4o-mini across the board",
+				Version:                   "2",
 				RateLimitTier:             "low",
 				SupportedInputModalities:  []string{"text", "image"},
 				SupportedOutputModalities: []string{"text"},
@@ -239,8 +238,8 @@ func TestAzureClient(t *testing.T) {
 			require.Equal(t, 2, len(models))
 			require.Equal(t, summary1.ID, models[0].ID)
 			require.Equal(t, summary2.ID, models[1].ID)
-			require.Equal(t, summary1.ID, models[0].Name)
-			require.Equal(t, summary2.ID, models[1].Name)
+			require.Equal(t, "gpt-4.1", models[0].Name)
+			require.Equal(t, "gpt-4.1-mini", models[1].Name)
 			require.Equal(t, summary1.Name, models[0].FriendlyName)
 			require.Equal(t, summary2.Name, models[1].FriendlyName)
 			require.Equal(t, "chat-completion", models[0].Task)
@@ -249,8 +248,8 @@ func TestAzureClient(t *testing.T) {
 			require.Equal(t, summary2.Publisher, models[1].Publisher)
 			require.Equal(t, summary1.Summary, models[0].Summary)
 			require.Equal(t, summary2.Summary, models[1].Summary)
-			require.Equal(t, "latest", models[0].Version)
-			require.Equal(t, "latest", models[1].Version)
+			require.Equal(t, "1", models[0].Version)
+			require.Equal(t, "2", models[1].Version)
 		})
 
 		t.Run("handles non-OK status", func(t *testing.T) {

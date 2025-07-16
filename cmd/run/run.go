@@ -251,7 +251,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 				return err
 			}
 
-			modelName, err := cmdHandler.getModelNameFromArgs(models)
+			model, err := cmdHandler.getModelFromArgs(models)
 			if err != nil {
 				return err
 			}
@@ -353,7 +353,8 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 
 				req := azuremodels.ChatCompletionOptions{
 					Messages: conversation.GetMessages(),
-					Model:    modelName,
+					Model:    model.ID,
+					Stream:   model.SupportsStreaming(),
 				}
 
 				mp.UpdateRequest(&req)
@@ -477,7 +478,7 @@ func (h *runCommandHandler) loadModels() ([]*azuremodels.ModelSummary, error) {
 	return models, nil
 }
 
-func (h *runCommandHandler) getModelNameFromArgs(models []*azuremodels.ModelSummary) (string, error) {
+func (h *runCommandHandler) getModelFromArgs(models []*azuremodels.ModelSummary) (*azuremodels.ModelSummary, error) {
 	modelName := ""
 
 	switch {
@@ -498,48 +499,44 @@ func (h *runCommandHandler) getModelNameFromArgs(models []*azuremodels.ModelSumm
 
 		err := survey.AskOne(prompt, &modelName, survey.WithPageSize(10))
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 
 	case len(h.args) >= 1:
 		modelName = h.args[0]
 	}
 
-	return validateModelName(modelName, models)
+	return getModel(modelName, models)
 }
 
-func validateModelName(modelName string, models []*azuremodels.ModelSummary) (string, error) {
+func getModel(modelName string, models []*azuremodels.ModelSummary) (*azuremodels.ModelSummary, error) {
 	noMatchErrorMessage := fmt.Sprintf("The specified model '%s' is not found. Run 'gh models list' to see available models or 'gh models run' to select interactively.", modelName)
 
 	if modelName == "" {
-		return "", errors.New(noMatchErrorMessage)
+		return nil, errors.New(noMatchErrorMessage)
 	}
 
 	parsedModel, err := modelkey.ParseModelKey(modelName)
 	if err != nil {
-		return "", fmt.Errorf("invalid model format: %w", err)
+		return nil, fmt.Errorf("invalid model format: %w", err)
 	}
 
 	if parsedModel.Provider == "custom" {
 		// Skip validation for custom provider
-		return parsedModel.String(), nil
+		return &azuremodels.ModelSummary{
+			ID: parsedModel.String(),
+		}, nil
 	}
 
 	// For non-custom providers, validate the model exists
 	expectedModelID := parsedModel.String()
-	foundMatch := false
 	for _, model := range models {
 		if model.HasName(expectedModelID) {
-			foundMatch = true
-			break
+			return model, nil
 		}
 	}
 
-	if !foundMatch {
-		return "", errors.New(noMatchErrorMessage)
-	}
-
-	return expectedModelID, nil
+	return nil, errors.New(noMatchErrorMessage)
 }
 
 func (h *runCommandHandler) getChatCompletionStreamReader(req azuremodels.ChatCompletionOptions, org string) (sse.Reader[azuremodels.ChatCompletion], error) {

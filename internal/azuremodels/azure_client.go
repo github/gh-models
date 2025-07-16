@@ -43,13 +43,6 @@ func NewAzureClient(httpClient *http.Client, authToken string, cfg *AzureClientC
 
 // GetChatCompletionStream returns a stream of chat completions using the given options.
 func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompletionOptions, org string) (*ChatCompletionResponse, error) {
-	// Check for o1 models, which don't support streaming
-	if req.Model == "o1-mini" || req.Model == "o1-preview" || req.Model == "o1" {
-		req.Stream = false
-	} else {
-		req.Stream = true
-	}
-
 	bodyBytes, err := json.Marshal(req)
 	if err != nil {
 		return nil, err
@@ -236,6 +229,7 @@ func (c *AzureClient) ListModels(ctx context.Context) ([]*ModelSummary, error) {
 			Publisher:    catalogModel.Publisher,
 			Summary:      catalogModel.Summary,
 			Version:      catalogModel.Version,
+			Capabilities: catalogModel.Capabilities,
 		})
 	}
 
