@@ -14,14 +14,13 @@ func TestView(t *testing.T) {
 	t.Run("NewViewCommand happy path", func(t *testing.T) {
 		client := azuremodels.NewMockClient()
 		modelSummary := &azuremodels.ModelSummary{
-			ID:           "test-id-1",
+			ID:           "openai/test-model-1",
 			Name:         "test-model-1",
 			FriendlyName: "Test Model 1",
 			Task:         "chat-completion",
 			Publisher:    "OpenAI",
 			Summary:      "This is a test model",
 			Version:      "1.0",
-			RegistryName: "azure-openai",
 		}
 		listModelsCallCount := 0
 		client.MockListModels = func(ctx context.Context) ([]*azuremodels.ModelSummary, error) {
@@ -49,7 +48,7 @@ func TestView(t *testing.T) {
 		buf := new(bytes.Buffer)
 		cfg := command.NewConfig(buf, buf, client, true, 80)
 		viewCmd := NewViewCommand(cfg)
-		viewCmd.SetArgs([]string{azuremodels.FormatIdentifier(modelSummary.Publisher, modelSummary.Name)})
+		viewCmd.SetArgs([]string{modelSummary.ID})
 
 		_, err := viewCmd.ExecuteC()
 

@@ -14,14 +14,13 @@ func TestList(t *testing.T) {
 	t.Run("NewListCommand happy path", func(t *testing.T) {
 		client := azuremodels.NewMockClient()
 		modelSummary := &azuremodels.ModelSummary{
-			ID:           "test-id-1",
+			ID:           "openai/test-id-1",
 			Name:         "test-model-1",
 			FriendlyName: "Test Model 1",
 			Task:         "chat-completion",
 			Publisher:    "OpenAI",
 			Summary:      "This is a test model",
 			Version:      "1.0",
-			RegistryName: "azure-openai",
 		}
 		listModelsCallCount := 0
 		client.MockListModels = func(ctx context.Context) ([]*azuremodels.ModelSummary, error) {
@@ -41,7 +40,7 @@ func TestList(t *testing.T) {
 		require.Contains(t, output, "DISPLAY NAME")
 		require.Contains(t, output, "ID")
 		require.Contains(t, output, modelSummary.FriendlyName)
-		require.Contains(t, output, azuremodels.FormatIdentifier(modelSummary.Publisher, modelSummary.Name))
+		require.Contains(t, output, modelSummary.ID)
 	})
 
 	t.Run("--help prints usage info", func(t *testing.T) {
