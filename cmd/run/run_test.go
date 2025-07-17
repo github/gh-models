@@ -331,6 +331,102 @@ messages:
 		require.Equal(t, "System message", *capturedReq.Messages[0].Content)
 		require.Equal(t, "User message", *capturedReq.Messages[1].Content)
 	})
+
+	t.Run("--file with responseFormat and jsonSchema", func(t *testing.T) {
+		const yamlBody = `
+name: JSON Schema Test
+description: Test responseFormat and jsonSchema
+model: openai/test-model
+responseFormat: json_schema
+jsonSchema:
+  name: person_schema
+  strict: true
+  schema:
+    type: object
+    properties:
+      name:
+        type: string
+        description: The name
+      age:
+        type: integer
+        description: The age
+    required:
+      - name
+      - age
+    additionalProperties: false
+messages:
+  - role: system
+    content: You are a helpful assistant.
+  - role: user
+    content: "Generate a person"
+`
+
+		tmp, err := os.CreateTemp(t.TempDir(), "*.prompt.yml")
+		require.NoError(t, err)
+		_, err = tmp.WriteString(yamlBody)
+		require.NoError(t, err)
+		require.NoError(t, tmp.Close())
+
+		client := azuremodels.NewMockClient()
+		modelSummary := &azuremodels.ModelSummary{
+			Name:      "test-model",
+			Publisher: "openai",
+			Task:      "chat-completion",
+		}
+		client.MockListModels = func(ctx context.Context) ([]*azuremodels.ModelSummary, error) {
+			return []*azuremodels.ModelSummary{modelSummary}, nil
+		}
+
+		var capturedRequest azuremodels.ChatCompletionOptions
+		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
+			capturedRequest = req
+			reply := "hello this is a test response"
+			reader := sse.NewMockEventReader([]azuremodels.ChatCompletion{
+				{
+					Choices: []azuremodels.ChatChoice{
+						{
+							Message: &azuremodels.ChatChoiceMessage{
+								Content: &reply,
+							},
+						},
+					},
+				},
+			})
+			return &azuremodels.ChatCompletionResponse{Reader: reader}, nil
+		}
+
+		out := new(bytes.Buffer)
+		cfg := command.NewConfig(out, out, client, true, 100)
+
+		cmd := NewRunCommand(cfg)
+		cmd.SetArgs([]string{"--file", tmp.Name()})
+
+		err = cmd.Execute()
+		require.NoError(t, err)
+
+		// Verify that responseFormat and jsonSchema were included in the request
+		require.NotNil(t, capturedRequest.ResponseFormat)
+		require.Equal(t, "json_schema", capturedRequest.ResponseFormat.Type)
+		require.NotNil(t, capturedRequest.ResponseFormat.JsonSchema)
+
+		schema := *capturedRequest.ResponseFormat.JsonSchema
+		require.Contains(t, schema, "name")
+		require.Contains(t, schema, "schema")
+		require.Equal(t, "person_schema", schema["name"])
+
+		schemaContent := schema["schema"].(map[string]interface{})
+		require.Equal(t, "object", schemaContent["type"])
+		require.Contains(t, schemaContent, "properties")
+		require.Contains(t, schemaContent, "required")
+
+		properties := schemaContent["properties"].(map[string]interface{})
+		require.Contains(t, properties, "name")
+		require.Contains(t, properties, "age")
+
+		required := schemaContent["required"].([]interface{})
+		require.Contains(t, required, "name")
+		require.Contains(t, required, "age")
+	})
 }
 
 func TestParseTemplateVariables(t *testing.T) {

@@ -1,0 +1,64 @@
+name: JSON Schema Response Example
+description: Example prompt demonstrating responseFormat and jsonSchema usage
+model: openai/gpt-4o
+responseFormat: json_schema
+jsonSchema:
+  name: Person Information Schema
+  strict: true
+  schema:
+    type: object
+    description: A structured response containing person information
+    properties:
+      name:
+        type: string
+        description: The full name of the person
+      age:
+        type: integer
+        description: The age of the person in years
+        minimum: 0
+        maximum: 150
+      email:
+        type: string
+        description: The email address of the person
+        format: email
+      skills:
+        type: array
+        description: A list of skills the person has
+        items:
+          type: string
+      address:
+        type: object
+        description: The person's address
+        properties:
+          street:
+            type: string
+            description: Street address
+          city:
+            type: string
+            description: City name
+          country:
+            type: string
+            description: Country name
+        required:
+          - city
+          - country
+    required:
+      - name
+      - age
+messages:
+  - role: system
+    content: You are a helpful assistant that provides structured information about people.
+  - role: user
+    content: "Generate information for a person named {{name}} who is {{age}} years old."
+testData:
+  - name: "Alice Johnson"
+    age: "30"
+  - name: "Bob Smith"
+    age: "25"
+evaluators:
+  - name: has-required-fields
+    string:
+      contains: "name"
+  - name: valid-json-structure
+    string:
+      contains: "age"

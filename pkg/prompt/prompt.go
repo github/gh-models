@@ -16,6 +16,8 @@ type File struct {
 	Description     string          `yaml:"description"`
 	Model           string          `yaml:"model"`
 	ModelParameters ModelParameters `yaml:"modelParameters"`
+	ResponseFormat  *string         `yaml:"responseFormat,omitempty"`
+	JsonSchema      *JsonSchema     `yaml:"jsonSchema,omitempty"`
 	Messages        []Message       `yaml:"messages"`
 	// TestData and Evaluators are only used by eval command
 	TestData   []map[string]interface{} `yaml:"testData,omitempty"`
@@ -65,6 +67,13 @@ type Choice struct {
 	Score  float64 `yaml:"score"`
 }
 
+// JsonSchema represents a JSON schema for structured responses
+type JsonSchema struct {
+	Name   string                 `yaml:"name" json:"name"`
+	Strict *bool                  `yaml:"strict,omitempty" json:"strict,omitempty"`
+	Schema map[string]interface{} `yaml:"schema" json:"schema"`
+}
+
 // LoadFromFile loads and parses a prompt file from the given path
 func LoadFromFile(filePath string) (*File, error) {
 	data, err := os.ReadFile(filePath)
@@ -77,7 +86,39 @@ func LoadFromFile(filePath string) (*File, error) {
 		return nil, err
 	}
 
+	if err := promptFile.validateResponseFormat(); err != nil {
+		return nil, err
+	}
+
 	return &promptFile, nil
+}
+
+// validateResponseFormat validates the responseFormat field
+func (f *File) validateResponseFormat() error {
+	if f.ResponseFormat == nil {
+		return nil
+	}
+
+	switch *f.ResponseFormat {
+	case "text", "json_object", "json_schema":
+	default:
+		return fmt.Errorf("invalid responseFormat: %s. Must be 'text', 'json_object', or 'json_schema'", *f.ResponseFormat)
+	}
+
+	// If responseFormat is "json_schema", jsonSchema must be provided with required fields
+	if *f.ResponseFormat == "json_schema" {
+		if f.JsonSchema == nil {
+			return fmt.Errorf("jsonSchema is required when responseFormat is 'json_schema'")
+		}
+		if f.JsonSchema.Name == "" {
+			return fmt.Errorf("jsonSchema.name is required when responseFormat is 'json_schema'")
+		}
+		if f.JsonSchema.Schema == nil {
+			return fmt.Errorf("jsonSchema.schema is required when responseFormat is 'json_schema'")
+		}
+	}
+
+	return nil
 }
 
 // TemplateString templates a string with the given data using simple {{variable}} replacement
@@ -144,6 +185,24 @@ func (f *File) BuildChatCompletionOptions(messages []azuremodels.ChatMessage) az
 	}
 	if f.ModelParameters.TopP != nil {
 		req.TopP = f.ModelParameters.TopP
+	}
+
+	// Apply response format
+	if f.ResponseFormat != nil {
+		responseFormat := &azuremodels.ResponseFormat{
+			Type: *f.ResponseFormat,
+		}
+		if f.JsonSchema != nil {
+			// Convert JsonSchema to map[string]interface{}
+			schemaMap := make(map[string]interface{})
+			schemaMap["name"] = f.JsonSchema.Name
+			if f.JsonSchema.Strict != nil {
+				schemaMap["strict"] = *f.JsonSchema.Strict
+			}
+			schemaMap["schema"] = f.JsonSchema.Schema
+			responseFormat.JsonSchema = &schemaMap
+		}
+		req.ResponseFormat = responseFormat
 	}
 
 	return req

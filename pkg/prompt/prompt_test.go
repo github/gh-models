@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/stretchr/testify/require"
 )
 
@@ -90,5 +91,176 @@ evaluators:
 
 		_, err = LoadFromFile(promptFilePath)
 		require.Error(t, err)
+	})
+
+	t.Run("loads prompt file with responseFormat text", func(t *testing.T) {
+		const yamlBody = `
+name: Text Response Format Test
+description: Test with text response format
+model: openai/gpt-4o
+responseFormat: text
+messages:
+  - role: user
+    content: "Hello"
+`
+
+		tmpDir := t.TempDir()
+		promptFilePath := filepath.Join(tmpDir, "test.prompt.yml")
+		err := os.WriteFile(promptFilePath, []byte(yamlBody), 0644)
+		require.NoError(t, err)
+
+		promptFile, err := LoadFromFile(promptFilePath)
+		require.NoError(t, err)
+		require.NotNil(t, promptFile.ResponseFormat)
+		require.Equal(t, "text", *promptFile.ResponseFormat)
+		require.Nil(t, promptFile.JsonSchema)
+	})
+
+	t.Run("loads prompt file with responseFormat json_object", func(t *testing.T) {
+		const yamlBody = `
+name: JSON Object Response Format Test
+description: Test with JSON object response format
+model: openai/gpt-4o
+responseFormat: json_object
+messages:
+  - role: user
+    content: "Hello"
+`
+
+		tmpDir := t.TempDir()
+		promptFilePath := filepath.Join(tmpDir, "test.prompt.yml")
+		err := os.WriteFile(promptFilePath, []byte(yamlBody), 0644)
+		require.NoError(t, err)
+
+		promptFile, err := LoadFromFile(promptFilePath)
+		require.NoError(t, err)
+		require.NotNil(t, promptFile.ResponseFormat)
+		require.Equal(t, "json_object", *promptFile.ResponseFormat)
+		require.Nil(t, promptFile.JsonSchema)
+	})
+
+	t.Run("loads prompt file with responseFormat json_schema and jsonSchema", func(t *testing.T) {
+		const yamlBody = `
+name: JSON Schema Response Format Test
+description: Test with JSON schema response format
+model: openai/gpt-4o
+responseFormat: json_schema
+jsonSchema:
+  name: person_info
+  strict: true
+  schema:
+    type: object
+    properties:
+      name:
+        type: string
+        description: The name of the person
+      age:
+        type: integer
+        description: The age of the person
+    required:
+      - name
+    additionalProperties: false
+messages:
+  - role: user
+    content: "Hello"
+`
+
+		tmpDir := t.TempDir()
+		promptFilePath := filepath.Join(tmpDir, "test.prompt.yml")
+		err := os.WriteFile(promptFilePath, []byte(yamlBody), 0644)
+		require.NoError(t, err)
+
+		promptFile, err := LoadFromFile(promptFilePath)
+		require.NoError(t, err)
+		require.NotNil(t, promptFile.ResponseFormat)
+		require.Equal(t, "json_schema", *promptFile.ResponseFormat)
+		require.NotNil(t, promptFile.JsonSchema)
+		require.Equal(t, "person_info", promptFile.JsonSchema.Name)
+		require.True(t, *promptFile.JsonSchema.Strict)
+		require.Contains(t, promptFile.JsonSchema.Schema, "type")
+		require.Contains(t, promptFile.JsonSchema.Schema, "properties")
+	})
+
+	t.Run("validates invalid responseFormat", func(t *testing.T) {
+		const yamlBody = `
+name: Invalid Response Format Test
+description: Test with invalid response format
+model: openai/gpt-4o
+responseFormat: invalid_format
+messages:
+  - role: user
+    content: "Hello"
+`
+
+		tmpDir := t.TempDir()
+		promptFilePath := filepath.Join(tmpDir, "test.prompt.yml")
+		err := os.WriteFile(promptFilePath, []byte(yamlBody), 0644)
+		require.NoError(t, err)
+
+		_, err = LoadFromFile(promptFilePath)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid responseFormat: invalid_format")
+	})
+
+	t.Run("validates json_schema requires jsonSchema", func(t *testing.T) {
+		const yamlBody = `
+name: JSON Schema Missing Test
+description: Test json_schema without jsonSchema
+model: openai/gpt-4o
+responseFormat: json_schema
+messages:
+  - role: user
+    content: "Hello"
+`
+
+		tmpDir := t.TempDir()
+		promptFilePath := filepath.Join(tmpDir, "test.prompt.yml")
+		err := os.WriteFile(promptFilePath, []byte(yamlBody), 0644)
+		require.NoError(t, err)
+
+		_, err = LoadFromFile(promptFilePath)
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "jsonSchema is required when responseFormat is 'json_schema'")
+	})
+
+	t.Run("BuildChatCompletionOptions includes responseFormat and jsonSchema", func(t *testing.T) {
+		promptFile := &File{
+			Model:          "openai/gpt-4o",
+			ResponseFormat: func() *string { s := "json_schema"; return &s }(),
+			JsonSchema: &JsonSchema{
+				Name:   "test_schema",
+				Strict: func() *bool { b := true; return &b }(),
+				Schema: map[string]interface{}{
+					"type": "object",
+					"properties": map[string]interface{}{
+						"name": map[string]interface{}{
+							"type":        "string",
+							"description": "The name",
+						},
+					},
+					"required": []string{"name"},
+				},
+			},
+		}
+
+		messages := []azuremodels.ChatMessage{
+			{
+				Role:    azuremodels.ChatMessageRoleUser,
+				Content: func() *string { s := "Hello"; return &s }(),
+			},
+		}
+		options := promptFile.BuildChatCompletionOptions(messages)
+		require.NotNil(t, options.ResponseFormat)
+		require.Equal(t, "json_schema", options.ResponseFormat.Type)
+		require.NotNil(t, options.ResponseFormat.JsonSchema)
+
+		schema := *options.ResponseFormat.JsonSchema
+		require.Equal(t, "test_schema", schema["name"])
+		require.Equal(t, true, schema["strict"])
+		require.Contains(t, schema, "schema")
+
+		schemaContent := schema["schema"].(map[string]interface{})
+		require.Equal(t, "object", schemaContent["type"])
+		require.Contains(t, schemaContent, "properties")
 	})
 }
