@@ -6,6 +6,23 @@ import (
 	"github.com/github/gh-models/internal/sse"
 )
 
+// ChatCompletionOptions represents available options for a chat completion request.
+type ChatCompletionOptions struct {
+	MaxTokens      *int            `json:"max_tokens,omitempty"`
+	Messages       []ChatMessage   `json:"messages"`
+	Model          string          `json:"model"`
+	Stream         bool            `json:"stream,omitempty"`
+	Temperature    *float64        `json:"temperature,omitempty"`
+	TopP           *float64        `json:"top_p,omitempty"`
+	ResponseFormat *ResponseFormat `json:"response_format,omitempty"`
+}
+
+// ResponseFormat represents the response format specification
+type ResponseFormat struct {
+	Type       string                  `json:"type"`
+	JsonSchema *map[string]interface{} `json:"json_schema,omitempty"`
+}
+
 // ChatMessageRole represents the role of a chat message.
 type ChatMessageRole string
 
@@ -22,16 +39,6 @@ const (
 type ChatMessage struct {
 	Content *string         `json:"content,omitempty"`
 	Role    ChatMessageRole `json:"role"`
-}
-
-// ChatCompletionOptions represents available options for a chat completion request.
-type ChatCompletionOptions struct {
-	MaxTokens   *int          `json:"max_tokens,omitempty"`
-	Messages    []ChatMessage `json:"messages"`
-	Model       string        `json:"model"`
-	Stream      bool          `json:"stream,omitempty"`
-	Temperature *float64      `json:"temperature,omitempty"`
-	TopP        *float64      `json:"top_p,omitempty"`
 }
 
 // ChatChoiceMessage is a message from a choice in a chat conversation.

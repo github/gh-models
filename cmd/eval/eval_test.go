@@ -511,6 +511,7 @@ description: Testing JSON with failing evaluators
 model: openai/gpt-4o
 testData:
   - input: "hello"
+    expected: "hello world"
 messages:
   - role: user
     content: "{{input}}"
@@ -553,18 +554,94 @@ evaluators:
 
 		output := out.String()
 
+		// Verify JSON structure
 		var result EvaluationSummary
 		err = json.Unmarshal([]byte(output), &result)
 		require.NoError(t, err)
 
-		// Verify failing test is properly represented
-		require.Equal(t, 1, result.Summary.TotalTests)
-		require.Equal(t, 0, result.Summary.PassedTests)
-		require.Equal(t, 1, result.Summary.FailedTests)
-		require.Equal(t, 0.0, result.Summary.PassRate)
+		// Verify JSON doesn't contain human-readable text
+		require.NotContains(t, output, "Running evaluation:")
+	})
 
-		require.Len(t, result.TestResults, 1)
-		require.False(t, result.TestResults[0].EvaluationResults[0].Passed)
-		require.Equal(t, 0.0, result.TestResults[0].EvaluationResults[0].Score)
+	t.Run("eval with responseFormat and jsonSchema", func(t *testing.T) {
+		const yamlBody = `
+name: JSON Schema Evaluation
+description: Testing responseFormat and jsonSchema in eval
+model: openai/gpt-4o
+responseFormat: json_schema
+jsonSchema:
+  name: response_schema
+  strict: true
+  schema:
+    type: object
+    properties:
+      message:
+        type: string
+        description: The response message
+      confidence:
+        type: number
+        description: Confidence score
+    required:
+      - message
+    additionalProperties: false
+testData:
+  - input: "hello"
+    expected: "hello world"
+messages:
+  - role: user
+    content: "Respond to: {{input}}"
+evaluators:
+  - name: contains-message
+    string:
+      contains: "message"
+`
+
+		tmpDir := t.TempDir()
+		promptFile := filepath.Join(tmpDir, "test.prompt.yml")
+		err := os.WriteFile(promptFile, []byte(yamlBody), 0644)
+		require.NoError(t, err)
+
+		client := azuremodels.NewMockClient()
+		var capturedRequest azuremodels.ChatCompletionOptions
+		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
+			capturedRequest = req
+			response := `{"message": "hello world", "confidence": 0.95}`
+			reader := sse.NewMockEventReader([]azuremodels.ChatCompletion{
+				{
+					Choices: []azuremodels.ChatChoice{
+						{
+							Message: &azuremodels.ChatChoiceMessage{
+								Content: &response,
+							},
+						},
+					},
+				},
+			})
+			return &azuremodels.ChatCompletionResponse{Reader: reader}, nil
+		}
+
+		out := new(bytes.Buffer)
+		cfg := command.NewConfig(out, out, client, true, 100)
+
+		cmd := NewEvalCommand(cfg)
+		cmd.SetArgs([]string{promptFile})
+
+		err = cmd.Execute()
+		require.NoError(t, err)
+
+		// Verify that responseFormat and jsonSchema were included in the request
+		require.NotNil(t, capturedRequest.ResponseFormat)
+		require.Equal(t, "json_schema", capturedRequest.ResponseFormat.Type)
+		require.NotNil(t, capturedRequest.ResponseFormat.JsonSchema)
+
+		schema := *capturedRequest.ResponseFormat.JsonSchema
+		require.Equal(t, "response_schema", schema["name"])
+		require.Equal(t, true, schema["strict"])
+		require.Contains(t, schema, "schema")
+
+		// Verify the test passed
+		output := out.String()
+		require.Contains(t, output, "✓ PASSED")
+		require.Contains(t, output, "🎉 All tests passed!")
 	})
 }

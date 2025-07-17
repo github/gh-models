@@ -1,0 +1,19 @@
+name: JSON Response Example
+description: Example prompt demonstrating responseFormat with json
+model: openai/gpt-4o
+responseFormat: json
+messages:
+  - role: system
+    content: You are a helpful assistant that responds in JSON format.
+  - role: user
+    content: "Provide a summary of {{topic}} in JSON format with title, description, and key_points array."
+testData:
+  - topic: "artificial intelligence"
+  - topic: "climate change"
+evaluators:
+  - name: contains-json-structure
+    string:
+      contains: "{"
+  - name: has-title
+    string:
+      contains: "title"

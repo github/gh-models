@@ -351,9 +351,17 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 					}
 				}
 
-				req := azuremodels.ChatCompletionOptions{
-					Messages: conversation.GetMessages(),
-					Model:    modelName,
+				var req azuremodels.ChatCompletionOptions
+				if pf != nil {
+					// Use the prompt file's BuildChatCompletionOptions method to include responseFormat and jsonSchema
+					req = pf.BuildChatCompletionOptions(conversation.GetMessages())
+					// Override the model name if provided via CLI
+					req.Model = modelName
+				} else {
+					req = azuremodels.ChatCompletionOptions{
+						Messages: conversation.GetMessages(),
+						Model:    modelName,
+					}
 				}
 
 				mp.UpdateRequest(&req)
