@@ -1,7 +1,7 @@
 name: JSON Response Example
 description: Example prompt demonstrating responseFormat with json
 model: openai/gpt-4o
-responseFormat: json
+responseFormat: json_object
 messages:
   - role: system
     content: You are a helpful assistant that responds in JSON format.
