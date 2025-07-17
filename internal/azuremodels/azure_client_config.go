@@ -4,7 +4,7 @@ const (
 	defaultInferenceRoot    = "https://models.github.ai"
 	defaultInferencePath    = "inference/chat/completions"
 	defaultAzureAiStudioURL = "https://api.catalog.azureml.ms"
-	defaultModelsURL        = defaultAzureAiStudioURL + "/asset-gallery/v1.0/models"
+	defaultModelsURL        = "https://models.github.ai/catalog/models"
 )
 
 // AzureClientConfig represents configurable settings for the Azure client.
