@@ -1,5 +1,5 @@
-name: JSON Schema String Format Example
-description: Example using JSON string format for jsonSchema
+name: JSON Schema Response Example
+description: Example prompt demonstrating responseFormat and jsonSchema usage
 model: openai/gpt-4o-mini
 responseFormat: json_schema
 jsonSchema: |-
