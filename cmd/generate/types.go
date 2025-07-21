@@ -1,5 +1,7 @@
 package generate
 
+import "github.com/github/gh-models/internal/azuremodels"
+
 // PromptPexModelAliases represents model aliases for different purposes
 type PromptPexModelAliases string
 
@@ -18,12 +20,6 @@ type PromptPexPrompts struct {
 	InverseOutputRules *string `yaml:"inverseOutputRules,omitempty" json:"inverseOutputRules,omitempty"`
 	Intent             *string `yaml:"intent,omitempty" json:"intent,omitempty"`
 	TestExpansion      *string `yaml:"testExpansion,omitempty" json:"testExpansion,omitempty"`
-}
-
-// ChatMessage represents a chat message
-type ChatMessage struct {
-	Role    string `json:"role" yaml:"role"`
-	Content string `json:"content" yaml:"content"`
 }
 
 // WorkspaceFile represents a file in the workspace
@@ -111,7 +107,7 @@ type PromptPexContext struct {
 	Dir                *string                     `json:"dir,omitempty" yaml:"dir,omitempty"`
 	Name               string                      `json:"name" yaml:"name"`
 	Frontmatter        PromptPexPromptyFrontmatter `json:"frontmatter" yaml:"frontmatter"`
-	Messages           []ChatMessage               `json:"messages" yaml:"messages"`
+	Messages           []azuremodels.ChatMessage   `json:"messages" yaml:"messages"`
 	Inputs             map[string]interface{}      `json:"inputs" yaml:"inputs"`
 	Prompt             WorkspaceFile               `json:"prompt" yaml:"prompt"`
 	OriginalPrompt     *WorkspaceFile              `json:"originalPrompt,omitempty" yaml:"originalPrompt,omitempty"`
