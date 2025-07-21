@@ -65,7 +65,7 @@ func GetEffortConfiguration(effort string) *EffortConfiguration {
 
 // ApplyEffortConfiguration applies effort configuration to options
 func ApplyEffortConfiguration(options *PromptPexOptions, effort string) {
-	if effort == "" {
+	if options == nil || effort == "" {
 		return
 	}
 
