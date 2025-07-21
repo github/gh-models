@@ -21,8 +21,8 @@ type File struct {
 	JsonSchema      *JsonSchema     `yaml:"jsonSchema,omitempty"`
 	Messages        []Message       `yaml:"messages"`
 	// TestData and Evaluators are only used by eval command
-	TestData   []map[string]interface{} `yaml:"testData,omitempty"`
-	Evaluators []Evaluator              `yaml:"evaluators,omitempty"`
+	TestData   []TestDataItem `yaml:"testData,omitempty"`
+	Evaluators []Evaluator    `yaml:"evaluators,omitempty"`
 }
 
 // ModelParameters represents model configuration parameters
@@ -37,6 +37,9 @@ type Message struct {
 	Role    string `yaml:"role"`
 	Content string `yaml:"content"`
 }
+
+// TestDataItem represents a single test data item for evaluation
+type TestDataItem map[string]interface{}
 
 // Evaluator represents an evaluation method (only used by eval command)
 type Evaluator struct {

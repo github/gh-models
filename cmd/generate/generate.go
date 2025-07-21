@@ -3,9 +3,16 @@ package generate
 
 import (
 	"github.com/MakeNowJust/heredoc"
+	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/command"
 	"github.com/spf13/cobra"
 )
+
+type generateCommandHandler struct {
+	cfg     *command.Config
+	client  azuremodels.Client
+	options PromptPexOptions
+}
 
 // NewListCommand returns a new command to list available GitHub models.
 func NewListCommand(cfg *command.Config) *cobra.Command {
