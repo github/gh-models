@@ -10,7 +10,9 @@ import (
 	"io"
 	"net/http"
 	"slices"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cli/go-gh/v2/pkg/api"
 	"github.com/github/gh-models/internal/modelkey"
@@ -259,6 +261,42 @@ func (c *AzureClient) handleHTTPError(resp *http.Response) error {
 			return err
 		}
 
+	case http.StatusTooManyRequests:
+		// Handle rate limiting
+		retryAfter := time.Duration(0)
+
+		// Check for x-ratelimit-timeremaining header (in seconds)
+		if timeRemainingStr := resp.Header.Get("x-ratelimit-timeremaining"); timeRemainingStr != "" {
+			if seconds, parseErr := strconv.Atoi(timeRemainingStr); parseErr == nil {
+				retryAfter = time.Duration(seconds) * time.Second
+			}
+		}
+
+		// Fall back to standard Retry-After header if x-ratelimit-timeremaining is not available
+		if retryAfter == 0 {
+			if retryAfterStr := resp.Header.Get("Retry-After"); retryAfterStr != "" {
+				if seconds, parseErr := strconv.Atoi(retryAfterStr); parseErr == nil {
+					retryAfter = time.Duration(seconds) * time.Second
+				}
+			}
+		}
+
+		// Default to 60 seconds if no retry-after information is provided
+		if retryAfter == 0 {
+			retryAfter = 60 * time.Second
+		}
+
+		body, _ := io.ReadAll(resp.Body)
+		message := "rate limit exceeded"
+		if len(body) > 0 {
+			message = string(body)
+		}
+
+		return &RateLimitError{
+			RetryAfter: retryAfter,
+			Message:    strings.TrimSpace(message),
+		}
+
 	default:
 		_, err = sb.WriteString("unexpected response from the server: " + resp.Status)
 		if err != nil {
@@ -285,4 +323,14 @@ func (c *AzureClient) handleHTTPError(resp *http.Response) error {
 	}
 
 	return errors.New(sb.String())
+}
+
+// RateLimitError represents a rate limiting error from the API
+type RateLimitError struct {
+	RetryAfter time.Duration
+	Message    string
+}
+
+func (e *RateLimitError) Error() string {
+	return fmt.Sprintf("rate limited: %s (retry after %v)", e.Message, e.RetryAfter)
 }
