@@ -269,7 +269,10 @@ messages:
 			ResponseFormat: func() *string { s := "json_schema"; return &s }(),
 			JsonSchema: func() *JsonSchema {
 				js := &JsonSchema{Raw: jsonSchemaStr}
-				json.Unmarshal([]byte(jsonSchemaStr), &js.Parsed)
+				err := json.Unmarshal([]byte(jsonSchemaStr), &js.Parsed)
+				if err != nil {
+					t.Fatal(err)
+				}
 				return js
 			}(),
 		}
