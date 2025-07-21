@@ -569,21 +569,7 @@ name: JSON Schema Evaluation
 description: Testing responseFormat and jsonSchema in eval
 model: openai/gpt-4o
 responseFormat: json_schema
-jsonSchema:
-  name: response_schema
-  strict: true
-  schema:
-    type: object
-    properties:
-      message:
-        type: string
-        description: The response message
-      confidence:
-        type: number
-        description: Confidence score
-    required:
-      - message
-    additionalProperties: false
+jsonSchema: '{"name": "response_schema", "strict": true, "schema": {"type": "object", "properties": {"message": {"type": "string", "description": "The response message"}, "confidence": {"type": "number", "description": "Confidence score"}}, "required": ["message"], "additionalProperties": false}}'
 testData:
   - input: "hello"
     expected: "hello world"

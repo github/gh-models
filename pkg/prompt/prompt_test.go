@@ -1,6 +1,7 @@
 package prompt
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -139,27 +140,35 @@ messages:
 		require.Nil(t, promptFile.JsonSchema)
 	})
 
-	t.Run("loads prompt file with responseFormat json_schema and jsonSchema", func(t *testing.T) {
+	t.Run("loads prompt file with responseFormat json_schema and jsonSchema as JSON string", func(t *testing.T) {
 		const yamlBody = `
-name: JSON Schema Response Format Test
-description: Test with JSON schema response format
+name: JSON Schema String Format Test
+description: Test with JSON schema as JSON string
 model: openai/gpt-4o
 responseFormat: json_schema
-jsonSchema:
-  name: person_info
-  strict: true
-  schema:
-    type: object
-    properties:
-      name:
-        type: string
-        description: The name of the person
-      age:
-        type: integer
-        description: The age of the person
-    required:
-      - name
-    additionalProperties: false
+jsonSchema: |-
+  {
+    "name": "describe_animal",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the animal"
+        },
+        "habitat": {
+          "type": "string",
+          "description": "The habitat the animal lives in"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "habitat"
+      ]
+    }
+  }
 messages:
   - role: user
     content: "Hello"
@@ -175,10 +184,26 @@ messages:
 		require.NotNil(t, promptFile.ResponseFormat)
 		require.Equal(t, "json_schema", *promptFile.ResponseFormat)
 		require.NotNil(t, promptFile.JsonSchema)
-		require.Equal(t, "person_info", promptFile.JsonSchema.Name)
-		require.True(t, *promptFile.JsonSchema.Strict)
-		require.Contains(t, promptFile.JsonSchema.Schema, "type")
-		require.Contains(t, promptFile.JsonSchema.Schema, "properties")
+
+		// Verify the schema contents using the already parsed data
+		schema := promptFile.JsonSchema.Parsed
+		require.Equal(t, "describe_animal", schema["name"])
+		require.Equal(t, true, schema["strict"])
+		require.Contains(t, schema, "schema")
+
+		// Verify the nested schema structure
+		nestedSchema := schema["schema"].(map[string]interface{})
+		require.Equal(t, "object", nestedSchema["type"])
+		require.Contains(t, nestedSchema, "properties")
+		require.Contains(t, nestedSchema, "required")
+
+		properties := nestedSchema["properties"].(map[string]interface{})
+		require.Contains(t, properties, "name")
+		require.Contains(t, properties, "habitat")
+
+		required := nestedSchema["required"].([]interface{})
+		require.Contains(t, required, "name")
+		require.Contains(t, required, "habitat")
 	})
 
 	t.Run("validates invalid responseFormat", func(t *testing.T) {
@@ -224,23 +249,32 @@ messages:
 	})
 
 	t.Run("BuildChatCompletionOptions includes responseFormat and jsonSchema", func(t *testing.T) {
+		jsonSchemaStr := `{
+			"name": "test_schema",
+			"strict": true,
+			"schema": {
+				"type": "object",
+				"properties": {
+					"name": {
+						"type": "string",
+						"description": "The name"
+					}
+				},
+				"required": ["name"]
+			}
+		}`
+
 		promptFile := &File{
 			Model:          "openai/gpt-4o",
 			ResponseFormat: func() *string { s := "json_schema"; return &s }(),
-			JsonSchema: &JsonSchema{
-				Name:   "test_schema",
-				Strict: func() *bool { b := true; return &b }(),
-				Schema: map[string]interface{}{
-					"type": "object",
-					"properties": map[string]interface{}{
-						"name": map[string]interface{}{
-							"type":        "string",
-							"description": "The name",
-						},
-					},
-					"required": []string{"name"},
-				},
-			},
+			JsonSchema: func() *JsonSchema {
+				js := &JsonSchema{Raw: jsonSchemaStr}
+				err := json.Unmarshal([]byte(jsonSchemaStr), &js.Parsed)
+				if err != nil {
+					t.Fatal(err)
+				}
+				return js
+			}(),
 		}
 
 		messages := []azuremodels.ChatMessage{

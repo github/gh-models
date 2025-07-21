@@ -1,64 +1,52 @@
 name: JSON Schema Response Example
 description: Example prompt demonstrating responseFormat and jsonSchema usage
-model: openai/gpt-4o
+model: openai/gpt-4o-mini
 responseFormat: json_schema
-jsonSchema:
-  name: Person Information Schema
-  strict: true
-  schema:
-    type: object
-    description: A structured response containing person information
-    properties:
-      name:
-        type: string
-        description: The full name of the person
-      age:
-        type: integer
-        description: The age of the person in years
-        minimum: 0
-        maximum: 150
-      email:
-        type: string
-        description: The email address of the person
-        format: email
-      skills:
-        type: array
-        description: A list of skills the person has
-        items:
-          type: string
-      address:
-        type: object
-        description: The person's address
-        properties:
-          street:
-            type: string
-            description: Street address
-          city:
-            type: string
-            description: City name
-          country:
-            type: string
-            description: Country name
-        required:
-          - city
-          - country
-    required:
-      - name
-      - age
+jsonSchema: |-
+  {
+    "name": "animal_description",
+    "strict": true,
+    "schema": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the animal"
+        },
+        "habitat": {
+          "type": "string",
+          "description": "The habitat where the animal lives"
+        },
+        "diet": {
+          "type": "string",
+          "description": "What the animal eats",
+          "enum": ["carnivore", "herbivore", "omnivore"]
+        },
+        "characteristics": {
+          "type": "array",
+          "description": "Key characteristics of the animal",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["name", "habitat", "diet"],
+      "additionalProperties": false
+    }
+  }
 messages:
   - role: system
-    content: You are a helpful assistant that provides structured information about people.
+    content: You are a helpful assistant that provides detailed information about animals.
   - role: user
-    content: "Generate information for a person named {{name}} who is {{age}} years old."
+    content: "Describe a {{animal}} in detail."
 testData:
-  - name: "Alice Johnson"
-    age: "30"
-  - name: "Bob Smith"
-    age: "25"
+  - animal: "dog"
+  - animal: "cat"
+  - animal: "elephant"
 evaluators:
-  - name: has-required-fields
+  - name: has-name
     string:
       contains: "name"
-  - name: valid-json-structure
+  - name: has-habitat
     string:
-      contains: "age"
+      contains: "habitat"

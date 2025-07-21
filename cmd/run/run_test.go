@@ -341,22 +341,7 @@ name: JSON Schema Test
 description: Test responseFormat and jsonSchema
 model: openai/test-model
 responseFormat: json_schema
-jsonSchema:
-  name: person_schema
-  strict: true
-  schema:
-    type: object
-    properties:
-      name:
-        type: string
-        description: The name
-      age:
-        type: integer
-        description: The age
-    required:
-      - name
-      - age
-    additionalProperties: false
+jsonSchema: '{"name": "person_schema", "strict": true, "schema": {"type": "object", "properties": {"name": {"type": "string", "description": "The name"}, "age": {"type": "integer", "description": "The age"}}, "required": ["name", "age"], "additionalProperties": false}}'
 messages:
   - role: system
     content: You are a helpful assistant.
