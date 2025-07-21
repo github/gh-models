@@ -185,11 +185,8 @@ messages:
 		require.Equal(t, "json_schema", *promptFile.ResponseFormat)
 		require.NotNil(t, promptFile.JsonSchema)
 
-		// Parse the JSON schema string to verify its contents
-		var schema map[string]interface{}
-		err = json.Unmarshal([]byte(*promptFile.JsonSchema), &schema)
-		require.NoError(t, err)
-
+		// Verify the schema contents using the already parsed data
+		schema := promptFile.JsonSchema.Parsed
 		require.Equal(t, "describe_animal", schema["name"])
 		require.Equal(t, true, schema["strict"])
 		require.Contains(t, schema, "schema")
@@ -270,7 +267,11 @@ messages:
 		promptFile := &File{
 			Model:          "openai/gpt-4o",
 			ResponseFormat: func() *string { s := "json_schema"; return &s }(),
-			JsonSchema:     func() *JsonSchema { js := JsonSchema(jsonSchemaStr); return &js }(),
+			JsonSchema: func() *JsonSchema {
+				js := &JsonSchema{Raw: jsonSchemaStr}
+				json.Unmarshal([]byte(jsonSchemaStr), &js.Parsed)
+				return js
+			}(),
 		}
 
 		messages := []azuremodels.ChatMessage{

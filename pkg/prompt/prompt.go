@@ -68,8 +68,11 @@ type Choice struct {
 	Score  float64 `yaml:"score"`
 }
 
-// JsonSchema represents a JSON schema for structured responses as a JSON string
-type JsonSchema string
+// JsonSchema represents a JSON schema for structured responses
+type JsonSchema struct {
+	Raw    string
+	Parsed map[string]interface{}
+}
 
 // UnmarshalYAML implements custom YAML unmarshaling for JsonSchema
 // Only supports JSON string format
@@ -84,13 +87,14 @@ func (js *JsonSchema) UnmarshalYAML(node *yaml.Node) error {
 		return err
 	}
 
-	// Validate that it's valid JSON
-	var temp interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &temp); err != nil {
+	// Parse and validate the JSON schema
+	var parsed map[string]interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &parsed); err != nil {
 		return fmt.Errorf("invalid JSON in jsonSchema: %w", err)
 	}
 
-	*js = JsonSchema(jsonStr)
+	js.Raw = jsonStr
+	js.Parsed = parsed
 	return nil
 }
 
@@ -131,17 +135,11 @@ func (f *File) validateResponseFormat() error {
 			return fmt.Errorf("jsonSchema is required when responseFormat is 'json_schema'")
 		}
 
-		// Parse and validate the JSON schema
-		var schema map[string]interface{}
-		if err := json.Unmarshal([]byte(*f.JsonSchema), &schema); err != nil {
-			return fmt.Errorf("invalid JSON in jsonSchema: %w", err)
-		}
-
-		// Check for required fields
-		if _, ok := schema["name"]; !ok {
+		// Check for required fields in the already parsed schema
+		if _, ok := f.JsonSchema.Parsed["name"]; !ok {
 			return fmt.Errorf("jsonSchema must contain 'name' field")
 		}
-		if _, ok := schema["schema"]; !ok {
+		if _, ok := f.JsonSchema.Parsed["schema"]; !ok {
 			return fmt.Errorf("jsonSchema must contain 'schema' field")
 		}
 	}
@@ -204,7 +202,6 @@ func (f *File) BuildChatCompletionOptions(messages []azuremodels.ChatMessage) az
 		Stream:   false,
 	}
 
-	// Apply model parameters
 	if f.ModelParameters.MaxTokens != nil {
 		req.MaxTokens = f.ModelParameters.MaxTokens
 	}
@@ -215,27 +212,12 @@ func (f *File) BuildChatCompletionOptions(messages []azuremodels.ChatMessage) az
 		req.TopP = f.ModelParameters.TopP
 	}
 
-	// Apply response format
 	if f.ResponseFormat != nil {
 		responseFormat := &azuremodels.ResponseFormat{
 			Type: *f.ResponseFormat,
 		}
 		if f.JsonSchema != nil {
-			// Parse the JSON schema string into a map
-			var schemaMap map[string]interface{}
-			if err := json.Unmarshal([]byte(*f.JsonSchema), &schemaMap); err != nil {
-				// This should not happen as we validate during unmarshaling
-				// but we'll handle it gracefully
-				schemaMap = map[string]interface{}{
-					"name":   "default_schema",
-					"strict": true,
-					"schema": map[string]interface{}{
-						"type":       "object",
-						"properties": map[string]interface{}{},
-					},
-				}
-			}
-			responseFormat.JsonSchema = &schemaMap
+			responseFormat.JsonSchema = &f.JsonSchema.Parsed
 		}
 		req.ResponseFormat = responseFormat
 	}
