@@ -353,7 +353,7 @@ func (h *evalCommandHandler) callModelWithRetry(ctx context.Context, req azuremo
 						continue
 					}
 				}
-				return "", fmt.Errorf("rate limit exceeded after %d attempts: %w", maxRetries+1, err)
+				return "", fmt.Errorf("rate limit exceeded after %d attempts: %w", attempt+1, err)
 			}
 			// For non-rate-limit errors, return immediately
 			return "", err
