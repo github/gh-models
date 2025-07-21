@@ -2,6 +2,7 @@
 package prompt
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -67,11 +68,30 @@ type Choice struct {
 	Score  float64 `yaml:"score"`
 }
 
-// JsonSchema represents a JSON schema for structured responses
-type JsonSchema struct {
-	Name   string                 `yaml:"name" json:"name"`
-	Strict *bool                  `yaml:"strict,omitempty" json:"strict,omitempty"`
-	Schema map[string]interface{} `yaml:"schema" json:"schema"`
+// JsonSchema represents a JSON schema for structured responses as a JSON string
+type JsonSchema string
+
+// UnmarshalYAML implements custom YAML unmarshaling for JsonSchema
+// Only supports JSON string format
+func (js *JsonSchema) UnmarshalYAML(node *yaml.Node) error {
+	// Only support string nodes (JSON format)
+	if node.Kind != yaml.ScalarNode {
+		return fmt.Errorf("jsonSchema must be a JSON string")
+	}
+
+	var jsonStr string
+	if err := node.Decode(&jsonStr); err != nil {
+		return err
+	}
+
+	// Validate that it's valid JSON
+	var temp interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &temp); err != nil {
+		return fmt.Errorf("invalid JSON in jsonSchema: %w", err)
+	}
+
+	*js = JsonSchema(jsonStr)
+	return nil
 }
 
 // LoadFromFile loads and parses a prompt file from the given path
@@ -105,16 +125,24 @@ func (f *File) validateResponseFormat() error {
 		return fmt.Errorf("invalid responseFormat: %s. Must be 'text', 'json_object', or 'json_schema'", *f.ResponseFormat)
 	}
 
-	// If responseFormat is "json_schema", jsonSchema must be provided with required fields
+	// If responseFormat is "json_schema", jsonSchema must be provided
 	if *f.ResponseFormat == "json_schema" {
 		if f.JsonSchema == nil {
 			return fmt.Errorf("jsonSchema is required when responseFormat is 'json_schema'")
 		}
-		if f.JsonSchema.Name == "" {
-			return fmt.Errorf("jsonSchema.name is required when responseFormat is 'json_schema'")
+
+		// Parse and validate the JSON schema
+		var schema map[string]interface{}
+		if err := json.Unmarshal([]byte(*f.JsonSchema), &schema); err != nil {
+			return fmt.Errorf("invalid JSON in jsonSchema: %w", err)
 		}
-		if f.JsonSchema.Schema == nil {
-			return fmt.Errorf("jsonSchema.schema is required when responseFormat is 'json_schema'")
+
+		// Check for required fields
+		if _, ok := schema["name"]; !ok {
+			return fmt.Errorf("jsonSchema must contain 'name' field")
+		}
+		if _, ok := schema["schema"]; !ok {
+			return fmt.Errorf("jsonSchema must contain 'schema' field")
 		}
 	}
 
@@ -193,13 +221,20 @@ func (f *File) BuildChatCompletionOptions(messages []azuremodels.ChatMessage) az
 			Type: *f.ResponseFormat,
 		}
 		if f.JsonSchema != nil {
-			// Convert JsonSchema to map[string]interface{}
-			schemaMap := make(map[string]interface{})
-			schemaMap["name"] = f.JsonSchema.Name
-			if f.JsonSchema.Strict != nil {
-				schemaMap["strict"] = *f.JsonSchema.Strict
+			// Parse the JSON schema string into a map
+			var schemaMap map[string]interface{}
+			if err := json.Unmarshal([]byte(*f.JsonSchema), &schemaMap); err != nil {
+				// This should not happen as we validate during unmarshaling
+				// but we'll handle it gracefully
+				schemaMap = map[string]interface{}{
+					"name":   "default_schema",
+					"strict": true,
+					"schema": map[string]interface{}{
+						"type":       "object",
+						"properties": map[string]interface{}{},
+					},
+				}
 			}
-			schemaMap["schema"] = f.JsonSchema.Schema
 			responseFormat.JsonSchema = &schemaMap
 		}
 		req.ResponseFormat = responseFormat
