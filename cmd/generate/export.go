@@ -153,12 +153,11 @@ func (h *generateCommandHandler) toGitHubModelsPrompt(modelID string, context *P
 		},
 	}
 
-	var description = context.Frontmatter.Description
 	prompt := &prompt.File{
 		Name:            context.Name,
-		Description:     description,
+		Description:     *context.Frontmatter.Description,
 		Model:           resolvedModel,
-		ModelParameters: modelParams,
+		ModelParameters: *modelParams,
 		Messages:        messages,
 		TestData:        testData,
 		Evaluators:      evaluators,
@@ -244,7 +243,7 @@ func (h *generateCommandHandler) extractTemplateVariables(context *PromptPexCont
 
 	// Extract variables from all message content
 	for _, msg := range context.Messages {
-		variables := extractVariablesFromText(msg.Content)
+		variables := extractVariablesFromText(*msg.Content)
 		for _, variable := range variables {
 			allowedFields[variable] = true
 		}
