@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/MakeNowJust/heredoc"
 	"github.com/github/gh-models/internal/azuremodels"
@@ -80,6 +81,8 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 
 			By default, results are displayed in a human-readable format. Use the --json flag
 			to output structured JSON data for programmatic use or integration with CI/CD pipelines.
+			This command will automatically retry on rate limiting errors, waiting for the specified
+			duration before retrying the request.
 
 			See https://docs.github.com/github-models/use-github-models/storing-prompts-in-github-repositories#supported-file-format for more information.
 		`),
@@ -327,36 +330,65 @@ func (h *evalCommandHandler) templateString(templateStr string, data map[string]
 	return prompt.TemplateString(templateStr, data)
 }
 
-func (h *evalCommandHandler) callModel(ctx context.Context, messages []azuremodels.ChatMessage) (string, error) {
-	req := h.evalFile.BuildChatCompletionOptions(messages)
+// callModelWithRetry makes an API call with automatic retry on rate limiting
+func (h *evalCommandHandler) callModelWithRetry(ctx context.Context, req azuremodels.ChatCompletionOptions) (string, error) {
+	const maxRetries = 3
 
-	resp, err := h.client.GetChatCompletionStream(ctx, req, h.org)
-	if err != nil {
-		return "", err
-	}
-
-	// For non-streaming requests, we should get a single response
-	var content strings.Builder
-	for {
-		completion, err := resp.Reader.Read()
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		resp, err := h.client.GetChatCompletionStream(ctx, req, h.org)
 		if err != nil {
-			if errors.Is(err, context.Canceled) || strings.Contains(err.Error(), "EOF") {
-				break
+			var rateLimitErr *azuremodels.RateLimitError
+			if errors.As(err, &rateLimitErr) {
+				if attempt < maxRetries {
+					if !h.jsonOutput {
+						h.cfg.WriteToOut(fmt.Sprintf("    Rate limited, waiting %v before retry (attempt %d/%d)...\n",
+							rateLimitErr.RetryAfter, attempt+1, maxRetries+1))
+					}
+
+					// Wait for the specified duration
+					select {
+					case <-ctx.Done():
+						return "", ctx.Err()
+					case <-time.After(rateLimitErr.RetryAfter):
+						continue
+					}
+				}
+				return "", fmt.Errorf("rate limit exceeded after %d attempts: %w", maxRetries+1, err)
 			}
+			// For non-rate-limit errors, return immediately
 			return "", err
 		}
 
-		for _, choice := range completion.Choices {
-			if choice.Delta != nil && choice.Delta.Content != nil {
-				content.WriteString(*choice.Delta.Content)
+		var content strings.Builder
+		for {
+			completion, err := resp.Reader.Read()
+			if err != nil {
+				if errors.Is(err, context.Canceled) || strings.Contains(err.Error(), "EOF") {
+					break
+				}
+				return "", err
 			}
-			if choice.Message != nil && choice.Message.Content != nil {
-				content.WriteString(*choice.Message.Content)
+
+			for _, choice := range completion.Choices {
+				if choice.Delta != nil && choice.Delta.Content != nil {
+					content.WriteString(*choice.Delta.Content)
+				}
+				if choice.Message != nil && choice.Message.Content != nil {
+					content.WriteString(*choice.Message.Content)
+				}
 			}
 		}
+
+		return strings.TrimSpace(content.String()), nil
 	}
 
-	return strings.TrimSpace(content.String()), nil
+	// This should never be reached, but just in case
+	return "", errors.New("unexpected error calling model")
+}
+
+func (h *evalCommandHandler) callModel(ctx context.Context, messages []azuremodels.ChatMessage) (string, error) {
+	req := h.evalFile.BuildChatCompletionOptions(messages)
+	return h.callModelWithRetry(ctx, req)
 }
 
 func (h *evalCommandHandler) runEvaluators(ctx context.Context, testCase map[string]interface{}, response string) ([]EvaluationResult, error) {
@@ -437,7 +469,6 @@ func (h *evalCommandHandler) runStringEvaluator(name string, eval prompt.StringE
 }
 
 func (h *evalCommandHandler) runLLMEvaluator(ctx context.Context, name string, eval prompt.LLMEvaluator, testCase map[string]interface{}, response string) (EvaluationResult, error) {
-	// Template the evaluation prompt
 	evalData := make(map[string]interface{})
 	for k, v := range testCase {
 		evalData[k] = v
@@ -449,7 +480,6 @@ func (h *evalCommandHandler) runLLMEvaluator(ctx context.Context, name string, e
 		return EvaluationResult{}, fmt.Errorf("failed to template evaluation prompt: %w", err)
 	}
 
-	// Prepare messages for evaluation
 	var messages []azuremodels.ChatMessage
 	if eval.SystemPrompt != "" {
 		messages = append(messages, azuremodels.ChatMessage{
@@ -462,40 +492,19 @@ func (h *evalCommandHandler) runLLMEvaluator(ctx context.Context, name string, e
 		Content: util.Ptr(promptContent),
 	})
 
-	// Call the evaluation model
 	req := azuremodels.ChatCompletionOptions{
 		Messages: messages,
 		Model:    eval.ModelID,
 		Stream:   false,
 	}
 
-	resp, err := h.client.GetChatCompletionStream(ctx, req, h.org)
+	evalResponseText, err := h.callModelWithRetry(ctx, req)
 	if err != nil {
 		return EvaluationResult{}, fmt.Errorf("failed to call evaluation model: %w", err)
 	}
 
-	var evalResponse strings.Builder
-	for {
-		completion, err := resp.Reader.Read()
-		if err != nil {
-			if errors.Is(err, context.Canceled) || strings.Contains(err.Error(), "EOF") {
-				break
-			}
-			return EvaluationResult{}, err
-		}
-
-		for _, choice := range completion.Choices {
-			if choice.Delta != nil && choice.Delta.Content != nil {
-				evalResponse.WriteString(*choice.Delta.Content)
-			}
-			if choice.Message != nil && choice.Message.Content != nil {
-				evalResponse.WriteString(*choice.Message.Content)
-			}
-		}
-	}
-
 	// Match response to choices
-	evalResponseText := strings.TrimSpace(strings.ToLower(evalResponse.String()))
+	evalResponseText = strings.TrimSpace(strings.ToLower(evalResponseText))
 	for _, choice := range eval.Choices {
 		if strings.Contains(evalResponseText, strings.ToLower(choice.Choice)) {
 			return EvaluationResult{
