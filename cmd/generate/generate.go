@@ -43,7 +43,7 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 			options := GetDefaultOptions()
 
 			// Parse flags and apply to options
-			if err := parseFlags(cmd, &options); err != nil {
+			if err := ParseFlags(cmd, &options); err != nil {
 				return fmt.Errorf("failed to parse flags: %w", err)
 			}
 
@@ -75,26 +75,32 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 	}
 
 	// Add command-line flags
-	cmd.Flags().String("org", "", "Organization to attribute usage to")
-	cmd.Flags().String("effort", "", "Effort level (min, low, medium, high)")
-	cmd.Flags().StringSlice("models-under-test", []string{}, "Models to test (can be used multiple times)")
-	cmd.Flags().String("groundtruth-model", "", "Model to use for generating groundtruth outputs")
-	cmd.Flags().Int("tests-per-rule", 0, "Number of tests to generate per rule")
-	cmd.Flags().Int("runs-per-test", 0, "Number of times to run each test")
-	cmd.Flags().Int("test-expansions", 0, "Number of test expansion phases")
-	cmd.Flags().Bool("rate-tests", false, "Enable test rating")
-	cmd.Flags().Bool("evals", false, "Enable evaluations")
-	cmd.Flags().StringSlice("eval-models", []string{}, "Models to use for evaluation")
-	cmd.Flags().String("custom-metric", "", "Custom evaluation metric")
-	cmd.Flags().Float64("temperature", 0.0, "Temperature for model inference")
+	AddCommandLineFlags(cmd)
 
 	return cmd
 }
 
+func AddCommandLineFlags(cmd *cobra.Command) {
+	flags := cmd.Flags()
+	flags.String("org", "", "Organization to attribute usage to")
+	flags.String("effort", "", "Effort level (min, low, medium, high)")
+	flags.StringSlice("models-under-test", []string{}, "Models to test (can be used multiple times)")
+	flags.String("groundtruth-model", "", "Model to use for generating groundtruth outputs")
+	flags.Int("tests-per-rule", 0, "Number of tests to generate per rule")
+	flags.Int("runs-per-test", 0, "Number of times to run each test")
+	flags.Int("test-expansions", 0, "Number of test expansion phases")
+	flags.Bool("rate-tests", false, "Enable test rating")
+	flags.Bool("evals", false, "Enable evaluations")
+	flags.StringSlice("eval-models", []string{}, "Models to use for evaluation")
+	flags.String("custom-metric", "", "Custom evaluation metric")
+	flags.Float64("temperature", 0.0, "Temperature for model inference")
+}
+
 // parseFlags parses command-line flags and applies them to the options
-func parseFlags(cmd *cobra.Command, options *PromptPexOptions) error {
+func ParseFlags(cmd *cobra.Command, options *PromptPexOptions) error {
+	flags := cmd.Flags()
 	// Parse effort first so it can set defaults
-	if effort, _ := cmd.Flags().GetString("effort"); effort != "" {
+	if effort, _ := flags.GetString("effort"); effort != "" {
 		options.Effort = &effort
 	}
 
@@ -104,49 +110,49 @@ func parseFlags(cmd *cobra.Command, options *PromptPexOptions) error {
 	}
 
 	// Parse other flags (these override effort defaults)
-	if modelsUnderTest, _ := cmd.Flags().GetStringSlice("models-under-test"); len(modelsUnderTest) > 0 {
+	if modelsUnderTest, _ := flags.GetStringSlice("models-under-test"); len(modelsUnderTest) > 0 {
 		options.ModelsUnderTest = modelsUnderTest
 	}
 
-	if groundtruthModel, _ := cmd.Flags().GetString("groundtruth-model"); groundtruthModel != "" {
+	if groundtruthModel, _ := flags.GetString("groundtruth-model"); groundtruthModel != "" {
 		options.GroundtruthModel = &groundtruthModel
 	}
 
-	if cmd.Flags().Changed("tests-per-rule") {
-		testsPerRule, _ := cmd.Flags().GetInt("tests-per-rule")
+	if flags.Changed("tests-per-rule") {
+		testsPerRule, _ := flags.GetInt("tests-per-rule")
 		options.TestsPerRule = &testsPerRule
 	}
 
-	if cmd.Flags().Changed("runs-per-test") {
-		runsPerTest, _ := cmd.Flags().GetInt("runs-per-test")
+	if flags.Changed("runs-per-test") {
+		runsPerTest, _ := flags.GetInt("runs-per-test")
 		options.RunsPerTest = &runsPerTest
 	}
 
-	if cmd.Flags().Changed("test-expansions") {
-		testExpansions, _ := cmd.Flags().GetInt("test-expansions")
+	if flags.Changed("test-expansions") {
+		testExpansions, _ := flags.GetInt("test-expansions")
 		options.TestExpansions = &testExpansions
 	}
 
-	if cmd.Flags().Changed("rate-tests") {
-		rateTests, _ := cmd.Flags().GetBool("rate-tests")
+	if flags.Changed("rate-tests") {
+		rateTests, _ := flags.GetBool("rate-tests")
 		options.RateTests = &rateTests
 	}
 
-	if cmd.Flags().Changed("evals") {
-		evals, _ := cmd.Flags().GetBool("evals")
+	if flags.Changed("evals") {
+		evals, _ := flags.GetBool("evals")
 		options.Evals = &evals
 	}
 
-	if evalModels, _ := cmd.Flags().GetStringSlice("eval-models"); len(evalModels) > 0 {
+	if evalModels, _ := flags.GetStringSlice("eval-models"); len(evalModels) > 0 {
 		options.EvalModels = evalModels
 	}
 
-	if customMetric, _ := cmd.Flags().GetString("custom-metric"); customMetric != "" {
+	if customMetric, _ := flags.GetString("custom-metric"); customMetric != "" {
 		options.CustomMetric = &customMetric
 	}
 
-	if cmd.Flags().Changed("temperature") {
-		temperature, _ := cmd.Flags().GetFloat64("temperature")
+	if flags.Changed("temperature") {
+		temperature, _ := flags.GetFloat64("temperature")
 		options.Temperature = &temperature
 	}
 
