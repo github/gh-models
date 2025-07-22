@@ -263,7 +263,12 @@ func (h *evalCommandHandler) printTestResult(result TestResult, testPassed bool)
 		printer.AddField(preview)
 		printer.EndRow()
 	}
-	printer.Render()
+
+	err := printer.Render()
+	if err != nil {
+		return
+	}
+
 	h.cfg.WriteToOut("\n")
 
 	table := h.cfg.NewTablePrinter()
@@ -283,7 +288,12 @@ func (h *evalCommandHandler) printTestResult(result TestResult, testPassed bool)
 		}
 		table.EndRow()
 	}
-	table.Render()
+
+	err = table.Render()
+	if err != nil {
+		return
+	}
+
 	h.cfg.WriteToOut("\n")
 }
 
