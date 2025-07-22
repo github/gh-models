@@ -605,7 +605,7 @@ messages:
 func TestGenerateCommandWithValidPromptFile(t *testing.T) {
 	t.Run("loads existing prompt file correctly", func(t *testing.T) {
 		// Use the existing test prompt file
-		promptFile := filepath.Join(".", "test_prompt.yml")
+		promptFile := filepath.Join("..", "..", "examples", "test_generate.yml")
 
 		// Setup mock client
 		client := azuremodels.NewMockClient()
