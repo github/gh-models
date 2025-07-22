@@ -10,11 +10,19 @@ import (
 	"time"
 
 	"github.com/MakeNowJust/heredoc"
+	"github.com/cli/go-gh/v2/pkg/tableprinter"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/command"
 	"github.com/github/gh-models/pkg/prompt"
 	"github.com/github/gh-models/pkg/util"
+	"github.com/mgutz/ansi"
 	"github.com/spf13/cobra"
+)
+
+var (
+	lightGrayUnderline = ansi.ColorFunc("white+du")
+	red                = ansi.ColorFunc("red")
+	green              = ansi.ColorFunc("green")
 )
 
 // EvaluationSummary represents the overall evaluation summary
@@ -167,6 +175,7 @@ func (h *evalCommandHandler) runEvaluation(ctx context.Context) error {
 
 	for i, testCase := range h.evalFile.TestData {
 		if !h.jsonOutput {
+			h.cfg.WriteToOut("-------------------------\n")
 			h.cfg.WriteToOut(fmt.Sprintf("Running test case %d/%d...\n", i+1, totalTests))
 		}
 
@@ -235,30 +244,46 @@ func (h *evalCommandHandler) runEvaluation(ctx context.Context) error {
 }
 
 func (h *evalCommandHandler) printTestResult(result TestResult, testPassed bool) {
+	printer := h.cfg.NewTablePrinter()
 	if testPassed {
-		h.cfg.WriteToOut("  ✓ PASSED\n")
+		printer.AddField("Result", tableprinter.WithColor(lightGrayUnderline))
+		printer.AddField("✓ PASSED", tableprinter.WithColor(green))
+		printer.EndRow()
 	} else {
-		h.cfg.WriteToOut("  ✗ FAILED\n")
+		printer.AddField("Result", tableprinter.WithColor(lightGrayUnderline))
+		printer.AddField("✗ FAILED", tableprinter.WithColor(red))
+		printer.EndRow()
 		// Show the first 100 characters of the model response when test fails
 		preview := result.ModelResponse
 		if len(preview) > 100 {
 			preview = preview[:100] + "..."
 		}
-		h.cfg.WriteToOut(fmt.Sprintf("    Model Response: %s\n", preview))
-	}
 
+		printer.AddField("Model Response", tableprinter.WithColor(lightGrayUnderline))
+		printer.AddField(preview)
+		printer.EndRow()
+	}
+	printer.Render()
+	h.cfg.WriteToOut("\n")
+
+	table := h.cfg.NewTablePrinter()
+	table.AddHeader([]string{"EVALUATION", "RESULT", "SCORE", "CRITERIA"}, tableprinter.WithColor(lightGrayUnderline))
 	// Show evaluation details
 	for _, evalResult := range result.EvaluationResults {
-		status := "✓"
+		status, color := "✓", green
 		if !evalResult.Passed {
-			status = "✗"
+			status, color = "✗", red
 		}
-		h.cfg.WriteToOut(fmt.Sprintf("    %s %s (score: %.2f)\n",
-			status, evalResult.EvaluatorName, evalResult.Score))
+		table.AddField(evalResult.EvaluatorName)
+		table.AddField(status, tableprinter.WithColor(color))
+		table.AddField(fmt.Sprintf("%.2f", evalResult.Score), tableprinter.WithColor(color))
+
 		if evalResult.Details != "" {
-			h.cfg.WriteToOut(fmt.Sprintf("      %s\n", evalResult.Details))
+			table.AddField(evalResult.Details)
 		}
+		table.EndRow()
 	}
+	table.Render()
 	h.cfg.WriteToOut("\n")
 }
 
