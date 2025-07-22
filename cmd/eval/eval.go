@@ -285,6 +285,8 @@ func (h *evalCommandHandler) printTestResult(result TestResult, testPassed bool)
 
 		if evalResult.Details != "" {
 			table.AddField(evalResult.Details)
+		} else {
+			table.AddField("")
 		}
 		table.EndRow()
 	}
