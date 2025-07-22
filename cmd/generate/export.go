@@ -125,9 +125,9 @@ func (h *generateCommandHandler) toGitHubModelsPrompt(modelID string, context *P
 	}
 
 	// Create model parameters
-	var modelParams *prompt.ModelParameters
+	var modelParams prompt.ModelParameters
 	if h.options.Temperature != nil {
-		modelParams = &prompt.ModelParameters{
+		modelParams = prompt.ModelParameters{
 			Temperature: h.options.Temperature,
 		}
 	}
@@ -157,7 +157,7 @@ func (h *generateCommandHandler) toGitHubModelsPrompt(modelID string, context *P
 		Name:            context.Name,
 		Description:     *context.Frontmatter.Description,
 		Model:           resolvedModel,
-		ModelParameters: *modelParams,
+		ModelParameters: modelParams,
 		Messages:        messages,
 		TestData:        testData,
 		Evaluators:      evaluators,
