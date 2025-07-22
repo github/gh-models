@@ -24,7 +24,7 @@ func TestNewGenerateCommand(t *testing.T) {
 		cmd := NewGenerateCommand(cfg)
 
 		require.Equal(t, "generate [prompt-file]", cmd.Use)
-		require.Equal(t, "Generate tests using PromptPex", cmd.Short)
+		require.Equal(t, "Generate tests and evaluations for prompts", cmd.Short)
 		require.Contains(t, cmd.Long, "PromptPex methodology")
 		require.True(t, cmd.Args != nil) // Should have ExactArgs(1)
 

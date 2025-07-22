@@ -23,9 +23,9 @@ type generateCommandHandler struct {
 func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "generate [prompt-file]",
-		Short: "Generate tests using PromptPex",
+		Short: "Generate tests and evaluations for prompts",
 		Long: heredoc.Docf(`
-			Augment prompt.yml file with generated test cases using the PromptPex methodology.
+			Augment prompt.yml file with generated test cases.
 			
 			This command analyzes a prompt file and generates comprehensive test cases to evaluate
 			the prompt's behavior across different scenarios and edge cases.
