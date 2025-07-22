@@ -88,6 +88,17 @@ func (h *generateCommandHandler) runPipeline(context *PromptPexContext) error {
 	return nil
 }
 
+// extractContentFromCompletion safely extracts content from a completion response
+func (h *generateCommandHandler) extractContentFromCompletion(completion azuremodels.ChatCompletion) (string, error) {
+	if len(completion.Choices) == 0 {
+		return "", fmt.Errorf("no completion choices returned from model")
+	}
+	if completion.Choices[0].Message == nil || completion.Choices[0].Message.Content == nil {
+		return "", fmt.Errorf("no content in completion response")
+	}
+	return *completion.Choices[0].Message.Content, nil
+}
+
 // generateIntent generates the intent of the prompt
 func (h *generateCommandHandler) generateIntent(context *PromptPexContext) error {
 	h.cfg.WriteToOut("Generating intent...")
@@ -113,7 +124,10 @@ Intent:`, context.Prompt.Messages)
 	if err != nil {
 		return err
 	}
-	var intent = *completion.Choices[0].Message.Content
+	intent, err := h.extractContentFromCompletion(completion)
+	if err != nil {
+		return err
+	}
 	context.Intent = intent
 
 	return nil
@@ -145,7 +159,10 @@ Input Specification:`, context.Prompt)
 	if err != nil {
 		return err
 	}
-	var inputSpec = *completion.Choices[0].Message.Content
+	inputSpec, err := h.extractContentFromCompletion(completion)
+	if err != nil {
+		return err
+	}
 	context.InputSpec = inputSpec
 
 	return nil
@@ -178,7 +195,10 @@ Output Rules:`, context.Prompt)
 	if err != nil {
 		return err
 	}
-	var rules = *completion.Choices[0].Message.Content
+	rules, err := h.extractContentFromCompletion(completion)
+	if err != nil {
+		return err
+	}
 	context.Rules = rules
 
 	return nil
@@ -211,7 +231,10 @@ Inverse Rules:`, context.Rules)
 	if err != nil {
 		return err
 	}
-	var inverseRules = *completion.Choices[0].Message.Content
+	inverseRules, err := h.extractContentFromCompletion(completion)
+	if err != nil {
+		return err
+	}
 	context.InverseRules = inverseRules
 
 	return nil

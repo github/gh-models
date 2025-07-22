@@ -60,7 +60,7 @@ func NewRootCommand() *cobra.Command {
 	cmd.AddCommand(list.NewListCommand(cfg))
 	cmd.AddCommand(run.NewRunCommand(cfg))
 	cmd.AddCommand(view.NewViewCommand(cfg))
-	cmd.AddCommand(generate.NewListCommand(cfg))
+	cmd.AddCommand(generate.NewGenerateCommand(cfg))
 
 	// Cobra does not have a nice way to inject "global" help text, so we have to do it manually.
 	// Copied from https://github.com/spf13/cobra/blob/e94f6d0dd9a5e5738dca6bce03c4b1207ffbc0ec/command.go#L595-L597
