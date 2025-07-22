@@ -20,3 +20,8 @@ test:
 	@echo "==> running Go tests <=="
 	go test -race -cover ./...
 .PHONY: test
+
+build:
+	script/build
+.PHONY: build
+	
