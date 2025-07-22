@@ -1,6 +1,6 @@
 package generate
 
-import "github.com/github/gh-models/internal/azuremodels"
+import "github.com/github/gh-models/pkg/prompt"
 
 // PromptPexModelAliases represents model aliases for different purposes
 type PromptPexModelAliases string
@@ -102,41 +102,26 @@ type PromptPexPromptyFrontmatter struct {
 
 // PromptPexContext represents the main context for PromptPex operations
 type PromptPexContext struct {
-	RunID              string                      `json:"runId" yaml:"runId"`
-	WriteResults       *bool                       `json:"writeResults,omitempty" yaml:"writeResults,omitempty"`
-	Dir                *string                     `json:"dir,omitempty" yaml:"dir,omitempty"`
-	Name               string                      `json:"name" yaml:"name"`
-	Frontmatter        PromptPexPromptyFrontmatter `json:"frontmatter" yaml:"frontmatter"`
-	Messages           []azuremodels.ChatMessage   `json:"messages" yaml:"messages"`
-	Inputs             map[string]interface{}      `json:"inputs" yaml:"inputs"`
-	Prompt             WorkspaceFile               `json:"prompt" yaml:"prompt"`
-	OriginalPrompt     *WorkspaceFile              `json:"originalPrompt,omitempty" yaml:"originalPrompt,omitempty"`
-	Intent             WorkspaceFile               `json:"intent" yaml:"intent"`
-	Rules              WorkspaceFile               `json:"rules" yaml:"rules"`
-	InverseRules       WorkspaceFile               `json:"inverseRules" yaml:"inverseRules"`
-	InputSpec          WorkspaceFile               `json:"inputSpec" yaml:"inputSpec"`
-	BaselineTests      WorkspaceFile               `json:"baselineTests" yaml:"baselineTests"`
-	Tests              WorkspaceFile               `json:"tests" yaml:"tests"`
-	PromptPexTests     []PromptPexTest             `json:"promptPexTests" yaml:"promptPexTests"`
-	TestData           WorkspaceFile               `json:"testData" yaml:"testData"`
-	RateTests          WorkspaceFile               `json:"rateTests" yaml:"rateTests"`
-	TestOutputs        WorkspaceFile               `json:"testOutputs" yaml:"testOutputs"`
-	TestEvals          WorkspaceFile               `json:"testEvals" yaml:"testEvals"`
-	RuleEvals          WorkspaceFile               `json:"ruleEvals" yaml:"ruleEvals"`
-	RuleCoverages      WorkspaceFile               `json:"ruleCoverages" yaml:"ruleCoverages"`
-	BaselineTestEvals  WorkspaceFile               `json:"baselineTestEvals" yaml:"baselineTestEvals"`
-	Metrics            []WorkspaceFile             `json:"metrics" yaml:"metrics"`
-	GroundtruthMetrics []WorkspaceFile             `json:"groundtruthMetrics" yaml:"groundtruthMetrics"`
-	TestSamples        []map[string]interface{}    `json:"testSamples,omitempty" yaml:"testSamples,omitempty"`
-	Versions           PromptPexVersions           `json:"versions" yaml:"versions"`
-	ReuseResults       *bool                       `json:"reuseResults,omitempty" yaml:"reuseResults,omitempty"`
-	Options            PromptPexOptions            `json:"options" yaml:"options"`
-}
-
-// PromptPexVersions represents version information
-type PromptPexVersions struct {
-	PromptPex string `json:"promptpex" yaml:"promptpex"`
-	Go        string `json:"go" yaml:"go"`
+	RunID             string                   `json:"runId" yaml:"runId"`
+	WriteResults      *bool                    `json:"writeResults,omitempty" yaml:"writeResults,omitempty"`
+	Prompt            *prompt.File             `json:"prompt" yaml:"prompt"`
+	Intent            string                   `json:"intent" yaml:"intent"`
+	Rules             string                   `json:"rules" yaml:"rules"`
+	InverseRules      string                   `json:"inverseRules" yaml:"inverseRules"`
+	InputSpec         string                   `json:"inputSpec" yaml:"inputSpec"`
+	BaselineTests     string                   `json:"baselineTests" yaml:"baselineTests"`
+	Tests             string                   `json:"tests" yaml:"tests"`
+	PromptPexTests    []PromptPexTest          `json:"promptPexTests" yaml:"promptPexTests"`
+	TestData          string                   `json:"testData" yaml:"testData"`
+	RateTests         string                   `json:"rateTests" yaml:"rateTests"`
+	TestOutputs       string                   `json:"testOutputs" yaml:"testOutputs"`
+	TestEvals         string                   `json:"testEvals" yaml:"testEvals"`
+	RuleEvals         string                   `json:"ruleEvals" yaml:"ruleEvals"`
+	RuleCoverages     string                   `json:"ruleCoverages" yaml:"ruleCoverages"`
+	BaselineTestEvals string                   `json:"baselineTestEvals" yaml:"baselineTestEvals"`
+	TestSamples       []map[string]interface{} `json:"testSamples,omitempty" yaml:"testSamples,omitempty"`
+	ReuseResults      *bool                    `json:"reuseResults,omitempty" yaml:"reuseResults,omitempty"`
+	Options           PromptPexOptions         `json:"options" yaml:"options"`
 }
 
 // PromptPexTest represents a single test case
