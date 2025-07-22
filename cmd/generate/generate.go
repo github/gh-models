@@ -28,7 +28,7 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 			Augment prompt.yml file with generated test cases.
 			
 			This command analyzes a prompt file and generates comprehensive test cases to evaluate
-			the prompt's behavior across different scenarios and edge cases.
+			the prompt's behavior across different scenarios and edge cases using the PromptPex methodology.
 		`, "`"),
 		Example: heredoc.Doc(`
 			gh models generate prompt.yml
