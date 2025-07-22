@@ -72,7 +72,6 @@ type PromptPexOptions struct {
 	TestExpansionInstructions      *string `yaml:"testExpansionInstructions,omitempty" json:"testExpansionInstructions,omitempty"`
 
 	// Loader options
-	Out                *string `yaml:"out,omitempty" json:"out,omitempty"`
 	DisableSafety      *bool   `yaml:"disableSafety,omitempty" json:"disableSafety,omitempty"`
 	TestSamplesCount   *int    `yaml:"testSamplesCount,omitempty" json:"testSamplesCount,omitempty"`
 	TestSamplesShuffle *bool   `yaml:"testSamplesShuffle,omitempty" json:"testSamplesShuffle,omitempty"`

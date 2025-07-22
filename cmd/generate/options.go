@@ -129,9 +129,6 @@ func MergeOptions(defaults PromptPexOptions, overrides PromptPexOptions) PromptP
 	if result.MaxTestsToRun == nil && defaults.MaxTestsToRun != nil {
 		result.MaxTestsToRun = defaults.MaxTestsToRun
 	}
-	if result.Out == nil && defaults.Out != nil {
-		result.Out = defaults.Out
-	}
 	if result.ModelsUnderTest == nil && defaults.ModelsUnderTest != nil {
 		result.ModelsUnderTest = defaults.ModelsUnderTest
 	}

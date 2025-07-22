@@ -3,66 +3,11 @@ package generate
 import (
 	"encoding/json"
 	"fmt"
-	"os"
-	"path/filepath"
 	"regexp"
 	"strings"
 
 	"github.com/github/gh-models/pkg/prompt"
-	"gopkg.in/yaml.v3"
 )
-
-// githubModelsEvalsGenerate generates GitHub Models evaluation files
-func (h *generateCommandHandler) githubModelsEvalsGenerate(context *PromptPexContext) error {
-	h.cfg.WriteToOut("Generating GitHub Models Evals...")
-
-	if len(context.PromptPexTests) == 0 {
-		h.cfg.WriteToOut("No tests found. Skipping GitHub Models Evals generation.")
-		return nil
-	}
-
-	// Default models to evaluate
-	modelsUnderTest := []string{"evals"}
-	if len(h.options.ModelsUnderTest) > 0 {
-		modelsUnderTest = append(modelsUnderTest, h.options.ModelsUnderTest...)
-	}
-
-	// Get output directory from options or use current directory
-	outputDir := "."
-	if h.options.Out != nil {
-		outputDir = *h.options.Out
-	}
-
-	for _, modelID := range modelsUnderTest {
-		h.cfg.WriteToOut(fmt.Sprintf("Generating GitHub Models eval for model: %s", modelID))
-
-		githubPrompt, err := h.toGitHubModelsPrompt(modelID, context)
-		if err != nil {
-			return fmt.Errorf("failed to convert to GitHub Models prompt: %w", err)
-		}
-
-		// Generate filename
-		safeModelName := strings.ReplaceAll(githubPrompt.Model, "/", "_")
-		filename := filepath.Join(outputDir, fmt.Sprintf("%s.prompt.yml", safeModelName))
-
-		// Convert to YAML
-		yamlData, err := yaml.Marshal(githubPrompt)
-		if err != nil {
-			return fmt.Errorf("failed to marshal GitHub Models prompt to YAML: %w", err)
-		}
-
-		// Write file
-		if context.WriteResults != nil && *context.WriteResults {
-			if err := os.WriteFile(filename, yamlData, 0644); err != nil {
-				return fmt.Errorf("failed to write GitHub Models eval file: %w", err)
-			}
-		}
-
-		h.cfg.WriteToOut(fmt.Sprintf("Generated GitHub Models eval file: %s", filename))
-	}
-
-	return nil
-}
 
 // toGitHubModelsPrompt converts PromptPex context to GitHub Models format
 func (h *generateCommandHandler) toGitHubModelsPrompt(modelID string, context *PromptPexContext) (*prompt.File, error) {
