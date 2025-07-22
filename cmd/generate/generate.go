@@ -2,6 +2,8 @@
 package generate
 
 import (
+	"context"
+
 	"github.com/MakeNowJust/heredoc"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/command"
@@ -9,9 +11,11 @@ import (
 )
 
 type generateCommandHandler struct {
+	ctx     context.Context
 	cfg     *command.Config
 	client  azuremodels.Client
 	options PromptPexOptions
+	org     string
 }
 
 // NewListCommand returns a new command to list available GitHub models.

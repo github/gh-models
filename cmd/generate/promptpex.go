@@ -131,28 +131,6 @@ func (p *PromptPex) runPipeline(context *PromptPexContext) error {
 	return nil
 }
 
-// generateSummary generates a summary report
-func (p *PromptPex) generateSummary(context *PromptPexContext) error {
-	p.logger.Printf("Summary: Generated %d tests for prompt '%s'", len(context.PromptPexTests), context.Name)
-
-	summary := map[string]interface{}{
-		"name":      context.Name,
-		"tests":     len(context.PromptPexTests),
-		"outputDir": *context.Dir,
-		"runId":     context.RunID,
-		"timestamp": time.Now().Format(time.RFC3339),
-	}
-
-	data, _ := json.MarshalIndent(summary, "", "  ")
-	summaryFile := filepath.Join(*context.Dir, "summary.json")
-
-	if context.WriteResults != nil && *context.WriteResults {
-		return os.WriteFile(summaryFile, data, 0644)
-	}
-
-	return nil
-}
-
 // generateIntent generates the intent of the prompt
 func (p *PromptPex) generateIntent(context *PromptPexContext) error {
 	p.logger.Println("Generating intent...")
