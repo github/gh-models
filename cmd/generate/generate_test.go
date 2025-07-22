@@ -612,12 +612,38 @@ func TestGenerateCommandWithValidPromptFile(t *testing.T) {
 		callCount := 0
 		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
 			callCount++
-			response := "Mock response"
+			var response string
 
-			if callCount == 1 {
-				response = "This prompt analyzes sentiment."
-			} else if callCount <= 5 {
-				response = "Mock pipeline response"
+			// Mock different responses for different pipeline stages
+			switch callCount {
+			case 1: // Intent generation
+				response = "This prompt analyzes sentiment of text input to classify it as positive, negative, or neutral."
+			case 2: // Input spec generation
+				response = "Input: text (string) - Any text to analyze for sentiment"
+			case 3: // Output rules generation
+				response = "1. Output must be one of: positive, negative, neutral\n2. Response should be lowercase\n3. No additional text or explanation"
+			case 4: // Inverse rules generation
+				response = "1. Output should not contain multiple sentiment words\n2. Output should not be uppercase\n3. Output should not contain explanations"
+			case 5: // Test generation
+				response = `[
+					{
+						"scenario": "Positive sentiment detection",
+						"testinput": "I love this amazing product!",
+						"reasoning": "Tests ability to detect clear positive sentiment"
+					},
+					{
+						"scenario": "Negative sentiment detection", 
+						"testinput": "This is terrible and disappointing",
+						"reasoning": "Tests ability to detect clear negative sentiment"
+					},
+					{
+						"scenario": "Neutral sentiment detection",
+						"testinput": "The weather is cloudy today",
+						"reasoning": "Tests ability to detect neutral sentiment"
+					}
+				]`
+			default:
+				response = "Test response"
 			}
 
 			chatCompletion := azuremodels.ChatCompletion{
