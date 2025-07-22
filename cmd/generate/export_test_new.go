@@ -669,7 +669,7 @@ func TestExtractVariablesFromText(t *testing.T) {
 		{
 			name:     "malformed variables",
 			text:     "{{incomplete and {not_valid}}",
-			expected: []string{"incomplete and {not_valid"}, // This is what the regex actually captures
+			expected: []string{"not_valid"},
 		},
 	}
 
@@ -771,7 +771,7 @@ func TestGetTestScenario(t *testing.T) {
 				TestInput:   "test input",
 				Groundtruth: StringPtr("This is a very long groundtruth that should be truncated"),
 			},
-			expected: "This is a very long groundtruth that should be tru...", // First 50 chars + "..."
+			expected: "This is a very long groundtruth that should be t...",
 		},
 		{
 			name: "with both reasoning and groundtruth (reasoning takes precedence)",

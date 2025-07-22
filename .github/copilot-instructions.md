@@ -26,6 +26,7 @@ This repository implements the GitHub Models CLI extension, enabling users to in
 - Use the provided types and utility functions for consistency.
 - Persist results and context to output directories for reproducibility.
 - Reference `README.md` and `examples/` for usage and integration patterns.
+- Follow Go best practices for naming.
 
 ## Generating Test Files
 - **Test File Location**: For each CLI command, place its tests in the same subfolder, named as `<command>_test.go` (e.g., `cmd/generate/generate_test.go`).
