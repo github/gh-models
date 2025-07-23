@@ -3,6 +3,8 @@ package generate
 import (
 	"reflect"
 	"testing"
+
+	"github.com/github/gh-models/pkg/util"
 )
 
 func TestGetDefaultOptions(t *testing.T) {
@@ -14,27 +16,27 @@ func TestGetDefaultOptions(t *testing.T) {
 		actual   interface{}
 		expected interface{}
 	}{
-		{"Temperature", defaults.Temperature, Float64Ptr(0.0)},
-		{"TestsPerRule", defaults.TestsPerRule, IntPtr(3)},
-		{"RunsPerTest", defaults.RunsPerTest, IntPtr(2)},
-		{"SplitRules", defaults.SplitRules, BoolPtr(true)},
-		{"MaxRulesPerTestGen", defaults.MaxRulesPerTestGen, IntPtr(3)},
-		{"TestGenerations", defaults.TestGenerations, IntPtr(2)},
-		{"TestExpansions", defaults.TestExpansions, IntPtr(0)},
-		{"FilterTestCount", defaults.FilterTestCount, IntPtr(5)},
-		{"Evals", defaults.Evals, BoolPtr(false)},
-		{"Compliance", defaults.Compliance, BoolPtr(false)},
-		{"BaselineTests", defaults.BaselineTests, BoolPtr(false)},
-		{"StoreCompletions", defaults.StoreCompletions, BoolPtr(false)},
-		{"CreateEvalRuns", defaults.CreateEvalRuns, BoolPtr(false)},
-		{"RateTests", defaults.RateTests, BoolPtr(false)},
-		{"DisableSafety", defaults.DisableSafety, BoolPtr(false)},
-		{"EvalCache", defaults.EvalCache, BoolPtr(false)},
-		{"TestRunCache", defaults.TestRunCache, BoolPtr(false)},
-		{"OutputPrompts", defaults.OutputPrompts, BoolPtr(false)},
-		{"WorkflowDiagram", defaults.WorkflowDiagram, BoolPtr(true)},
-		{"LoadContext", defaults.LoadContext, BoolPtr(false)},
-		{"LoadContextFile", defaults.LoadContextFile, StringPtr("promptpex_context.json")},
+		{"Temperature", defaults.Temperature, util.Ptr(0.0)},
+		{"TestsPerRule", defaults.TestsPerRule, util.Ptr(3)},
+		{"RunsPerTest", defaults.RunsPerTest, util.Ptr(2)},
+		{"SplitRules", defaults.SplitRules, util.Ptr(true)},
+		{"MaxRulesPerTestGen", defaults.MaxRulesPerTestGen, util.Ptr(3)},
+		{"TestGenerations", defaults.TestGenerations, util.Ptr(2)},
+		{"TestExpansions", defaults.TestExpansions, util.Ptr(0)},
+		{"FilterTestCount", defaults.FilterTestCount, util.Ptr(5)},
+		{"Evals", defaults.Evals, util.Ptr(false)},
+		{"Compliance", defaults.Compliance, util.Ptr(false)},
+		{"BaselineTests", defaults.BaselineTests, util.Ptr(false)},
+		{"StoreCompletions", defaults.StoreCompletions, util.Ptr(false)},
+		{"CreateEvalRuns", defaults.CreateEvalRuns, util.Ptr(false)},
+		{"RateTests", defaults.RateTests, util.Ptr(false)},
+		{"DisableSafety", defaults.DisableSafety, util.Ptr(false)},
+		{"EvalCache", defaults.EvalCache, util.Ptr(false)},
+		{"TestRunCache", defaults.TestRunCache, util.Ptr(false)},
+		{"OutputPrompts", defaults.OutputPrompts, util.Ptr(false)},
+		{"WorkflowDiagram", defaults.WorkflowDiagram, util.Ptr(true)},
+		{"LoadContext", defaults.LoadContext, util.Ptr(false)},
+		{"LoadContextFile", defaults.LoadContextFile, util.Ptr("promptpex_context.json")},
 	}
 
 	for _, tt := range tests {
@@ -112,9 +114,9 @@ func TestMergeOptions_EmptyDefaults(t *testing.T) {
 	// Test merging with empty defaults - should return overrides
 	defaults := PromptPexOptions{}
 	overrides := PromptPexOptions{
-		Temperature:  Float64Ptr(1.0),
-		TestsPerRule: IntPtr(5),
-		SplitRules:   BoolPtr(false),
+		Temperature:  util.Ptr(1.0),
+		TestsPerRule: util.Ptr(5),
+		SplitRules:   util.Ptr(false),
 	}
 
 	merged := MergeOptions(defaults, overrides)
@@ -128,52 +130,52 @@ func TestMergeOptions_EmptyDefaults(t *testing.T) {
 func TestMergeOptions_OverridesPrecedence(t *testing.T) {
 	// Test that overrides take precedence over defaults
 	defaults := PromptPexOptions{
-		Temperature:        Float64Ptr(0.0),
-		TestsPerRule:       IntPtr(3),
-		RunsPerTest:        IntPtr(2),
-		SplitRules:         BoolPtr(true),
-		MaxRulesPerTestGen: IntPtr(3),
-		TestGenerations:    IntPtr(2),
-		Evals:              BoolPtr(false),
-		WorkflowDiagram:    BoolPtr(true),
+		Temperature:        util.Ptr(0.0),
+		TestsPerRule:       util.Ptr(3),
+		RunsPerTest:        util.Ptr(2),
+		SplitRules:         util.Ptr(true),
+		MaxRulesPerTestGen: util.Ptr(3),
+		TestGenerations:    util.Ptr(2),
+		Evals:              util.Ptr(false),
+		WorkflowDiagram:    util.Ptr(true),
 	}
 
 	overrides := PromptPexOptions{
-		Temperature:     Float64Ptr(1.5),
-		TestsPerRule:    IntPtr(10),
-		SplitRules:      BoolPtr(false),
-		Evals:           BoolPtr(true),
-		WorkflowDiagram: BoolPtr(false),
+		Temperature:     util.Ptr(1.5),
+		TestsPerRule:    util.Ptr(10),
+		SplitRules:      util.Ptr(false),
+		Evals:           util.Ptr(true),
+		WorkflowDiagram: util.Ptr(false),
 	}
 
 	merged := MergeOptions(defaults, overrides)
 
 	// Test that overridden values take precedence
-	if !reflect.DeepEqual(merged.Temperature, Float64Ptr(1.5)) {
-		t.Errorf("merged.Temperature = %+v, want %+v", merged.Temperature, Float64Ptr(1.5))
+	if !reflect.DeepEqual(merged.Temperature, util.Ptr(1.5)) {
+		t.Errorf("merged.Temperature = %+v, want %+v", merged.Temperature, util.Ptr(1.5))
 	}
-	if !reflect.DeepEqual(merged.TestsPerRule, IntPtr(10)) {
-		t.Errorf("merged.TestsPerRule = %+v, want %+v", merged.TestsPerRule, IntPtr(10))
+	if !reflect.DeepEqual(merged.TestsPerRule, util.Ptr(10)) {
+		t.Errorf("merged.TestsPerRule = %+v, want %+v", merged.TestsPerRule, util.Ptr(10))
 	}
-	if !reflect.DeepEqual(merged.SplitRules, BoolPtr(false)) {
-		t.Errorf("merged.SplitRules = %+v, want %+v", merged.SplitRules, BoolPtr(false))
+	if !reflect.DeepEqual(merged.SplitRules, util.Ptr(false)) {
+		t.Errorf("merged.SplitRules = %+v, want %+v", merged.SplitRules, util.Ptr(false))
 	}
-	if !reflect.DeepEqual(merged.Evals, BoolPtr(true)) {
-		t.Errorf("merged.Evals = %+v, want %+v", merged.Evals, BoolPtr(true))
+	if !reflect.DeepEqual(merged.Evals, util.Ptr(true)) {
+		t.Errorf("merged.Evals = %+v, want %+v", merged.Evals, util.Ptr(true))
 	}
-	if !reflect.DeepEqual(merged.WorkflowDiagram, BoolPtr(false)) {
-		t.Errorf("merged.WorkflowDiagram = %+v, want %+v", merged.WorkflowDiagram, BoolPtr(false))
+	if !reflect.DeepEqual(merged.WorkflowDiagram, util.Ptr(false)) {
+		t.Errorf("merged.WorkflowDiagram = %+v, want %+v", merged.WorkflowDiagram, util.Ptr(false))
 	}
 
 	// Test that non-overridden values come from defaults
-	if !reflect.DeepEqual(merged.RunsPerTest, IntPtr(2)) {
-		t.Errorf("merged.RunsPerTest = %+v, want %+v", merged.RunsPerTest, IntPtr(2))
+	if !reflect.DeepEqual(merged.RunsPerTest, util.Ptr(2)) {
+		t.Errorf("merged.RunsPerTest = %+v, want %+v", merged.RunsPerTest, util.Ptr(2))
 	}
-	if !reflect.DeepEqual(merged.MaxRulesPerTestGen, IntPtr(3)) {
-		t.Errorf("merged.MaxRulesPerTestGen = %+v, want %+v", merged.MaxRulesPerTestGen, IntPtr(3))
+	if !reflect.DeepEqual(merged.MaxRulesPerTestGen, util.Ptr(3)) {
+		t.Errorf("merged.MaxRulesPerTestGen = %+v, want %+v", merged.MaxRulesPerTestGen, util.Ptr(3))
 	}
-	if !reflect.DeepEqual(merged.TestGenerations, IntPtr(2)) {
-		t.Errorf("merged.TestGenerations = %+v, want %+v", merged.TestGenerations, IntPtr(2))
+	if !reflect.DeepEqual(merged.TestGenerations, util.Ptr(2)) {
+		t.Errorf("merged.TestGenerations = %+v, want %+v", merged.TestGenerations, util.Ptr(2))
 	}
 }
 
@@ -181,14 +183,14 @@ func TestMergeOptions_PartialOverrides(t *testing.T) {
 	// Test merging with partial overrides
 	defaults := GetDefaultOptions()
 	overrides := PromptPexOptions{
-		Temperature:      Float64Ptr(0.8),
-		TestExpansions:   IntPtr(5),
-		DisableSafety:    BoolPtr(true),
-		LoadContextFile:  StringPtr("custom_context.json"),
+		Temperature:      util.Ptr(0.8),
+		TestExpansions:   util.Ptr(5),
+		DisableSafety:    util.Ptr(true),
+		LoadContextFile:  util.Ptr("custom_context.json"),
 		ModelsUnderTest:  []string{"model1", "model2"},
 		EvalModels:       []string{"eval1", "eval2"},
-		GroundtruthModel: StringPtr("groundtruth_model"),
-		Prompt:           StringPtr("test_prompt"),
+		GroundtruthModel: util.Ptr("groundtruth_model"),
+		Prompt:           util.Ptr("test_prompt"),
 	}
 
 	merged := MergeOptions(defaults, overrides)
@@ -199,14 +201,14 @@ func TestMergeOptions_PartialOverrides(t *testing.T) {
 		actual   interface{}
 		expected interface{}
 	}{
-		{"Temperature", merged.Temperature, Float64Ptr(0.8)},
-		{"TestExpansions", merged.TestExpansions, IntPtr(5)},
-		{"DisableSafety", merged.DisableSafety, BoolPtr(true)},
-		{"LoadContextFile", merged.LoadContextFile, StringPtr("custom_context.json")},
+		{"Temperature", merged.Temperature, util.Ptr(0.8)},
+		{"TestExpansions", merged.TestExpansions, util.Ptr(5)},
+		{"DisableSafety", merged.DisableSafety, util.Ptr(true)},
+		{"LoadContextFile", merged.LoadContextFile, util.Ptr("custom_context.json")},
 		{"ModelsUnderTest", merged.ModelsUnderTest, []string{"model1", "model2"}},
 		{"EvalModels", merged.EvalModels, []string{"eval1", "eval2"}},
-		{"GroundtruthModel", merged.GroundtruthModel, StringPtr("groundtruth_model")},
-		{"Prompt", merged.Prompt, StringPtr("test_prompt")},
+		{"GroundtruthModel", merged.GroundtruthModel, util.Ptr("groundtruth_model")},
+		{"Prompt", merged.Prompt, util.Ptr("test_prompt")},
 	}
 
 	for _, tt := range tests {
@@ -255,9 +257,9 @@ func TestMergeOptions_WithEffort(t *testing.T) {
 	// Test merging options with effort configuration
 	defaults := GetDefaultOptions()
 	overrides := PromptPexOptions{
-		Effort:      StringPtr(EffortHigh),
-		Temperature: Float64Ptr(0.9),
-		Evals:       BoolPtr(true),
+		Effort:      util.Ptr(EffortHigh),
+		Temperature: util.Ptr(0.9),
+		Evals:       util.Ptr(true),
 	}
 
 	merged := MergeOptions(defaults, overrides)
@@ -274,11 +276,11 @@ func TestMergeOptions_WithEffort(t *testing.T) {
 	}
 
 	// Test that explicit overrides still take precedence over effort
-	if !reflect.DeepEqual(merged.Temperature, Float64Ptr(0.9)) {
-		t.Errorf("merged.Temperature = %+v, want %+v (explicit override)", merged.Temperature, Float64Ptr(0.9))
+	if !reflect.DeepEqual(merged.Temperature, util.Ptr(0.9)) {
+		t.Errorf("merged.Temperature = %+v, want %+v (explicit override)", merged.Temperature, util.Ptr(0.9))
 	}
-	if !reflect.DeepEqual(merged.Evals, BoolPtr(true)) {
-		t.Errorf("merged.Evals = %+v, want %+v (explicit override)", merged.Evals, BoolPtr(true))
+	if !reflect.DeepEqual(merged.Evals, util.Ptr(true)) {
+		t.Errorf("merged.Evals = %+v, want %+v (explicit override)", merged.Evals, util.Ptr(true))
 	}
 
 	// Test that defaults are still applied for non-effort, non-override fields
@@ -303,21 +305,21 @@ func TestMergeOptions_NilValues(t *testing.T) {
 		},
 		{
 			name:                "default set, override nil",
-			defaultTemperature:  Float64Ptr(0.5),
+			defaultTemperature:  util.Ptr(0.5),
 			overrideTemperature: nil,
-			expectedTemperature: Float64Ptr(0.5),
+			expectedTemperature: util.Ptr(0.5),
 		},
 		{
 			name:                "default nil, override set",
 			defaultTemperature:  nil,
-			overrideTemperature: Float64Ptr(0.8),
-			expectedTemperature: Float64Ptr(0.8),
+			overrideTemperature: util.Ptr(0.8),
+			expectedTemperature: util.Ptr(0.8),
 		},
 		{
 			name:                "both set",
-			defaultTemperature:  Float64Ptr(0.5),
-			overrideTemperature: Float64Ptr(0.8),
-			expectedTemperature: Float64Ptr(0.8),
+			defaultTemperature:  util.Ptr(0.5),
+			overrideTemperature: util.Ptr(0.8),
+			expectedTemperature: util.Ptr(0.8),
 		},
 	}
 
@@ -338,63 +340,63 @@ func TestMergeOptions_NilValues(t *testing.T) {
 func TestMergeOptions_AllFields(t *testing.T) {
 	// Comprehensive test covering all fields in PromptPexOptions
 	defaults := PromptPexOptions{
-		Temperature:        Float64Ptr(0.1),
-		TestsPerRule:       IntPtr(1),
-		RunsPerTest:        IntPtr(1),
-		SplitRules:         BoolPtr(false),
-		MaxRulesPerTestGen: IntPtr(1),
-		TestGenerations:    IntPtr(1),
-		TestExpansions:     IntPtr(1),
-		FilterTestCount:    IntPtr(1),
-		Evals:              BoolPtr(false),
-		Compliance:         BoolPtr(false),
-		BaselineTests:      BoolPtr(false),
-		StoreCompletions:   BoolPtr(false),
-		CreateEvalRuns:     BoolPtr(false),
-		RateTests:          BoolPtr(false),
-		DisableSafety:      BoolPtr(false),
-		EvalCache:          BoolPtr(false),
-		TestRunCache:       BoolPtr(false),
-		OutputPrompts:      BoolPtr(false),
-		WorkflowDiagram:    BoolPtr(false),
-		LoadContext:        BoolPtr(false),
-		LoadContextFile:    StringPtr("default.json"),
-		MaxRules:           IntPtr(1),
-		MaxTestsToRun:      IntPtr(1),
+		Temperature:        util.Ptr(0.1),
+		TestsPerRule:       util.Ptr(1),
+		RunsPerTest:        util.Ptr(1),
+		SplitRules:         util.Ptr(false),
+		MaxRulesPerTestGen: util.Ptr(1),
+		TestGenerations:    util.Ptr(1),
+		TestExpansions:     util.Ptr(1),
+		FilterTestCount:    util.Ptr(1),
+		Evals:              util.Ptr(false),
+		Compliance:         util.Ptr(false),
+		BaselineTests:      util.Ptr(false),
+		StoreCompletions:   util.Ptr(false),
+		CreateEvalRuns:     util.Ptr(false),
+		RateTests:          util.Ptr(false),
+		DisableSafety:      util.Ptr(false),
+		EvalCache:          util.Ptr(false),
+		TestRunCache:       util.Ptr(false),
+		OutputPrompts:      util.Ptr(false),
+		WorkflowDiagram:    util.Ptr(false),
+		LoadContext:        util.Ptr(false),
+		LoadContextFile:    util.Ptr("default.json"),
+		MaxRules:           util.Ptr(1),
+		MaxTestsToRun:      util.Ptr(1),
 		ModelsUnderTest:    []string{"default_model"},
 		EvalModels:         []string{"default_eval"},
-		GroundtruthModel:   StringPtr("default_groundtruth"),
-		Prompt:             StringPtr("default_prompt"),
+		GroundtruthModel:   util.Ptr("default_groundtruth"),
+		Prompt:             util.Ptr("default_prompt"),
 	}
 
 	overrides := PromptPexOptions{
-		Temperature:        Float64Ptr(0.9),
-		TestsPerRule:       IntPtr(10),
-		RunsPerTest:        IntPtr(5),
-		SplitRules:         BoolPtr(true),
-		MaxRulesPerTestGen: IntPtr(20),
-		TestGenerations:    IntPtr(3),
-		TestExpansions:     IntPtr(2),
-		FilterTestCount:    IntPtr(15),
-		Evals:              BoolPtr(true),
-		Compliance:         BoolPtr(true),
-		BaselineTests:      BoolPtr(true),
-		StoreCompletions:   BoolPtr(true),
-		CreateEvalRuns:     BoolPtr(true),
-		RateTests:          BoolPtr(true),
-		DisableSafety:      BoolPtr(true),
-		EvalCache:          BoolPtr(true),
-		TestRunCache:       BoolPtr(true),
-		OutputPrompts:      BoolPtr(true),
-		WorkflowDiagram:    BoolPtr(true),
-		LoadContext:        BoolPtr(true),
-		LoadContextFile:    StringPtr("override.json"),
-		MaxRules:           IntPtr(100),
-		MaxTestsToRun:      IntPtr(50),
+		Temperature:        util.Ptr(0.9),
+		TestsPerRule:       util.Ptr(10),
+		RunsPerTest:        util.Ptr(5),
+		SplitRules:         util.Ptr(true),
+		MaxRulesPerTestGen: util.Ptr(20),
+		TestGenerations:    util.Ptr(3),
+		TestExpansions:     util.Ptr(2),
+		FilterTestCount:    util.Ptr(15),
+		Evals:              util.Ptr(true),
+		Compliance:         util.Ptr(true),
+		BaselineTests:      util.Ptr(true),
+		StoreCompletions:   util.Ptr(true),
+		CreateEvalRuns:     util.Ptr(true),
+		RateTests:          util.Ptr(true),
+		DisableSafety:      util.Ptr(true),
+		EvalCache:          util.Ptr(true),
+		TestRunCache:       util.Ptr(true),
+		OutputPrompts:      util.Ptr(true),
+		WorkflowDiagram:    util.Ptr(true),
+		LoadContext:        util.Ptr(true),
+		LoadContextFile:    util.Ptr("override.json"),
+		MaxRules:           util.Ptr(100),
+		MaxTestsToRun:      util.Ptr(50),
 		ModelsUnderTest:    []string{"override_model1", "override_model2"},
 		EvalModels:         []string{"override_eval1", "override_eval2"},
-		GroundtruthModel:   StringPtr("override_groundtruth"),
-		Prompt:             StringPtr("override_prompt"),
+		GroundtruthModel:   util.Ptr("override_groundtruth"),
+		Prompt:             util.Ptr("override_prompt"),
 	}
 
 	merged := MergeOptions(defaults, overrides)
@@ -459,58 +461,58 @@ func TestMergeOptions_EmptySlices(t *testing.T) {
 }
 
 // Helper function tests
-func TestBoolPtr(t *testing.T) {
+func Testutil.Ptr(t *testing.T) {
 	tests := []bool{true, false}
 
 	for _, val := range tests {
-		ptr := BoolPtr(val)
+		ptr := util.Ptr(val)
 		if ptr == nil {
-			t.Errorf("BoolPtr(%t) returned nil", val)
+			t.Errorf("util.Ptr(%t) returned nil", val)
 		}
 		if *ptr != val {
-			t.Errorf("BoolPtr(%t) = %t, want %t", val, *ptr, val)
+			t.Errorf("util.Ptr(%t) = %t, want %t", val, *ptr, val)
 		}
 	}
 }
 
-func TestIntPtr(t *testing.T) {
+func Testutil.Ptr(t *testing.T) {
 	tests := []int{0, 1, -1, 100, -100}
 
 	for _, val := range tests {
-		ptr := IntPtr(val)
+		ptr := util.Ptr(val)
 		if ptr == nil {
-			t.Errorf("IntPtr(%d) returned nil", val)
+			t.Errorf("util.Ptr(%d) returned nil", val)
 		}
 		if *ptr != val {
-			t.Errorf("IntPtr(%d) = %d, want %d", val, *ptr, val)
+			t.Errorf("util.Ptr(%d) = %d, want %d", val, *ptr, val)
 		}
 	}
 }
 
-func TestFloat64Ptr(t *testing.T) {
+func Testutil.Ptr(t *testing.T) {
 	tests := []float64{0.0, 1.0, -1.0, 3.14159, -2.71828}
 
 	for _, val := range tests {
-		ptr := Float64Ptr(val)
+		ptr := util.Ptr(val)
 		if ptr == nil {
-			t.Errorf("Float64Ptr(%f) returned nil", val)
+			t.Errorf("util.Ptr(%f) returned nil", val)
 		}
 		if *ptr != val {
-			t.Errorf("Float64Ptr(%f) = %f, want %f", val, *ptr, val)
+			t.Errorf("util.Ptr(%f) = %f, want %f", val, *ptr, val)
 		}
 	}
 }
 
-func TestStringPtr(t *testing.T) {
+func Testutil.Ptr(t *testing.T) {
 	tests := []string{"", "hello", "world", "test string with spaces", "special!@#$%^&*()chars"}
 
 	for _, val := range tests {
-		ptr := StringPtr(val)
+		ptr := util.Ptr(val)
 		if ptr == nil {
-			t.Errorf("StringPtr(%q) returned nil", val)
+			t.Errorf("util.Ptr(%q) returned nil", val)
 		}
 		if *ptr != val {
-			t.Errorf("StringPtr(%q) = %q, want %q", val, *ptr, val)
+			t.Errorf("util.Ptr(%q) = %q, want %q", val, *ptr, val)
 		}
 	}
 }
@@ -521,17 +523,17 @@ func TestGetOptions(t *testing.T) {
 	// If the struct is not accessible for testing, this test can be removed
 	handler := &generateCommandHandler{
 		options: PromptPexOptions{
-			Temperature:  Float64Ptr(0.5),
-			TestsPerRule: IntPtr(7),
+			Temperature:  util.Ptr(0.5),
+			TestsPerRule: util.Ptr(7),
 		},
 	}
 
 	options := handler.GetOptions()
 
-	if !reflect.DeepEqual(options.Temperature, Float64Ptr(0.5)) {
-		t.Errorf("GetOptions().Temperature = %+v, want %+v", options.Temperature, Float64Ptr(0.5))
+	if !reflect.DeepEqual(options.Temperature, util.Ptr(0.5)) {
+		t.Errorf("GetOptions().Temperature = %+v, want %+v", options.Temperature, util.Ptr(0.5))
 	}
-	if !reflect.DeepEqual(options.TestsPerRule, IntPtr(7)) {
-		t.Errorf("GetOptions().TestsPerRule = %+v, want %+v", options.TestsPerRule, IntPtr(7))
+	if !reflect.DeepEqual(options.TestsPerRule, util.Ptr(7)) {
+		t.Errorf("GetOptions().TestsPerRule = %+v, want %+v", options.TestsPerRule, util.Ptr(7))
 	}
 }

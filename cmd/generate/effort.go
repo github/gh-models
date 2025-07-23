@@ -1,5 +1,7 @@
 package generate
 
+import "github.com/github/gh-models/pkg/util"
+
 // EffortConfiguration defines the configuration for different effort levels
 type EffortConfiguration struct {
 	SplitRules                *bool `json:"splitRules,omitempty"`
@@ -19,44 +21,44 @@ func GetEffortConfiguration(effort string) *EffortConfiguration {
 	switch effort {
 	case EffortMin:
 		return &EffortConfiguration{
-			SplitRules:                BoolPtr(false),
-			TestGenerations:           IntPtr(1),
-			TestsPerRule:              IntPtr(1),
-			RunsPerTest:               IntPtr(1),
-			TestExpansions:            IntPtr(0),
-			MaxRules:                  IntPtr(6),
-			MaxRulesPerTestGeneration: IntPtr(100),
-			MaxTestsToRun:             IntPtr(10),
-			Compliance:                BoolPtr(false),
+			SplitRules:                util.Ptr(false),
+			TestGenerations:           util.Ptr(1),
+			TestsPerRule:              util.Ptr(1),
+			RunsPerTest:               util.Ptr(1),
+			TestExpansions:            util.Ptr(0),
+			MaxRules:                  util.Ptr(6),
+			MaxRulesPerTestGeneration: util.Ptr(100),
+			MaxTestsToRun:             util.Ptr(10),
+			Compliance:                util.Ptr(false),
 		}
 	case EffortLow:
 		return &EffortConfiguration{
-			TestExpansions:            IntPtr(0),
-			TestGenerations:           IntPtr(1),
-			MaxRules:                  IntPtr(3),
-			TestsPerRule:              IntPtr(2),
-			RunsPerTest:               IntPtr(1),
-			MaxRulesPerTestGeneration: IntPtr(5),
-			SplitRules:                BoolPtr(true),
-			MaxTestsToRun:             IntPtr(20),
+			TestExpansions:            util.Ptr(0),
+			TestGenerations:           util.Ptr(1),
+			MaxRules:                  util.Ptr(3),
+			TestsPerRule:              util.Ptr(2),
+			RunsPerTest:               util.Ptr(1),
+			MaxRulesPerTestGeneration: util.Ptr(5),
+			SplitRules:                util.Ptr(true),
+			MaxTestsToRun:             util.Ptr(20),
 		}
 	case EffortMedium:
 		return &EffortConfiguration{
-			TestExpansions:            IntPtr(0),
-			MaxRules:                  IntPtr(20),
-			TestsPerRule:              IntPtr(3),
-			RunsPerTest:               IntPtr(1),
-			MaxRulesPerTestGeneration: IntPtr(5),
-			SplitRules:                BoolPtr(true),
-			TestGenerations:           IntPtr(1),
+			TestExpansions:            util.Ptr(0),
+			MaxRules:                  util.Ptr(20),
+			TestsPerRule:              util.Ptr(3),
+			RunsPerTest:               util.Ptr(1),
+			MaxRulesPerTestGeneration: util.Ptr(5),
+			SplitRules:                util.Ptr(true),
+			TestGenerations:           util.Ptr(1),
 		}
 	case EffortHigh:
 		return &EffortConfiguration{
-			TestExpansions:            IntPtr(1),
-			MaxRules:                  IntPtr(50),
-			MaxRulesPerTestGeneration: IntPtr(2),
-			SplitRules:                BoolPtr(true),
-			TestGenerations:           IntPtr(2),
+			TestExpansions:            util.Ptr(1),
+			MaxRules:                  util.Ptr(50),
+			MaxRulesPerTestGeneration: util.Ptr(2),
+			SplitRules:                util.Ptr(true),
+			TestGenerations:           util.Ptr(2),
 		}
 	default:
 		return nil

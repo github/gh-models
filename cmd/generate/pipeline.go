@@ -7,6 +7,7 @@ import (
 
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/prompt"
+	"github.com/github/gh-models/pkg/util"
 )
 
 // RunTestGenerationPipeline executes the main PromptPex pipeline
@@ -97,8 +98,8 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 func testConnection(h *generateCommandHandler) error {
 	result, err := h.callModelWithRetry("configuration", azuremodels.ChatCompletionOptions{
 		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
-		Messages:    []azuremodels.ChatMessage{{Role: azuremodels.ChatMessageRoleSystem, Content: StringPtr("write a haiku in 5 emojis")}},
-		Temperature: Float64Ptr(0.0),
+		Messages:    []azuremodels.ChatMessage{{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr("write a haiku in 5 emojis")}},
+		Temperature: util.Ptr(0.0),
 	})
 	if err != nil {
 		return fmt.Errorf("failed to test LLM connection: %w", err)
@@ -125,7 +126,7 @@ Intent:`, RenderMessagesToString(context.Prompt.Messages))
 	options := azuremodels.ChatCompletionOptions{
 		Model:       "openai/gpt-4o", // GitHub Models compatible model
 		Messages:    messages,
-		Temperature: Float64Ptr(0.0),
+		Temperature: util.Ptr(0.0),
 		Stream:      false,
 	}
 	intent, err := h.callModelWithRetry("intent", options)
@@ -156,7 +157,7 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 	options := azuremodels.ChatCompletionOptions{
 		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
 		Messages:    messages,
-		Temperature: Float64Ptr(0.0),
+		Temperature: util.Ptr(0.0),
 	}
 
 	inputSpec, err := h.callModelWithRetry("input spec", options)
@@ -188,7 +189,7 @@ Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 	options := azuremodels.ChatCompletionOptions{
 		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
 		Messages:    messages,
-		Temperature: Float64Ptr(0.0),
+		Temperature: util.Ptr(0.0),
 	}
 
 	rules, err := h.callModelWithRetry("output rules", options)
@@ -219,7 +220,7 @@ Inverse Rules:`, context.Rules)
 	options := azuremodels.ChatCompletionOptions{
 		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
 		Messages:    messages,
-		Temperature: Float64Ptr(0.0),
+		Temperature: util.Ptr(0.0),
 	}
 
 	inverseRules, err := h.callModelWithRetry("inverse output rules", options)
@@ -284,7 +285,7 @@ Generate exactly %d diverse test cases:`, testsPerRule*3,
 	options := azuremodels.ChatCompletionOptions{
 		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
 		Messages:    messages,
-		Temperature: Float64Ptr(0.3),
+		Temperature: util.Ptr(0.3),
 	}
 
 	content, err := h.callModelWithRetry("tests", options)
@@ -403,7 +404,7 @@ func (h *generateCommandHandler) runSingleTestWithContext(input, modelName strin
 	options := azuremodels.ChatCompletionOptions{
 		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
 		Messages:    openaiMessages,
-		Temperature: Float64Ptr(0.0),
+		Temperature: util.Ptr(0.0),
 	}
 
 	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
@@ -484,7 +485,7 @@ Compliance:`, rules, output)
 	options := azuremodels.ChatCompletionOptions{
 		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
 		Messages:    messages,
-		Temperature: Float64Ptr(0.0),
+		Temperature: util.Ptr(0.0),
 	}
 
 	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
@@ -525,7 +526,7 @@ Score (0-1):`, metric, output)
 	options := azuremodels.ChatCompletionOptions{
 		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
 		Messages:    messages,
-		Temperature: Float64Ptr(0.0),
+		Temperature: util.Ptr(0.0),
 	}
 
 	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
@@ -630,7 +631,7 @@ Generate variations in JSON format as an array of objects with "scenario", "test
 	options := azuremodels.ChatCompletionOptions{
 		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
 		Messages:    messages,
-		Temperature: Float64Ptr(0.5),
+		Temperature: util.Ptr(0.5),
 	}
 
 	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
@@ -657,9 +658,9 @@ Generate variations in JSON format as an array of objects with "scenario", "test
 	for i := range expandedTests {
 		expandedTests[i].TestInputOriginal = &test.TestInput
 		if test.Generation != nil {
-			expandedTests[i].Generation = IntPtr(*test.Generation + 1)
+			expandedTests[i].Generation = util.Ptr(*test.Generation + 1)
 		} else {
-			expandedTests[i].Generation = IntPtr(1)
+			expandedTests[i].Generation = util.Ptr(1)
 		}
 	}
 
@@ -691,7 +692,7 @@ Analysis:`, strings.Join(testSummary, "\n"))
 	options := azuremodels.ChatCompletionOptions{
 		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
 		Messages:    messages,
-		Temperature: Float64Ptr(0.2),
+		Temperature: util.Ptr(0.2),
 	}
 
 	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)

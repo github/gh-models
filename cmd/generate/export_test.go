@@ -6,6 +6,7 @@ import (
 
 	"github.com/github/gh-models/pkg/command"
 	"github.com/github/gh-models/pkg/prompt"
+	"github.com/github/gh-models/pkg/util"
 )
 
 func TestToGitHubModelsPrompt(t *testing.T) {
@@ -39,8 +40,8 @@ func TestToGitHubModelsPrompt(t *testing.T) {
 				PromptPexTests: []PromptPexTest{
 					{
 						TestInput:   `{"input": "world"}`,
-						Groundtruth: StringPtr("Hello world!"),
-						Reasoning:   StringPtr("Basic greeting test"),
+						Groundtruth: util.Ptr("Hello world!"),
+						Reasoning:   util.Ptr("Basic greeting test"),
 					},
 				},
 			},
@@ -109,7 +110,7 @@ func TestToGitHubModelsPrompt(t *testing.T) {
 				PromptPexTests: []PromptPexTest{
 					{
 						TestInput:   `{"data": "test data", "type": "analysis"}`,
-						Groundtruth: StringPtr("Analysis result"),
+						Groundtruth: util.Ptr("Analysis result"),
 					},
 				},
 			},
@@ -432,7 +433,7 @@ func TestGetTestScenario(t *testing.T) {
 			name: "with reasoning",
 			test: PromptPexTest{
 				TestInput: "test input",
-				Reasoning: StringPtr("Test reasoning"),
+				Reasoning: util.Ptr("Test reasoning"),
 			},
 			expected: "Test reasoning",
 		},
@@ -440,7 +441,7 @@ func TestGetTestScenario(t *testing.T) {
 			name: "with groundtruth (short)",
 			test: PromptPexTest{
 				TestInput:   "test input",
-				Groundtruth: StringPtr("Short groundtruth"),
+				Groundtruth: util.Ptr("Short groundtruth"),
 			},
 			expected: "Short groundtruth",
 		},
@@ -448,7 +449,7 @@ func TestGetTestScenario(t *testing.T) {
 			name: "with groundtruth (long)",
 			test: PromptPexTest{
 				TestInput:   "test input",
-				Groundtruth: StringPtr("This is a very long groundtruth that should be truncated"),
+				Groundtruth: util.Ptr("This is a very long groundtruth that should be truncated"),
 			},
 			expected: "This is a very long groundtruth that should be tru...", // First 50 chars + "..."
 		},
@@ -456,8 +457,8 @@ func TestGetTestScenario(t *testing.T) {
 			name: "with both reasoning and groundtruth (reasoning takes precedence)",
 			test: PromptPexTest{
 				TestInput:   "test input",
-				Reasoning:   StringPtr("Test reasoning"),
-				Groundtruth: StringPtr("Test groundtruth"),
+				Reasoning:   util.Ptr("Test reasoning"),
+				Groundtruth: util.Ptr("Test groundtruth"),
 			},
 			expected: "Test reasoning",
 		},
@@ -465,8 +466,8 @@ func TestGetTestScenario(t *testing.T) {
 			name: "with empty reasoning",
 			test: PromptPexTest{
 				TestInput:   "test input",
-				Reasoning:   StringPtr(""),
-				Groundtruth: StringPtr("Test groundtruth"),
+				Reasoning:   util.Ptr(""),
+				Groundtruth: util.Ptr("Test groundtruth"),
 			},
 			expected: "Test groundtruth",
 		},

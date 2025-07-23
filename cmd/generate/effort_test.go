@@ -3,6 +3,8 @@ package generate
 import (
 	"reflect"
 	"testing"
+
+	"github.com/github/gh-models/pkg/util"
 )
 
 func TestGetEffortConfiguration(t *testing.T) {
@@ -15,53 +17,53 @@ func TestGetEffortConfiguration(t *testing.T) {
 			name:   "EffortMin configuration",
 			effort: EffortMin,
 			expected: &EffortConfiguration{
-				SplitRules:                BoolPtr(false),
-				TestGenerations:           IntPtr(1),
-				TestsPerRule:              IntPtr(1),
-				RunsPerTest:               IntPtr(1),
-				TestExpansions:            IntPtr(0),
-				MaxRules:                  IntPtr(6),
-				MaxRulesPerTestGeneration: IntPtr(100),
-				MaxTestsToRun:             IntPtr(10),
-				Compliance:                BoolPtr(false),
+				SplitRules:                util.Ptr(false),
+				TestGenerations:           util.Ptr(1),
+				TestsPerRule:              util.Ptr(1),
+				RunsPerTest:               util.Ptr(1),
+				TestExpansions:            util.Ptr(0),
+				MaxRules:                  util.Ptr(6),
+				MaxRulesPerTestGeneration: util.Ptr(100),
+				MaxTestsToRun:             util.Ptr(10),
+				Compliance:                util.Ptr(false),
 			},
 		},
 		{
 			name:   "EffortLow configuration",
 			effort: EffortLow,
 			expected: &EffortConfiguration{
-				TestExpansions:            IntPtr(0),
-				TestGenerations:           IntPtr(1),
-				MaxRules:                  IntPtr(3),
-				TestsPerRule:              IntPtr(2),
-				RunsPerTest:               IntPtr(1),
-				MaxRulesPerTestGeneration: IntPtr(5),
-				SplitRules:                BoolPtr(true),
-				MaxTestsToRun:             IntPtr(20),
+				TestExpansions:            util.Ptr(0),
+				TestGenerations:           util.Ptr(1),
+				MaxRules:                  util.Ptr(3),
+				TestsPerRule:              util.Ptr(2),
+				RunsPerTest:               util.Ptr(1),
+				MaxRulesPerTestGeneration: util.Ptr(5),
+				SplitRules:                util.Ptr(true),
+				MaxTestsToRun:             util.Ptr(20),
 			},
 		},
 		{
 			name:   "EffortMedium configuration",
 			effort: EffortMedium,
 			expected: &EffortConfiguration{
-				TestExpansions:            IntPtr(0),
-				MaxRules:                  IntPtr(20),
-				TestsPerRule:              IntPtr(3),
-				RunsPerTest:               IntPtr(1),
-				MaxRulesPerTestGeneration: IntPtr(5),
-				SplitRules:                BoolPtr(true),
-				TestGenerations:           IntPtr(1),
+				TestExpansions:            util.Ptr(0),
+				MaxRules:                  util.Ptr(20),
+				TestsPerRule:              util.Ptr(3),
+				RunsPerTest:               util.Ptr(1),
+				MaxRulesPerTestGeneration: util.Ptr(5),
+				SplitRules:                util.Ptr(true),
+				TestGenerations:           util.Ptr(1),
 			},
 		},
 		{
 			name:   "EffortHigh configuration",
 			effort: EffortHigh,
 			expected: &EffortConfiguration{
-				TestExpansions:            IntPtr(1),
-				MaxRules:                  IntPtr(50),
-				MaxRulesPerTestGeneration: IntPtr(2),
-				SplitRules:                BoolPtr(true),
-				TestGenerations:           IntPtr(2),
+				TestExpansions:            util.Ptr(1),
+				MaxRules:                  util.Ptr(50),
+				MaxRulesPerTestGeneration: util.Ptr(2),
+				SplitRules:                util.Ptr(true),
+				TestGenerations:           util.Ptr(2),
 			},
 		},
 		{
@@ -122,15 +124,15 @@ func TestGetEffortConfiguration_FieldComparison(t *testing.T) {
 		actual   interface{}
 		expected interface{}
 	}{
-		{"SplitRules", config.SplitRules, BoolPtr(false)},
-		{"TestGenerations", config.TestGenerations, IntPtr(1)},
-		{"TestsPerRule", config.TestsPerRule, IntPtr(1)},
-		{"RunsPerTest", config.RunsPerTest, IntPtr(1)},
-		{"TestExpansions", config.TestExpansions, IntPtr(0)},
-		{"MaxRules", config.MaxRules, IntPtr(6)},
-		{"MaxRulesPerTestGeneration", config.MaxRulesPerTestGeneration, IntPtr(100)},
-		{"MaxTestsToRun", config.MaxTestsToRun, IntPtr(10)},
-		{"Compliance", config.Compliance, BoolPtr(false)},
+		{"SplitRules", config.SplitRules, util.Ptr(false)},
+		{"TestGenerations", config.TestGenerations, util.Ptr(1)},
+		{"TestsPerRule", config.TestsPerRule, util.Ptr(1)},
+		{"RunsPerTest", config.RunsPerTest, util.Ptr(1)},
+		{"TestExpansions", config.TestExpansions, util.Ptr(0)},
+		{"MaxRules", config.MaxRules, util.Ptr(6)},
+		{"MaxRulesPerTestGeneration", config.MaxRulesPerTestGeneration, util.Ptr(100)},
+		{"MaxTestsToRun", config.MaxTestsToRun, util.Ptr(10)},
+		{"Compliance", config.Compliance, util.Ptr(false)},
 	}
 
 	for _, tt := range tests {
@@ -155,37 +157,37 @@ func TestApplyEffortConfiguration(t *testing.T) {
 			initialOptions: &PromptPexOptions{},
 			effort:         EffortMin,
 			expectedChanges: map[string]interface{}{
-				"SplitRules":         BoolPtr(false),
-				"TestGenerations":    IntPtr(1),
-				"TestsPerRule":       IntPtr(1),
-				"RunsPerTest":        IntPtr(1),
-				"TestExpansions":     IntPtr(0),
-				"MaxRules":           IntPtr(6),
-				"MaxRulesPerTestGen": IntPtr(100),
-				"MaxTestsToRun":      IntPtr(10),
-				"Compliance":         BoolPtr(false),
+				"SplitRules":         util.Ptr(false),
+				"TestGenerations":    util.Ptr(1),
+				"TestsPerRule":       util.Ptr(1),
+				"RunsPerTest":        util.Ptr(1),
+				"TestExpansions":     util.Ptr(0),
+				"MaxRules":           util.Ptr(6),
+				"MaxRulesPerTestGen": util.Ptr(100),
+				"MaxTestsToRun":      util.Ptr(10),
+				"Compliance":         util.Ptr(false),
 			},
 			description: "All fields should be set from EffortMin configuration",
 		},
 		{
 			name: "apply to options with existing values",
 			initialOptions: &PromptPexOptions{
-				SplitRules:      BoolPtr(true), // Already set, should not change
-				TestGenerations: IntPtr(5),     // Already set, should not change
-				TestsPerRule:    nil,           // Not set, should be applied
-				MaxRules:        nil,           // Not set, should be applied
+				SplitRules:      util.Ptr(true), // Already set, should not change
+				TestGenerations: util.Ptr(5),    // Already set, should not change
+				TestsPerRule:    nil,            // Not set, should be applied
+				MaxRules:        nil,            // Not set, should be applied
 			},
 			effort: EffortMin,
 			expectedChanges: map[string]interface{}{
-				"SplitRules":         BoolPtr(true),  // Should remain unchanged
-				"TestGenerations":    IntPtr(5),      // Should remain unchanged
-				"TestsPerRule":       IntPtr(1),      // Should be applied from EffortMin
-				"RunsPerTest":        IntPtr(1),      // Should be applied from EffortMin
-				"TestExpansions":     IntPtr(0),      // Should be applied from EffortMin
-				"MaxRules":           IntPtr(6),      // Should be applied from EffortMin
-				"MaxRulesPerTestGen": IntPtr(100),    // Should be applied from EffortMin
-				"MaxTestsToRun":      IntPtr(10),     // Should be applied from EffortMin
-				"Compliance":         BoolPtr(false), // Should be applied from EffortMin
+				"SplitRules":         util.Ptr(true),  // Should remain unchanged
+				"TestGenerations":    util.Ptr(5),     // Should remain unchanged
+				"TestsPerRule":       util.Ptr(1),     // Should be applied from EffortMin
+				"RunsPerTest":        util.Ptr(1),     // Should be applied from EffortMin
+				"TestExpansions":     util.Ptr(0),     // Should be applied from EffortMin
+				"MaxRules":           util.Ptr(6),     // Should be applied from EffortMin
+				"MaxRulesPerTestGen": util.Ptr(100),   // Should be applied from EffortMin
+				"MaxTestsToRun":      util.Ptr(10),    // Should be applied from EffortMin
+				"Compliance":         util.Ptr(false), // Should be applied from EffortMin
 			},
 			description: "Only unset fields should be applied from configuration",
 		},
@@ -208,14 +210,14 @@ func TestApplyEffortConfiguration(t *testing.T) {
 			initialOptions: &PromptPexOptions{},
 			effort:         EffortLow,
 			expectedChanges: map[string]interface{}{
-				"TestExpansions":     IntPtr(0),
-				"TestGenerations":    IntPtr(1),
-				"MaxRules":           IntPtr(3),
-				"TestsPerRule":       IntPtr(2),
-				"RunsPerTest":        IntPtr(1),
-				"MaxRulesPerTestGen": IntPtr(5),
-				"SplitRules":         BoolPtr(true),
-				"MaxTestsToRun":      IntPtr(20),
+				"TestExpansions":     util.Ptr(0),
+				"TestGenerations":    util.Ptr(1),
+				"MaxRules":           util.Ptr(3),
+				"TestsPerRule":       util.Ptr(2),
+				"RunsPerTest":        util.Ptr(1),
+				"MaxRulesPerTestGen": util.Ptr(5),
+				"SplitRules":         util.Ptr(true),
+				"MaxTestsToRun":      util.Ptr(20),
 			},
 			description: "All fields should be set from EffortLow configuration",
 		},
@@ -224,11 +226,11 @@ func TestApplyEffortConfiguration(t *testing.T) {
 			initialOptions: &PromptPexOptions{},
 			effort:         EffortHigh,
 			expectedChanges: map[string]interface{}{
-				"TestExpansions":     IntPtr(1),
-				"MaxRules":           IntPtr(50),
-				"MaxRulesPerTestGen": IntPtr(2),
-				"SplitRules":         BoolPtr(true),
-				"TestGenerations":    IntPtr(2),
+				"TestExpansions":     util.Ptr(1),
+				"MaxRules":           util.Ptr(50),
+				"MaxRulesPerTestGen": util.Ptr(2),
+				"SplitRules":         util.Ptr(true),
+				"TestGenerations":    util.Ptr(2),
 			},
 			description: "All fields should be set from EffortHigh configuration",
 		},

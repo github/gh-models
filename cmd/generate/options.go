@@ -1,48 +1,33 @@
 package generate
 
+import "github.com/github/gh-models/pkg/util"
+
 // GetDefaultOptions returns default options for PromptPex
 func GetDefaultOptions() PromptPexOptions {
 	return PromptPexOptions{
-		Temperature:        Float64Ptr(0.0),
-		TestsPerRule:       IntPtr(3),
-		RunsPerTest:        IntPtr(2),
-		SplitRules:         BoolPtr(true),
-		MaxRulesPerTestGen: IntPtr(3),
-		TestGenerations:    IntPtr(2),
-		TestExpansions:     IntPtr(0),
-		FilterTestCount:    IntPtr(5),
-		Evals:              BoolPtr(false),
-		Compliance:         BoolPtr(false),
-		BaselineTests:      BoolPtr(false),
-		StoreCompletions:   BoolPtr(false),
-		CreateEvalRuns:     BoolPtr(false),
-		RateTests:          BoolPtr(false),
-		DisableSafety:      BoolPtr(false),
-		EvalCache:          BoolPtr(false),
-		TestRunCache:       BoolPtr(false),
-		OutputPrompts:      BoolPtr(false),
-		WorkflowDiagram:    BoolPtr(true),
-		LoadContext:        BoolPtr(false),
-		LoadContextFile:    StringPtr("promptpex_context.json"),
-		Verbose:            BoolPtr(false),
+		Temperature:        util.Ptr(0.0),
+		TestsPerRule:       util.Ptr(3),
+		RunsPerTest:        util.Ptr(2),
+		SplitRules:         util.Ptr(true),
+		MaxRulesPerTestGen: util.Ptr(3),
+		TestGenerations:    util.Ptr(2),
+		TestExpansions:     util.Ptr(0),
+		FilterTestCount:    util.Ptr(5),
+		Evals:              util.Ptr(false),
+		Compliance:         util.Ptr(false),
+		BaselineTests:      util.Ptr(false),
+		StoreCompletions:   util.Ptr(false),
+		CreateEvalRuns:     util.Ptr(false),
+		RateTests:          util.Ptr(false),
+		DisableSafety:      util.Ptr(false),
+		EvalCache:          util.Ptr(false),
+		TestRunCache:       util.Ptr(false),
+		OutputPrompts:      util.Ptr(false),
+		WorkflowDiagram:    util.Ptr(true),
+		LoadContext:        util.Ptr(false),
+		LoadContextFile:    util.Ptr("promptpex_context.json"),
+		Verbose:            util.Ptr(false),
 	}
-}
-
-// Helper functions to create pointers
-func BoolPtr(b bool) *bool {
-	return &b
-}
-
-func IntPtr(i int) *int {
-	return &i
-}
-
-func Float64Ptr(f float64) *float64 {
-	return &f
-}
-
-func StringPtr(s string) *string {
-	return &s
 }
 
 // GetOptions returns the current options for testing purposes

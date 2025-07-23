@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/github/gh-models/pkg/command"
+	"github.com/github/gh-models/pkg/util"
 )
 
 func TestCreateContext(t *testing.T) {
@@ -51,7 +52,7 @@ messages:
   - role: user
     content: Analyze {{data}}`,
 			options: PromptPexOptions{
-				Effort: StringPtr("high"),
+				Effort: util.Ptr("high"),
 			},
 			expectError: false,
 			expectedFields: map[string]interface{}{

@@ -5,11 +5,6 @@ import (
 	"testing"
 )
 
-// Helper function to create string pointers for tests
-func stringPtr(s string) *string {
-	return &s
-}
-
 func TestParseTestsFromLLMResponse_DirectUnmarshal(t *testing.T) {
 	handler := &generateCommandHandler{}
 
