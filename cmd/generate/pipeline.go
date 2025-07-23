@@ -9,8 +9,8 @@ import (
 	"github.com/github/gh-models/pkg/prompt"
 )
 
-// runPipeline executes the main PromptPex pipeline
-func (h *generateCommandHandler) runPipeline(context *PromptPexContext) error {
+// RunTestGenerationPipeline executes the main PromptPex pipeline
+func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexContext) error {
 	h.cfg.WriteToOut(fmt.Sprintf("Running pipeline for prompt: %s", context.Prompt.Name))
 
 	// Step 1: Generate Intent
@@ -108,7 +108,7 @@ func (h *generateCommandHandler) generateIntent(context *PromptPexContext) error
 Prompt:
 %s
 
-Intent:`, context.Prompt.Messages)
+Intent:`, RenderMessagesToString(context.Prompt.Messages))
 
 	response, err := h.client.GetChatCompletionStream(h.ctx, azuremodels.ChatCompletionOptions{
 		Model: "openai/gpt-4o-mini", // GitHub Models compatible model
@@ -141,9 +141,9 @@ func (h *generateCommandHandler) generateInputSpec(context *PromptPexContext) er
 List the expected input parameters, their types, constraints, and examples.
 
 Prompt:
-%v
+%s
 
-Input Specification:`, context.Prompt)
+Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 
 	response, err := h.client.GetChatCompletionStream(h.ctx, azuremodels.ChatCompletionOptions{
 		Model: "openai/gpt-4o-mini", // GitHub Models compatible model
@@ -177,9 +177,9 @@ These rules should describe what makes a valid output from this prompt.
 List each rule on a separate line starting with a number.
 
 Prompt:
-%v
+%s
 
-Output Rules:`, context.Prompt)
+Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 
 	response, err := h.client.GetChatCompletionStream(h.ctx, azuremodels.ChatCompletionOptions{
 		Model: "openai/gpt-4o-mini", // GitHub Models compatible model
@@ -262,7 +262,7 @@ OUTPUT RULES:
 %s
 
 PROMPT:
-%v
+%s
 
 Generate test cases that:
 1. Test the core functionality described in the intent
@@ -283,7 +283,7 @@ Generate exactly %d diverse test cases:`, testsPerRule*3,
 		context.Intent,
 		context.InputSpec,
 		context.Rules,
-		context.Prompt,
+		RenderMessagesToString(context.Prompt.Messages),
 		testsPerRule*3)
 
 	response, err := h.client.GetChatCompletionStream(h.ctx, azuremodels.ChatCompletionOptions{
