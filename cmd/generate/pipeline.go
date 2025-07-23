@@ -88,17 +88,6 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 	return nil
 }
 
-// extractContentFromCompletion safely extracts content from a completion response
-func (h *generateCommandHandler) extractContentFromCompletion(completion azuremodels.ChatCompletion) (string, error) {
-	if len(completion.Choices) == 0 {
-		return "", fmt.Errorf("no completion choices returned from model")
-	}
-	if completion.Choices[0].Message == nil || completion.Choices[0].Message.Content == nil {
-		return "", fmt.Errorf("no content in completion response")
-	}
-	return *completion.Choices[0].Message.Content, nil
-}
-
 // generateIntent generates the intent of the prompt
 func (h *generateCommandHandler) generateIntent(context *PromptPexContext) error {
 	h.cfg.WriteToOut("Generating intent...\n")
@@ -114,30 +103,16 @@ Intent:`, RenderMessagesToString(context.Prompt.Messages))
 		{Role: azuremodels.ChatMessageRoleSystem, Content: &system},
 		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
 	}
-
 	options := azuremodels.ChatCompletionOptions{
 		Model:       "openai/gpt-4o", // GitHub Models compatible model
 		Messages:    messages,
 		Temperature: Float64Ptr(0.0),
+		Stream:      false,
 	}
-
-	h.logLLMRequest("intent", options, messages)
-
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
+	intent, err := h.callModelWithRetry("intent", options)
 	if err != nil {
 		return err
 	}
-	completion, err := response.Reader.Read()
-	if err != nil {
-		return err
-	}
-	intent, err := h.extractContentFromCompletion(completion)
-	if err != nil {
-		return err
-	}
-
-	h.logLLMResponse(intent)
-
 	context.Intent = intent
 
 	return nil
@@ -165,23 +140,10 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 		Temperature: Float64Ptr(0.0),
 	}
 
-	h.logLLMRequest("input spec", options, messages)
-
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
+	inputSpec, err := h.callModelWithRetry("input spec", options)
 	if err != nil {
 		return err
 	}
-	completion, err := response.Reader.Read()
-	if err != nil {
-		return err
-	}
-	inputSpec, err := h.extractContentFromCompletion(completion)
-	if err != nil {
-		return err
-	}
-
-	h.logLLMResponse(inputSpec)
-
 	context.InputSpec = inputSpec
 
 	return nil
@@ -210,23 +172,10 @@ Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 		Temperature: Float64Ptr(0.0),
 	}
 
-	h.logLLMRequest("output rules", options, messages)
-
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
+	rules, err := h.callModelWithRetry("output rules", options)
 	if err != nil {
 		return err
 	}
-	completion, err := response.Reader.Read()
-	if err != nil {
-		return err
-	}
-	rules, err := h.extractContentFromCompletion(completion)
-	if err != nil {
-		return err
-	}
-
-	h.logLLMResponse(rules)
-
 	context.Rules = rules
 
 	return nil
@@ -254,24 +203,10 @@ Inverse Rules:`, context.Rules)
 		Temperature: Float64Ptr(0.0),
 	}
 
-	h.logLLMRequest("inverse rules", options, messages)
-
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
-
+	inverseRules, err := h.callModelWithRetry("inverse output rules", options)
 	if err != nil {
 		return err
 	}
-	completion, err := response.Reader.Read()
-	if err != nil {
-		return err
-	}
-	inverseRules, err := h.extractContentFromCompletion(completion)
-	if err != nil {
-		return err
-	}
-
-	h.logLLMResponse(inverseRules)
-
 	context.InverseRules = inverseRules
 
 	return nil
@@ -333,23 +268,7 @@ Generate exactly %d diverse test cases:`, testsPerRule*3,
 		Temperature: Float64Ptr(0.3),
 	}
 
-	h.logLLMRequest("tests", options, messages)
-
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
-
-	if err != nil {
-		return err
-	}
-
-	// Parse the JSON response
-	completion, err := response.Reader.Read()
-	if err != nil {
-		return err
-	}
-	content := *completion.Choices[0].Message.Content
-
-	h.logLLMResponse(content)
-
+	content, err := h.callModelWithRetry("tests", options)
 	h.cfg.WriteToOut(fmt.Sprintf("LLM Response for tests: %s", content))
 
 	tests, err := h.ParseTestsFromLLMResponse(content)
