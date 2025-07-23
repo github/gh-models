@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/github/gh-models/internal/azuremodels"
 )
 
@@ -18,6 +19,11 @@ func (h *generateCommandHandler) callModelWithRetry(step string, req azuremodels
 	h.logLLMRequest(step, req)
 
 	for attempt := 0; attempt <= maxRetries; attempt++ {
+		sp := spinner.New(spinner.CharSets[14], 100*time.Millisecond, spinner.WithWriter(h.cfg.ErrOut))
+		sp.Start()
+		//nolint:gocritic,revive // TODO
+		defer sp.Stop()
+
 		resp, err := h.client.GetChatCompletionStream(ctx, req, h.org)
 		if err != nil {
 			var rateLimitErr *azuremodels.RateLimitError
@@ -39,10 +45,13 @@ func (h *generateCommandHandler) callModelWithRetry(step string, req azuremodels
 			// For non-rate-limit errors, return immediately
 			return "", err
 		}
+		reader := resp.Reader
+		//nolint:gocritic,revive // TODO
+		defer reader.Close()
 
 		var content strings.Builder
 		for {
-			completion, err := resp.Reader.Read()
+			completion, err := reader.Read()
 			if err != nil {
 				if errors.Is(err, context.Canceled) || strings.Contains(err.Error(), "EOF") {
 					break
