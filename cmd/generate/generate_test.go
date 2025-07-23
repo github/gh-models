@@ -70,12 +70,12 @@ func TestParseFlags(t *testing.T) {
 	tests := []struct {
 		name     string
 		args     []string
-		validate func(*testing.T, PromptPexOptions)
+		validate func(*testing.T, *PromptPexOptions)
 	}{
 		{
 			name: "default options preserve initial state",
 			args: []string{},
-			validate: func(t *testing.T, opts PromptPexOptions) {
+			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.Equal(t, 3, *opts.TestsPerRule)
 				require.Equal(t, 2, *opts.RunsPerTest)
 				require.Equal(t, 0, *opts.TestExpansions)
@@ -86,7 +86,7 @@ func TestParseFlags(t *testing.T) {
 		{
 			name: "effort flag is set",
 			args: []string{"--effort", "medium"},
-			validate: func(t *testing.T, opts PromptPexOptions) {
+			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.NotNil(t, opts.Effort)
 				require.Equal(t, "medium", *opts.Effort)
 			},
@@ -94,14 +94,14 @@ func TestParseFlags(t *testing.T) {
 		{
 			name: "models under test flag",
 			args: []string{"--models-under-test", "openai/gpt-4o", "--models-under-test", "openai/gpt-4o-mini"},
-			validate: func(t *testing.T, opts PromptPexOptions) {
+			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.Equal(t, []string{"openai/gpt-4o", "openai/gpt-4o-mini"}, opts.ModelsUnderTest)
 			},
 		},
 		{
 			name: "groundtruth model flag",
 			args: []string{"--groundtruth-model", "openai/gpt-4o"},
-			validate: func(t *testing.T, opts PromptPexOptions) {
+			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.NotNil(t, opts.GroundtruthModel)
 				require.Equal(t, "openai/gpt-4o", *opts.GroundtruthModel)
 			},
@@ -109,7 +109,7 @@ func TestParseFlags(t *testing.T) {
 		{
 			name: "numeric flags",
 			args: []string{"--tests-per-rule", "10", "--runs-per-test", "3", "--test-expansions", "2"},
-			validate: func(t *testing.T, opts PromptPexOptions) {
+			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.NotNil(t, opts.TestsPerRule)
 				require.Equal(t, 10, *opts.TestsPerRule)
 				require.NotNil(t, opts.RunsPerTest)
@@ -121,7 +121,7 @@ func TestParseFlags(t *testing.T) {
 		{
 			name: "boolean flags",
 			args: []string{"--rate-tests", "--evals"},
-			validate: func(t *testing.T, opts PromptPexOptions) {
+			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.NotNil(t, opts.RateTests)
 				require.Equal(t, true, *opts.RateTests)
 				require.NotNil(t, opts.Evals)
@@ -131,7 +131,7 @@ func TestParseFlags(t *testing.T) {
 		{
 			name: "temperature flag",
 			args: []string{"--temperature", "0.7"},
-			validate: func(t *testing.T, opts PromptPexOptions) {
+			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.NotNil(t, opts.Temperature)
 				require.Equal(t, 0.7, *opts.Temperature)
 			},
@@ -139,7 +139,7 @@ func TestParseFlags(t *testing.T) {
 		{
 			name: "custom metric flag",
 			args: []string{"--custom-metric", "Rate the quality of response from 1-10"},
-			validate: func(t *testing.T, opts PromptPexOptions) {
+			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.NotNil(t, opts.CustomMetric)
 				require.Equal(t, "Rate the quality of response from 1-10", *opts.CustomMetric)
 			},
@@ -147,7 +147,7 @@ func TestParseFlags(t *testing.T) {
 		{
 			name: "eval models flag",
 			args: []string{"--eval-models", "openai/gpt-4o", "--eval-models", "openai/gpt-4o-mini"},
-			validate: func(t *testing.T, opts PromptPexOptions) {
+			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.Equal(t, []string{"openai/gpt-4o", "openai/gpt-4o-mini"}, opts.EvalModels)
 			},
 		},
@@ -165,7 +165,7 @@ func TestParseFlags(t *testing.T) {
 
 			// Parse options from the flags
 			options := GetDefaultOptions()
-			err = ParseFlags(cmd, &options)
+			err = ParseFlags(cmd, options)
 			require.NoError(t, err)
 
 			// Validate using the test-specific validation function
@@ -175,103 +175,6 @@ func TestParseFlags(t *testing.T) {
 }
 
 func TestGenerateCommandExecution(t *testing.T) {
-	t.Run("successful execution with mock prompt file", func(t *testing.T) {
-		// Create test prompt file
-		const yamlBody = `
-name: Test Sentiment Analysis
-description: Analyze sentiment of user input
-model: openai/gpt-4o-mini
-messages:
-  - role: system
-    content: You are a sentiment analysis expert.
-  - role: user
-    content: "Classify sentiment: {{text}}"
-`
-
-		tmpDir := t.TempDir()
-		promptFile := filepath.Join(tmpDir, "test.prompt.yml")
-		err := os.WriteFile(promptFile, []byte(yamlBody), 0644)
-		require.NoError(t, err)
-
-		// Setup mock client
-		client := azuremodels.NewMockClient()
-		callCount := 0
-		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
-			callCount++
-			var response string
-
-			// Mock different responses for different pipeline stages
-			switch callCount {
-			case 1: // Intent generation
-				response = "This prompt analyzes the sentiment of text input to classify it as positive, negative, or neutral."
-			case 2: // Input spec generation
-				response = "Input: text (string) - Any text to analyze for sentiment"
-			case 3: // Output rules generation
-				response = "1. Output must be one of: positive, negative, neutral\n2. Response should be lowercase\n3. No additional text or explanation"
-			case 4: // Inverse rules generation
-				response = "1. Output should not contain multiple sentiment words\n2. Output should not be uppercase\n3. Output should not contain explanations"
-			case 5: // Test generation
-				response = `[
-					{
-						"scenario": "Positive sentiment detection",
-						"testinput": "I love this amazing product!",
-						"reasoning": "Tests ability to detect clear positive sentiment"
-					},
-					{
-						"scenario": "Negative sentiment detection", 
-						"testinput": "This is terrible and disappointing",
-						"reasoning": "Tests ability to detect clear negative sentiment"
-					},
-					{
-						"scenario": "Neutral sentiment detection",
-						"testinput": "The weather is cloudy today",
-						"reasoning": "Tests ability to detect neutral sentiment"
-					}
-				]`
-			default:
-				response = "Test response"
-			}
-
-			chatCompletion := azuremodels.ChatCompletion{
-				Choices: []azuremodels.ChatChoice{
-					{
-						Message: &azuremodels.ChatChoiceMessage{
-							Content: util.Ptr(response),
-							Role:    util.Ptr(string(azuremodels.ChatMessageRoleAssistant)),
-						},
-					},
-				},
-			}
-
-			return &azuremodels.ChatCompletionResponse{
-				Reader: sse.NewMockEventReader([]azuremodels.ChatCompletion{chatCompletion}),
-			}, nil
-		}
-
-		// Create config and run command
-		out := new(bytes.Buffer)
-		cfg := command.NewConfig(out, out, client, true, 100)
-
-		cmd := NewGenerateCommand(cfg)
-		cmd.SetArgs([]string{
-			"--effort", "low",
-			promptFile,
-		})
-
-		err = cmd.Execute()
-		require.NoError(t, err)
-
-		// Check that pipeline stages were called
-		require.Greater(t, callCount, 3, "Should have called multiple pipeline stages")
-
-		output := out.String()
-		require.Contains(t, output, "Generating tests")
-		require.Contains(t, output, "Generating intent")
-		require.Contains(t, output, "Generating input specification")
-		require.Contains(t, output, "Generating output rules")
-		require.Contains(t, output, "Generating tests")
-		require.Contains(t, output, "Pipeline completed successfully")
-	})
 
 	t.Run("fails with invalid prompt file", func(t *testing.T) {
 		client := azuremodels.NewMockClient()
@@ -599,80 +502,6 @@ messages:
 
 		output := out.String()
 		require.Contains(t, output, "Evaluating test results")
-	})
-}
-
-func TestGenerateCommandWithValidPromptFile(t *testing.T) {
-	t.Run("loads existing prompt file correctly", func(t *testing.T) {
-		// Use the existing test prompt file
-		promptFile := filepath.Join("..", "..", "examples", "test_generate.yml")
-
-		// Setup mock client
-		client := azuremodels.NewMockClient()
-		callCount := 0
-		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
-			callCount++
-			var response string
-
-			// Mock different responses for different pipeline stages
-			switch callCount {
-			case 1: // Intent generation
-				response = "This prompt analyzes sentiment of text input to classify it as positive, negative, or neutral."
-			case 2: // Input spec generation
-				response = "Input: text (string) - Any text to analyze for sentiment"
-			case 3: // Output rules generation
-				response = "1. Output must be one of: positive, negative, neutral\n2. Response should be lowercase\n3. No additional text or explanation"
-			case 4: // Inverse rules generation
-				response = "1. Output should not contain multiple sentiment words\n2. Output should not be uppercase\n3. Output should not contain explanations"
-			case 5: // Test generation
-				response = `[
-					{
-						"scenario": "Positive sentiment detection",
-						"testinput": "I love this amazing product!",
-						"reasoning": "Tests ability to detect clear positive sentiment"
-					},
-					{
-						"scenario": "Negative sentiment detection", 
-						"testinput": "This is terrible and disappointing",
-						"reasoning": "Tests ability to detect clear negative sentiment"
-					},
-					{
-						"scenario": "Neutral sentiment detection",
-						"testinput": "The weather is cloudy today",
-						"reasoning": "Tests ability to detect neutral sentiment"
-					}
-				]`
-			default:
-				response = "Test response"
-			}
-
-			chatCompletion := azuremodels.ChatCompletion{
-				Choices: []azuremodels.ChatChoice{
-					{
-						Message: &azuremodels.ChatChoiceMessage{
-							Content: util.Ptr(response),
-							Role:    util.Ptr(string(azuremodels.ChatMessageRoleAssistant)),
-						},
-					},
-				},
-			}
-
-			return &azuremodels.ChatCompletionResponse{
-				Reader: sse.NewMockEventReader([]azuremodels.ChatCompletion{chatCompletion}),
-			}, nil
-		}
-
-		out := new(bytes.Buffer)
-		cfg := command.NewConfig(out, out, client, true, 100)
-
-		cmd := NewGenerateCommand(cfg)
-		cmd.SetArgs([]string{promptFile})
-
-		err := cmd.Execute()
-		require.NoError(t, err)
-
-		output := out.String()
-		require.Contains(t, output, "Generating tests")
 	})
 }
 

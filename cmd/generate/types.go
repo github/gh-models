@@ -121,7 +121,7 @@ type PromptPexContext struct {
 	BaselineTestEvals string                   `json:"baselineTestEvals" yaml:"baselineTestEvals"`
 	TestSamples       []map[string]interface{} `json:"testSamples,omitempty" yaml:"testSamples,omitempty"`
 	ReuseResults      *bool                    `json:"reuseResults,omitempty" yaml:"reuseResults,omitempty"`
-	Options           PromptPexOptions         `json:"options" yaml:"options"`
+	Options           *PromptPexOptions        `json:"options" yaml:"options"`
 }
 
 // PromptPexTest represents a single test case

@@ -14,7 +14,7 @@ func TestToGitHubModelsPrompt(t *testing.T) {
 		name        string
 		modelID     string
 		context     *PromptPexContext
-		options     PromptPexOptions
+		options     *PromptPexOptions
 		expected    func(*prompt.File) bool // validation function
 		expectError bool
 	}{
@@ -45,9 +45,9 @@ func TestToGitHubModelsPrompt(t *testing.T) {
 					},
 				},
 			},
-			options: PromptPexOptions{
-				Temperature: Float64Ptr(0.7),
-			},
+			options: util.Ptr(PromptPexOptions{
+				Temperature: util.Ptr(0.7),
+			}),
 			expected: func(pf *prompt.File) bool {
 				return pf.Model == "gpt-4o" &&
 					pf.Name == "test-prompt" &&
@@ -80,9 +80,9 @@ func TestToGitHubModelsPrompt(t *testing.T) {
 					},
 				},
 			},
-			options: PromptPexOptions{
-				Temperature: Float64Ptr(0.5),
-			},
+			options: util.Ptr(PromptPexOptions{
+				Temperature: util.Ptr(0.5),
+			}),
 			expected: func(pf *prompt.File) bool {
 				return pf.Model == "gpt-3.5-turbo" &&
 					pf.Name == "custom-model-test" &&
@@ -114,7 +114,7 @@ func TestToGitHubModelsPrompt(t *testing.T) {
 					},
 				},
 			},
-			options: PromptPexOptions{},
+			options: util.Ptr(PromptPexOptions{}),
 			expected: func(pf *prompt.File) bool {
 				if len(pf.TestData) != 1 {
 					return false
@@ -153,7 +153,7 @@ func TestToGitHubModelsPrompt(t *testing.T) {
 					},
 				},
 			},
-			options: PromptPexOptions{},
+			options: util.Ptr(PromptPexOptions{}),
 			expected: func(pf *prompt.File) bool {
 				// Only the valid input should remain
 				return len(pf.TestData) == 1 &&
@@ -290,7 +290,7 @@ func TestExtractTemplateVariables(t *testing.T) {
 			}
 			handler := &generateCommandHandler{
 				cfg:     cfg,
-				options: PromptPexOptions{},
+				options: util.Ptr(PromptPexOptions{}),
 			}
 
 			result := handler.extractTemplateVariables(tt.context)

@@ -15,7 +15,7 @@ type generateCommandHandler struct {
 	ctx     context.Context
 	cfg     *command.Config
 	client  azuremodels.Client
-	options PromptPexOptions
+	options *PromptPexOptions
 	org     string
 }
 
@@ -43,7 +43,7 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 			options := GetDefaultOptions()
 
 			// Parse flags and apply to options
-			if err := ParseFlags(cmd, &options); err != nil {
+			if err := ParseFlags(cmd, options); err != nil {
 				return fmt.Errorf("failed to parse flags: %w", err)
 			}
 

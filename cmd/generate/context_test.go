@@ -30,7 +30,7 @@ messages:
   - role: user
     content: Hello {{input}}!`,
 			options: PromptPexOptions{
-				Temperature: Float64Ptr(0.7),
+				Temperature: util.Ptr(0.7),
 			},
 			expectError: false,
 			expectedFields: map[string]interface{}{
@@ -103,7 +103,7 @@ messages:
 			config := &command.Config{}
 			handler := &generateCommandHandler{
 				cfg:     config,
-				options: tt.options,
+				options: &tt.options,
 			}
 
 			// Test CreateContext
@@ -195,7 +195,7 @@ messages:
 	config := &command.Config{}
 	handler := &generateCommandHandler{
 		cfg:     config,
-		options: PromptPexOptions{},
+		options: util.Ptr(PromptPexOptions{}),
 	}
 
 	// Create multiple contexts and check that RunIDs are generated
@@ -233,7 +233,7 @@ func TestCreateContextWithNonExistentFile(t *testing.T) {
 	config := &command.Config{}
 	handler := &generateCommandHandler{
 		cfg:     config,
-		options: PromptPexOptions{},
+		options: util.Ptr(PromptPexOptions{}),
 	}
 
 	_, err := handler.CreateContext("/nonexistent/file.prompt.yml")
@@ -297,7 +297,7 @@ messages:
 			config := &command.Config{}
 			handler := &generateCommandHandler{
 				cfg:     config,
-				options: PromptPexOptions{},
+				options: util.Ptr(PromptPexOptions{}),
 			}
 
 			_, err = handler.CreateContext(promptFile)
