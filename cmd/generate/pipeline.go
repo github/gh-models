@@ -13,6 +13,12 @@ import (
 func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexContext) error {
 	h.cfg.WriteToOut(fmt.Sprintf("Generating tests for '%s'\n", context.Prompt.Name))
 
+	// test LLM connection
+	err := testConnection(h)
+	if err != nil {
+		return err
+	}
+
 	// Step 1: Generate Intent
 	if err := h.generateIntent(context); err != nil {
 		return fmt.Errorf("failed to generate intent: %w", err)
@@ -85,6 +91,19 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 	}
 
 	h.cfg.WriteToOut("Pipeline completed successfully.")
+	return nil
+}
+
+func testConnection(h *generateCommandHandler) error {
+	result, err := h.callModelWithRetry("configuration", azuremodels.ChatCompletionOptions{
+		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Messages:    []azuremodels.ChatMessage{{Role: azuremodels.ChatMessageRoleSystem, Content: StringPtr("write a haiku in 5 emojis")}},
+		Temperature: Float64Ptr(0.0),
+	})
+	if err != nil {
+		return fmt.Errorf("failed to test LLM connection: %w", err)
+	}
+	h.cfg.WriteToOut(fmt.Sprintf("LLM connection test successful: %s\n", result))
 	return nil
 }
 
