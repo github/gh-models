@@ -67,6 +67,8 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 
 			// Run the PromptPex pipeline
 			if err := handler.RunTestGenerationPipeline(context); err != nil {
+				// Disable usage help for pipeline failures
+				cmd.SilenceUsage = true
 				return fmt.Errorf("pipeline failed: %w", err)
 			}
 
