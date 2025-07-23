@@ -11,7 +11,7 @@ import (
 
 // RunTestGenerationPipeline executes the main PromptPex pipeline
 func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexContext) error {
-	h.cfg.WriteToOut(fmt.Sprintf("Running pipeline for prompt: %s", context.Prompt.Name))
+	h.cfg.WriteToOut(fmt.Sprintf("Generating tests for '%s'\n", context.Prompt.Name))
 
 	// Step 1: Generate Intent
 	if err := h.generateIntent(context); err != nil {
@@ -101,22 +101,29 @@ func (h *generateCommandHandler) extractContentFromCompletion(completion azuremo
 
 // generateIntent generates the intent of the prompt
 func (h *generateCommandHandler) generateIntent(context *PromptPexContext) error {
-	h.cfg.WriteToOut("Generating intent...")
+	h.cfg.WriteToOut("Generating intent...\n")
 
-	prompt := fmt.Sprintf(`Analyze the following prompt and describe its intent in 2-3 sentences.
-
-Prompt:
+	system := `Analyze the following prompt and describe its intent in 2-3 sentences.`
+	prompt := fmt.Sprintf(`<prompt>
 %s
+</prompt>
 
 Intent:`, RenderMessagesToString(context.Prompt.Messages))
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, azuremodels.ChatCompletionOptions{
-		Model: "openai/gpt-4o-mini", // GitHub Models compatible model
-		Messages: []azuremodels.ChatMessage{
-			{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-		},
+	messages := []azuremodels.ChatMessage{
+		{Role: azuremodels.ChatMessageRoleSystem, Content: &system},
+		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+	}
+
+	options := azuremodels.ChatCompletionOptions{
+		Model:       "openai/gpt-4o", // GitHub Models compatible model
+		Messages:    messages,
 		Temperature: Float64Ptr(0.0),
-	}, h.org)
+	}
+
+	h.logLLMRequest("intent", options, messages)
+
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 	if err != nil {
 		return err
 	}
@@ -128,6 +135,9 @@ Intent:`, RenderMessagesToString(context.Prompt.Messages))
 	if err != nil {
 		return err
 	}
+
+	h.logLLMResponse(intent)
+
 	context.Intent = intent
 
 	return nil
@@ -135,7 +145,7 @@ Intent:`, RenderMessagesToString(context.Prompt.Messages))
 
 // generateInputSpec generates the input specification
 func (h *generateCommandHandler) generateInputSpec(context *PromptPexContext) error {
-	h.cfg.WriteToOut("Generating input specification...")
+	h.cfg.WriteToOut("Generating input specification...\n")
 
 	prompt := fmt.Sprintf(`Analyze the following prompt and generate a specification for its inputs.
 List the expected input parameters, their types, constraints, and examples.
@@ -145,13 +155,19 @@ Prompt:
 
 Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, azuremodels.ChatCompletionOptions{
-		Model: "openai/gpt-4o-mini", // GitHub Models compatible model
-		Messages: []azuremodels.ChatMessage{
-			{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-		},
+	messages := []azuremodels.ChatMessage{
+		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+	}
+
+	options := azuremodels.ChatCompletionOptions{
+		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Messages:    messages,
 		Temperature: Float64Ptr(0.0),
-	}, h.org)
+	}
+
+	h.logLLMRequest("input spec", options, messages)
+
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 	if err != nil {
 		return err
 	}
@@ -163,6 +179,9 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 	if err != nil {
 		return err
 	}
+
+	h.logLLMResponse(inputSpec)
+
 	context.InputSpec = inputSpec
 
 	return nil
@@ -170,7 +189,7 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 
 // generateOutputRules generates output rules for the prompt
 func (h *generateCommandHandler) generateOutputRules(context *PromptPexContext) error {
-	h.cfg.WriteToOut("Generating output rules...")
+	h.cfg.WriteToOut("Generating output rules...\n")
 
 	prompt := fmt.Sprintf(`Analyze the following prompt and generate a list of output rules.
 These rules should describe what makes a valid output from this prompt.
@@ -181,13 +200,19 @@ Prompt:
 
 Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, azuremodels.ChatCompletionOptions{
-		Model: "openai/gpt-4o-mini", // GitHub Models compatible model
-		Messages: []azuremodels.ChatMessage{
-			{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-		},
+	messages := []azuremodels.ChatMessage{
+		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+	}
+
+	options := azuremodels.ChatCompletionOptions{
+		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Messages:    messages,
 		Temperature: Float64Ptr(0.0),
-	}, h.org)
+	}
+
+	h.logLLMRequest("output rules", options, messages)
+
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 	if err != nil {
 		return err
 	}
@@ -199,6 +224,9 @@ Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 	if err != nil {
 		return err
 	}
+
+	h.logLLMResponse(rules)
+
 	context.Rules = rules
 
 	return nil
@@ -206,7 +234,7 @@ Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 
 // generateInverseRules generates inverse rules (what makes an invalid output)
 func (h *generateCommandHandler) generateInverseRules(context *PromptPexContext) error {
-	h.cfg.WriteToOut("Generating inverse rules...")
+	h.cfg.WriteToOut("Generating inverse rules...\n")
 
 	prompt := fmt.Sprintf(`Based on the following output rules, generate inverse rules that describe what would make an INVALID output.
 These should be the opposite or negation of the original rules.
@@ -216,13 +244,19 @@ Original Rules:
 
 Inverse Rules:`, context.Rules)
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, azuremodels.ChatCompletionOptions{
-		Model: "openai/gpt-4o-mini", // GitHub Models compatible model
-		Messages: []azuremodels.ChatMessage{
-			{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-		},
+	messages := []azuremodels.ChatMessage{
+		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+	}
+
+	options := azuremodels.ChatCompletionOptions{
+		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Messages:    messages,
 		Temperature: Float64Ptr(0.0),
-	}, h.org)
+	}
+
+	h.logLLMRequest("inverse rules", options, messages)
+
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 
 	if err != nil {
 		return err
@@ -235,6 +269,9 @@ Inverse Rules:`, context.Rules)
 	if err != nil {
 		return err
 	}
+
+	h.logLLMResponse(inverseRules)
+
 	context.InverseRules = inverseRules
 
 	return nil
@@ -242,7 +279,7 @@ Inverse Rules:`, context.Rules)
 
 // generateTests generates test cases for the prompt
 func (h *generateCommandHandler) generateTests(context *PromptPexContext) error {
-	h.cfg.WriteToOut("Generating tests...")
+	h.cfg.WriteToOut("Generating tests...\n")
 
 	testsPerRule := 3
 	if h.options.TestsPerRule != nil {
@@ -286,13 +323,19 @@ Generate exactly %d diverse test cases:`, testsPerRule*3,
 		RenderMessagesToString(context.Prompt.Messages),
 		testsPerRule*3)
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, azuremodels.ChatCompletionOptions{
-		Model: "openai/gpt-4o-mini", // GitHub Models compatible model
-		Messages: []azuremodels.ChatMessage{
-			{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-		},
+	messages := []azuremodels.ChatMessage{
+		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+	}
+
+	options := azuremodels.ChatCompletionOptions{
+		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Messages:    messages,
 		Temperature: Float64Ptr(0.3),
-	}, h.org)
+	}
+
+	h.logLLMRequest("tests", options, messages)
+
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 
 	if err != nil {
 		return err
@@ -304,6 +347,9 @@ Generate exactly %d diverse test cases:`, testsPerRule*3,
 		return err
 	}
 	content := *completion.Choices[0].Message.Content
+
+	h.logLLMResponse(content)
+
 	h.cfg.WriteToOut(fmt.Sprintf("LLM Response for tests: %s", content))
 
 	tests, err := h.ParseTestsFromLLMResponse(content)
@@ -328,7 +374,7 @@ Generate exactly %d diverse test cases:`, testsPerRule*3,
 
 // runTests executes tests against the specified models
 func (h *generateCommandHandler) runTests(context *PromptPexContext) error {
-	h.cfg.WriteToOut("Running tests against models...")
+	h.cfg.WriteToOut("Running tests against models...\n")
 
 	var results []PromptPexTestResult
 	runsPerTest := 1
@@ -375,11 +421,6 @@ func (h *generateCommandHandler) runTests(context *PromptPexContext) error {
 	return nil
 }
 
-// runSingleTest runs a single test against a model
-func (h *generateCommandHandler) runSingleTest(input, modelName string) (string, error) {
-	return h.runSingleTestWithContext(input, modelName, nil)
-}
-
 // runSingleTestWithContext runs a single test against a model with context
 func (h *generateCommandHandler) runSingleTestWithContext(input, modelName string, context *PromptPexContext) (string, error) {
 	// Use the context if provided, otherwise use the stored context
@@ -421,11 +462,13 @@ func (h *generateCommandHandler) runSingleTestWithContext(input, modelName strin
 		})
 	}
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, azuremodels.ChatCompletionOptions{
+	options := azuremodels.ChatCompletionOptions{
 		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
 		Messages:    openaiMessages,
 		Temperature: Float64Ptr(0.0),
-	}, h.org)
+	}
+
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 	if err != nil {
 		return "", err
 	}
@@ -433,12 +476,14 @@ func (h *generateCommandHandler) runSingleTestWithContext(input, modelName strin
 	if err != nil {
 		return "", err
 	}
-	return *completion.Choices[0].Message.Content, nil
+	result := *completion.Choices[0].Message.Content
+
+	return result, nil
 }
 
 // evaluateResults evaluates test results using the specified evaluation models
 func (h *generateCommandHandler) evaluateResults(context *PromptPexContext) error {
-	h.cfg.WriteToOut("Evaluating test results...")
+	h.cfg.WriteToOut("Evaluating test results...\n")
 
 	// Parse existing test results
 	var results []PromptPexTestResult
@@ -494,14 +539,17 @@ Output to evaluate:
 
 Compliance:`, rules, output)
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, azuremodels.ChatCompletionOptions{
+	messages := []azuremodels.ChatMessage{
+		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+	}
 
-		Model: "openai/gpt-4o-mini", // GitHub Models compatible model
-		Messages: []azuremodels.ChatMessage{
-			{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-		},
+	options := azuremodels.ChatCompletionOptions{
+		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Messages:    messages,
 		Temperature: Float64Ptr(0.0),
-	}, h.org)
+	}
+
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 
 	if err != nil {
 		return EvalResultUnknown, err
@@ -512,6 +560,7 @@ Compliance:`, rules, output)
 		return EvalResultUnknown, err
 	}
 	result := strings.ToLower(strings.TrimSpace(*completion.Choices[0].Message.Content))
+
 	switch result {
 	case "ok":
 		return EvalResultOK, nil
@@ -531,14 +580,17 @@ Output to evaluate:
 
 Score (0-1):`, metric, output)
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, azuremodels.ChatCompletionOptions{
+	messages := []azuremodels.ChatMessage{
+		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+	}
 
-		Model: "openai/gpt-4o-mini", // GitHub Models compatible model
-		Messages: []azuremodels.ChatMessage{
-			{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-		},
+	options := azuremodels.ChatCompletionOptions{
+		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Messages:    messages,
 		Temperature: Float64Ptr(0.0),
-	}, h.org)
+	}
+
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 
 	if err != nil {
 		return 0.0, err
@@ -551,6 +603,7 @@ Score (0-1):`, metric, output)
 
 	// Parse the score from the response
 	scoreStr := strings.TrimSpace(*completion.Choices[0].Message.Content)
+
 	var score float64
 	if _, err := fmt.Sscanf(scoreStr, "%f", &score); err != nil {
 		return 0.0, fmt.Errorf("failed to parse score: %w", err)
@@ -632,14 +685,17 @@ Reasoning: %s
 Generate variations in JSON format as an array of objects with "scenario", "testinput", and "reasoning" fields.`,
 		*test.Scenario, test.TestInput, *test.Reasoning)
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, azuremodels.ChatCompletionOptions{
+	messages := []azuremodels.ChatMessage{
+		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+	}
 
-		Model: "openai/gpt-4o-mini", // GitHub Models compatible model
-		Messages: []azuremodels.ChatMessage{
-			{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-		},
+	options := azuremodels.ChatCompletionOptions{
+		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Messages:    messages,
 		Temperature: Float64Ptr(0.5),
-	}, h.org)
+	}
+
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 
 	if err != nil {
 		return nil, err
@@ -674,7 +730,7 @@ Generate variations in JSON format as an array of objects with "scenario", "test
 
 // rateTests generates a quality assessment of the test collection
 func (h *generateCommandHandler) rateTests(context *PromptPexContext) error {
-	h.cfg.WriteToOut("Rating test collection quality...")
+	h.cfg.WriteToOut("Rating test collection quality...\n")
 
 	testSummary := make([]string, len(context.PromptPexTests))
 	for i, test := range context.PromptPexTests {
@@ -690,13 +746,17 @@ Test Collection:
 
 Analysis:`, strings.Join(testSummary, "\n"))
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, azuremodels.ChatCompletionOptions{
-		Model: "openai/gpt-4o-mini", // GitHub Models compatible model
-		Messages: []azuremodels.ChatMessage{
-			{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-		},
+	messages := []azuremodels.ChatMessage{
+		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+	}
+
+	options := azuremodels.ChatCompletionOptions{
+		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Messages:    messages,
 		Temperature: Float64Ptr(0.2),
-	}, h.org)
+	}
+
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 
 	if err != nil {
 		return err
@@ -708,6 +768,7 @@ Analysis:`, strings.Join(testSummary, "\n"))
 	}
 
 	rating := *completion.Choices[0].Message.Content
+
 	context.RateTests = rating
 
 	return nil

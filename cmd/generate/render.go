@@ -17,8 +17,8 @@ func RenderMessagesToString(messages []prompt.Message) string {
 
 	for i, msg := range messages {
 		// Add role header
-		roleUpper := strings.ToUpper(msg.Role)
-		builder.WriteString(fmt.Sprintf("[%s]\n", roleUpper))
+		roleLower := strings.ToLower(msg.Role)
+		builder.WriteString(fmt.Sprintf("%s:\n", roleLower))
 
 		// Add content with proper indentation
 		content := strings.TrimSpace(msg.Content)

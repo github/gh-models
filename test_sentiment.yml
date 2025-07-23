@@ -1,0 +1,12 @@
+name: Simple Sentiment Analysis
+description: A basic sentiment analysis prompt
+model: openai/gpt-4o-mini
+messages:
+  - role: system
+    content: |
+      You are a helpful assistant that analyzes sentiment. Classify text as positive, negative, or neutral.
+  - role: user
+    content: |
+      Please analyze the sentiment of this text: {{text}}
+      
+      Respond with only one word: positive, negative, or neutral.

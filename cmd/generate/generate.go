@@ -96,6 +96,7 @@ func AddCommandLineFlags(cmd *cobra.Command) {
 	flags.StringSlice("eval-models", []string{}, "Models to use for evaluation")
 	flags.String("custom-metric", "", "Custom evaluation metric")
 	flags.Float64("temperature", 0.0, "Temperature for model inference")
+	flags.Bool("verbose", false, "Enable verbose output including LLM payloads")
 }
 
 // parseFlags parses command-line flags and applies them to the options
@@ -156,6 +157,11 @@ func ParseFlags(cmd *cobra.Command, options *PromptPexOptions) error {
 	if flags.Changed("temperature") {
 		temperature, _ := flags.GetFloat64("temperature")
 		options.Temperature = &temperature
+	}
+
+	if flags.Changed("verbose") {
+		verbose, _ := flags.GetBool("verbose")
+		options.Verbose = &verbose
 	}
 
 	return nil

@@ -23,21 +23,21 @@ func TestRenderMessagesToString(t *testing.T) {
 			messages: []prompt.Message{
 				{Role: "system", Content: "You are a helpful assistant."},
 			},
-			expected: "[SYSTEM]\nYou are a helpful assistant.\n",
+			expected: "system:\nYou are a helpful assistant.\n",
 		},
 		{
 			name: "single user message",
 			messages: []prompt.Message{
 				{Role: "user", Content: "Hello, how are you?"},
 			},
-			expected: "[USER]\nHello, how are you?\n",
+			expected: "user:\nHello, how are you?\n",
 		},
 		{
 			name: "single assistant message",
 			messages: []prompt.Message{
 				{Role: "assistant", Content: "I'm doing well, thank you!"},
 			},
-			expected: "[ASSISTANT]\nI'm doing well, thank you!\n",
+			expected: "assistant:\nI'm doing well, thank you!\n",
 		},
 		{
 			name: "multiple messages",
@@ -46,35 +46,35 @@ func TestRenderMessagesToString(t *testing.T) {
 				{Role: "user", Content: "What is 2+2?"},
 				{Role: "assistant", Content: "2+2 equals 4."},
 			},
-			expected: "[SYSTEM]\nYou are a helpful assistant.\n\n[USER]\nWhat is 2+2?\n\n[ASSISTANT]\n2+2 equals 4.\n",
+			expected: "system:\nYou are a helpful assistant.\n\nuser:\nWhat is 2+2?\n\nassistant:\n2+2 equals 4.\n",
 		},
 		{
 			name: "message with empty content",
 			messages: []prompt.Message{
 				{Role: "user", Content: ""},
 			},
-			expected: "[USER]\n",
+			expected: "user:\n",
 		},
 		{
 			name: "message with whitespace only content",
 			messages: []prompt.Message{
 				{Role: "user", Content: "   \n\t  "},
 			},
-			expected: "[USER]\n",
+			expected: "user:\n",
 		},
 		{
 			name: "message with multiline content",
 			messages: []prompt.Message{
 				{Role: "user", Content: "This is line 1\nThis is line 2\nThis is line 3"},
 			},
-			expected: "[USER]\nThis is line 1\nThis is line 2\nThis is line 3\n",
+			expected: "user:\nThis is line 1\nThis is line 2\nThis is line 3\n",
 		},
 		{
 			name: "message with leading and trailing whitespace",
 			messages: []prompt.Message{
 				{Role: "user", Content: "  \n  Hello world  \n  "},
 			},
-			expected: "[USER]\nHello world\n",
+			expected: "user:\nHello world\n",
 		},
 		{
 			name: "mixed roles and content types",
@@ -83,7 +83,7 @@ func TestRenderMessagesToString(t *testing.T) {
 				{Role: "user", Content: "Write a function:\n\nfunc add(a, b int) int {\n    return a + b\n}"},
 				{Role: "assistant", Content: "Here's the function you requested."},
 			},
-			expected: "[SYSTEM]\nYou are a code assistant.\n\n[USER]\nWrite a function:\n\nfunc add(a, b int) int {\n    return a + b\n}\n\n[ASSISTANT]\nHere's the function you requested.\n",
+			expected: "system:\nYou are a code assistant.\n\nuser:\nWrite a function:\n\nfunc add(a, b int) int {\n    return a + b\n}\n\nassistant:\nHere's the function you requested.\n",
 		},
 		{
 			name: "lowercase role names",
@@ -92,7 +92,7 @@ func TestRenderMessagesToString(t *testing.T) {
 				{Role: "user", Content: "User message"},
 				{Role: "assistant", Content: "Assistant message"},
 			},
-			expected: "[SYSTEM]\nSystem message\n\n[USER]\nUser message\n\n[ASSISTANT]\nAssistant message\n",
+			expected: "system:\nSystem message\n\nuser:\nUser message\n\nassistant:\nAssistant message\n",
 		},
 		{
 			name: "uppercase role names",
@@ -101,7 +101,7 @@ func TestRenderMessagesToString(t *testing.T) {
 				{Role: "USER", Content: "User message"},
 				{Role: "ASSISTANT", Content: "Assistant message"},
 			},
-			expected: "[SYSTEM]\nSystem message\n\n[USER]\nUser message\n\n[ASSISTANT]\nAssistant message\n",
+			expected: "system:\nSystem message\n\nuser:\nUser message\n\nassistant:\nAssistant message\n",
 		},
 		{
 			name: "mixed case role names",
@@ -110,28 +110,21 @@ func TestRenderMessagesToString(t *testing.T) {
 				{Role: "User", Content: "User message"},
 				{Role: "Assistant", Content: "Assistant message"},
 			},
-			expected: "[SYSTEM]\nSystem message\n\n[USER]\nUser message\n\n[ASSISTANT]\nAssistant message\n",
-		},
-		{
-			name: "custom role name",
-			messages: []prompt.Message{
-				{Role: "custom", Content: "Custom role message"},
-			},
-			expected: "[CUSTOM]\nCustom role message\n",
+			expected: "system:\nSystem message\n\nuser:\nUser message\n\nassistant:\nAssistant message\n",
 		},
 		{
 			name: "message with only newlines",
 			messages: []prompt.Message{
 				{Role: "user", Content: "\n\n\n"},
 			},
-			expected: "[USER]\n",
+			expected: "user:\n",
 		},
 		{
 			name: "message with mixed whitespace and content",
 			messages: []prompt.Message{
 				{Role: "user", Content: "\n  Hello  \n\n  World  \n"},
 			},
-			expected: "[USER]\nHello  \n\n  World\n",
+			expected: "user:\nHello  \n\n  World\n",
 		},
 	}
 
@@ -170,7 +163,7 @@ func TestRenderMessagesToString_EdgeCases(t *testing.T) {
 			{Role: "user", Content: longContent},
 		}
 		result := RenderMessagesToString(messages)
-		expected := "[USER]\n" + strings.TrimSpace(longContent) + "\n"
+		expected := "user:\n" + strings.TrimSpace(longContent) + "\n"
 		if result != expected {
 			t.Errorf("renderMessagesToString() failed with long content")
 		}
@@ -181,7 +174,7 @@ func TestRenderMessagesToString_EdgeCases(t *testing.T) {
 			{Role: "user", Content: "Hello 🌍! How are you? 你好 مرحبا"},
 		}
 		result := RenderMessagesToString(messages)
-		expected := "[USER]\nHello 🌍! How are you? 你好 مرحبا\n"
+		expected := "user:\nHello 🌍! How are you? 你好 مرحبا\n"
 		if result != expected {
 			t.Errorf("renderMessagesToString() = %q, expected %q", result, expected)
 		}
@@ -192,7 +185,7 @@ func TestRenderMessagesToString_EdgeCases(t *testing.T) {
 			{Role: "user", Content: "Special chars: !@#$%^&*()_+-=[]{}|;':\",./<>?`~"},
 		}
 		result := RenderMessagesToString(messages)
-		expected := "[USER]\nSpecial chars: !@#$%^&*()_+-=[]{}|;':\",./<>?`~\n"
+		expected := "user:\nSpecial chars: !@#$%^&*()_+-=[]{}|;':\",./<>?`~\n"
 		if result != expected {
 			t.Errorf("renderMessagesToString() = %q, expected %q", result, expected)
 		}

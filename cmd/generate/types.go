@@ -77,6 +77,7 @@ type PromptPexOptions struct {
 	TestSamplesShuffle *bool   `yaml:"testSamplesShuffle,omitempty" json:"testSamplesShuffle,omitempty"`
 	LoadContext        *bool   `yaml:"loadContext,omitempty" json:"loadContext,omitempty"`
 	LoadContextFile    *string `yaml:"loadContextFile,omitempty" json:"loadContextFile,omitempty"`
+	Verbose            *bool   `yaml:"verbose,omitempty" json:"verbose,omitempty"`
 }
 
 // PromptPexTestGenerationScenario represents a test generation scenario

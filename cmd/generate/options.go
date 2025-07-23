@@ -24,6 +24,7 @@ func GetDefaultOptions() PromptPexOptions {
 		WorkflowDiagram:    BoolPtr(true),
 		LoadContext:        BoolPtr(false),
 		LoadContextFile:    StringPtr("promptpex_context.json"),
+		Verbose:            BoolPtr(false),
 	}
 }
 
@@ -122,6 +123,9 @@ func MergeOptions(defaults PromptPexOptions, overrides PromptPexOptions) PromptP
 	}
 	if result.LoadContextFile == nil && defaults.LoadContextFile != nil {
 		result.LoadContextFile = defaults.LoadContextFile
+	}
+	if result.Verbose == nil && defaults.Verbose != nil {
+		result.Verbose = defaults.Verbose
 	}
 	if result.MaxRules == nil && defaults.MaxRules != nil {
 		result.MaxRules = defaults.MaxRules

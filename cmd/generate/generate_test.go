@@ -265,7 +265,7 @@ messages:
 		require.Greater(t, callCount, 3, "Should have called multiple pipeline stages")
 
 		output := out.String()
-		require.Contains(t, output, "Running pipeline for prompt")
+		require.Contains(t, output, "Generating tests")
 		require.Contains(t, output, "Generating intent")
 		require.Contains(t, output, "Generating input specification")
 		require.Contains(t, output, "Generating output rules")
@@ -672,7 +672,7 @@ func TestGenerateCommandWithValidPromptFile(t *testing.T) {
 		require.NoError(t, err)
 
 		output := out.String()
-		require.Contains(t, output, "Running pipeline for prompt")
+		require.Contains(t, output, "Generating tests")
 	})
 }
 
