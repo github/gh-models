@@ -1,12 +1,10 @@
-name: Sentiment Analysis Test
-description: A test prompt for sentiment analysis
+name: Funny Joke Test
+description: A test prompt for analyzing jokes
 model: openai/gpt-4o-mini
 messages:
   - role: system
     content: |
-      You are a sentiment analysis expert. Classify the sentiment of the given text.
-      Classify the sentiment of this text as positive, negative, or neutral: 
-      Respond with only the sentiment word.
+      You are an expert at telling jokes. Determine if the Joke below is funny or not.
   - role: user
     content: |
       {{text}}
