@@ -49,7 +49,6 @@ func (h *generateCommandHandler) callModelWithRetry(step string, req azuremodels
 				}
 				return "", err
 			}
-
 			if len(completion.Choices) == 0 {
 				return "", fmt.Errorf("no completion choices returned from model")
 			}
