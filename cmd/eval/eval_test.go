@@ -312,7 +312,8 @@ evaluators:
 		require.Contains(t, output, "Failing Test")
 		require.Contains(t, output, "Running test case")
 		require.Contains(t, output, "FAILED")
-		require.Contains(t, output, "Model Response: actual model response")
+		require.Contains(t, output, "Model Response")
+		require.Contains(t, output, "actual model response")
 	})
 
 	t.Run("json output format", func(t *testing.T) {
