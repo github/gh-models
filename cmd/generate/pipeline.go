@@ -270,13 +270,13 @@ Generate exactly %d diverse test cases:`, testsPerRule*3,
 	}
 
 	content, err := h.callModelWithRetry("tests", options)
-	h.cfg.WriteToOut(fmt.Sprintf("LLM Response for tests: %s", content))
-
+	if err != nil {
+		return fmt.Errorf("failed to generate tests: %w", err)
+	}
 	tests, err := h.ParseTestsFromLLMResponse(content)
 	if err != nil {
 		return fmt.Errorf("failed to parse test JSON: %w", err)
 	}
-
 	context.PromptPexTests = tests
 
 	// Serialize tests to JSON

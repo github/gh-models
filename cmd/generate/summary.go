@@ -6,7 +6,7 @@ import (
 
 // generateSummary generates a summary report
 func (h *generateCommandHandler) GenerateSummary(context *PromptPexContext) error {
-	h.cfg.WriteToOut(fmt.Sprintf("Summary: Generated %d tests for prompt '%s'", len(context.PromptPexTests), context.Prompt.Name))
+	h.cfg.WriteToOut(fmt.Sprintf("\n---\nGenerated %d tests for prompt '%s'\n", len(context.PromptPexTests), context.Prompt.Name))
 
 	return nil
 }
