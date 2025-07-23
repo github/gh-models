@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -64,6 +65,22 @@ func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompl
 		inferenceURL = fmt.Sprintf("%s/orgs/%s/%s", c.cfg.InferenceRoot, org, c.cfg.InferencePath)
 	} else {
 		inferenceURL = c.cfg.InferenceRoot + "/" + c.cfg.InferencePath
+	}
+
+	// TODO: remove logging
+	// Write request details to llm.http file for debugging
+	if os.Getenv("DEBUG") != "" {
+		httpFile, err := os.OpenFile("llm.http", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err == nil {
+			defer httpFile.Close()
+			fmt.Fprintf(httpFile, "### %s\n", time.Now().Format(time.RFC3339))
+			fmt.Fprintf(httpFile, "POST %s\n", inferenceURL)
+			fmt.Fprintf(httpFile, "Authorization: Bearer {{$processEnv GITHUB_TOKEN}}\n")
+			fmt.Fprintf(httpFile, "Content-Type: application/json\n")
+			fmt.Fprintf(httpFile, "x-ms-useragent: github-cli-models\n")
+			fmt.Fprintf(httpFile, "x-ms-user-agent: github-cli-models\n")
+			fmt.Fprintf(httpFile, "\n%s\n\n", string(bodyBytes))
+		}
 	}
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, inferenceURL, body)

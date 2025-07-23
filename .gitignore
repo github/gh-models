@@ -4,3 +4,4 @@
 /gh-models-linux-*
 /gh-models-windows-*
 /gh-models-android-*
+*.http

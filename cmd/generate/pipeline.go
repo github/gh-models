@@ -97,9 +97,8 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 
 func testConnection(h *generateCommandHandler) error {
 	result, err := h.callModelWithRetry("configuration", azuremodels.ChatCompletionOptions{
-		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
-		Messages:    []azuremodels.ChatMessage{{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr("write a haiku in 5 emojis")}},
-		Temperature: util.Ptr(0.0),
+		Model:    "openai/gpt-4o-mini", // GitHub Models compatible model
+		Messages: []azuremodels.ChatMessage{{Role: azuremodels.ChatMessageRoleUser, Content: util.Ptr("write a haiku in 5 emojis")}},
 	})
 	if err != nil {
 		return fmt.Errorf("failed to test LLM connection: %w", err)
