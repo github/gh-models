@@ -31,7 +31,7 @@ func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string) (*Pr
 		PromptHash: promptHash,
 		// Infered intent of the prompt
 		Intent:       "",
-		Rules:        "",
+		Rules:        []string{},
 		InverseRules: "",
 		InputSpec:    "",
 		Tests:        "",

@@ -3,7 +3,37 @@ package generate
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
+	"strings"
 )
+
+// parseRules removes numbering, bullets, and extraneous "Rules:" lines from a rules text block.
+func ParseRules(text string) []string {
+	if IsUnassistedResponse(text) {
+		return nil
+	}
+	lines := SplitLines(Unfence(text))
+	itemsRe := regexp.MustCompile(`^\s*(\d+\.|_|-|\*)\s+`) // remove leading item numbers or bullets
+	rulesRe := regexp.MustCompile(`^\s*Rules:\s*$`)
+	pythonWrapRe := regexp.MustCompile(`^\["(.*)"\]$`)
+	var cleaned []string
+	for _, line := range lines {
+		// Remove leading numbering or bullets
+		replaced := itemsRe.ReplaceAllString(line, "")
+		// Skip empty lines
+		if strings.TrimSpace(replaced) == "" {
+			continue
+		}
+		// Skip "Rules:" header lines
+		if rulesRe.MatchString(replaced) {
+			continue
+		}
+		// Remove ["..."] wrapping
+		replaced = pythonWrapRe.ReplaceAllString(replaced, "$1")
+		cleaned = append(cleaned, replaced)
+	}
+	return cleaned
+}
 
 // ParseTestsFromLLMResponse parses test cases from LLM response with robust error handling
 func (h *generateCommandHandler) ParseTestsFromLLMResponse(content string) ([]PromptPexTest, error) {

@@ -6,6 +6,7 @@ import "github.com/github/gh-models/pkg/prompt"
 type PromptPexModelAliases struct {
 	Rules       *string `yaml:"rules,omitempty" json:"rules,omitempty"`
 	Groundtruth *string `yaml:"groundtruth,omitempty" json:"groundtruth,omitempty"`
+	Compliance  *string `yaml:"compliance,omitempty" json:"compliance,omitempty"`
 }
 
 // PromptPexPrompts contains custom prompts for different stages
@@ -81,7 +82,7 @@ type PromptPexContext struct {
 	Prompt         *prompt.File      `json:"prompt" yaml:"prompt"`
 	PromptHash     string            `json:"promptHash" yaml:"promptHash"`
 	Intent         string            `json:"intent" yaml:"intent"`
-	Rules          string            `json:"rules" yaml:"rules"`
+	Rules          []string          `json:"rules" yaml:"rules"`
 	InverseRules   string            `json:"inverseRules" yaml:"inverseRules"`
 	InputSpec      string            `json:"inputSpec" yaml:"inputSpec"`
 	Tests          string            `json:"tests" yaml:"tests"`

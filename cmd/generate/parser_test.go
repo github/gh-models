@@ -3,6 +3,8 @@ package generate
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestParseTestsFromLLMResponse_DirectUnmarshal(t *testing.T) {
@@ -391,4 +393,131 @@ func TestParseTestsFromLLMResponse_BehaviorDocumentation(t *testing.T) {
 			t.Logf("ISSUE: No input field parsed correctly, got: '%s'", result[0].TestInput)
 		}
 	})
+}
+
+func TestParseRules(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected []string
+	}{
+		{
+			name:     "empty string",
+			input:    "",
+			expected: nil,
+		},
+		{
+			name:     "single rule without numbering",
+			input:    "Always validate input",
+			expected: []string{"Always validate input"},
+		},
+		{
+			name:     "numbered rules",
+			input:    "1. Always validate input\n2. Handle errors gracefully\n3. Write clean code",
+			expected: []string{"Always validate input", "Handle errors gracefully", "Write clean code"},
+		},
+		{
+			name:     "bulleted rules with asterisks",
+			input:    "* Always validate input\n* Handle errors gracefully\n* Write clean code",
+			expected: []string{"Always validate input", "Handle errors gracefully", "Write clean code"},
+		},
+		{
+			name:     "bulleted rules with dashes",
+			input:    "- Always validate input\n- Handle errors gracefully\n- Write clean code",
+			expected: []string{"Always validate input", "Handle errors gracefully", "Write clean code"},
+		},
+		{
+			name:     "bulleted rules with underscores",
+			input:    "_ Always validate input\n_ Handle errors gracefully\n_ Write clean code",
+			expected: []string{"Always validate input", "Handle errors gracefully", "Write clean code"},
+		},
+		{
+			name:     "mixed numbering and bullets",
+			input:    "1. Always validate input\n* Handle errors gracefully\n- Write clean code",
+			expected: []string{"Always validate input", "Handle errors gracefully", "Write clean code"},
+		},
+		{
+			name:     "rules with 'Rules:' header",
+			input:    "Rules:\n1. Always validate input\n2. Handle errors gracefully",
+			expected: []string{"Always validate input", "Handle errors gracefully"},
+		},
+		{
+			name:     "rules with indented 'Rules:' header",
+			input:    "  Rules:  \n1. Always validate input\n2. Handle errors gracefully",
+			expected: []string{"Always validate input", "Handle errors gracefully"},
+		},
+		{
+			name:     "rules with empty lines",
+			input:    "1. Always validate input\n\n2. Handle errors gracefully\n\n\n3. Write clean code",
+			expected: []string{"Always validate input", "Handle errors gracefully", "Write clean code"},
+		},
+		{
+			name:     "rules with python-style array wrapping",
+			input:    `["Always validate input"]`,
+			expected: []string{"Always validate input"},
+		},
+		{
+			name:     "code fenced rules",
+			input:    "```\n1. Always validate input\n2. Handle errors gracefully\n```",
+			expected: []string{"Always validate input", "Handle errors gracefully"},
+		},
+		{
+			name:     "complex example with all features",
+			input:    "```\nRules:\n1. Always validate input\n\n* Handle errors gracefully\n- Write clean code\n[\"Test thoroughly\"]\n\n```",
+			expected: []string{"Always validate input", "Handle errors gracefully", "Write clean code", "Test thoroughly"},
+		},
+		{
+			name:     "unassisted response returns nil",
+			input:    "I can't assist with that request",
+			expected: nil,
+		},
+		{
+			name:     "whitespace only lines are ignored",
+			input:    "1. First rule\n   \n\t\n2. Second rule",
+			expected: []string{"First rule", "Second rule"},
+		},
+		{
+			name:     "rules with leading and trailing whitespace",
+			input:    "  1. Always validate input  \n  2. Handle errors gracefully  ",
+			expected: []string{"Always validate input  ", "  2. Handle errors gracefully"},
+		},
+		{
+			name:     "decimal numbered rules (not matched by regex)",
+			input:    "1.1 First subrule\n1.2 Second subrule\n2.0 Main rule",
+			expected: []string{"1.1 First subrule", "1.2 Second subrule", "2.0 Main rule"},
+		},
+		{
+			name:     "double digit numbered rules",
+			input:    "10. Tenth rule\n11. Eleventh rule\n12. Twelfth rule",
+			expected: []string{"Tenth rule", "Eleventh rule", "Twelfth rule"},
+		},
+		{
+			name:     "numbering without space (not matched)",
+			input:    "1.No space after dot\n2.Another without space",
+			expected: []string{"1.No space after dot", "2.Another without space"},
+		},
+		{
+			name:     "multiple spaces after numbering",
+			input:    "1.  Multiple spaces\n2.   Even more spaces",
+			expected: []string{"Multiple spaces", "Even more spaces"},
+		},
+		{
+			name:     "rules starting with whitespace",
+			input:    "  1. Indented rule\n\t2. Tab indented rule",
+			expected: []string{"Indented rule", "\t2. Tab indented rule"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ParseRules(tt.input)
+
+			if tt.expected == nil {
+				require.Nil(t, result, "Expected nil result")
+				return
+			}
+
+			require.Equal(t, tt.expected, result, "ParseRules result mismatch")
+		})
+	}
 }

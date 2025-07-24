@@ -172,7 +172,13 @@ Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 	if err != nil {
 		return err
 	}
-	context.Rules = rules
+
+	parsed := ParseRules(rules)
+	if parsed == nil {
+		return fmt.Errorf("failed to parse output rules: %s", rules)
+	}
+
+	context.Rules = parsed
 
 	return nil
 }
@@ -442,24 +448,26 @@ func (h *generateCommandHandler) evaluateResults(context *PromptPexContext) erro
 }
 
 // evaluateCompliance evaluates if an output complies with the given rules
-func (h *generateCommandHandler) evaluateCompliance(output, rules string) (PromptPexEvalResultType, error) {
-	prompt := fmt.Sprintf(`Evaluate if the following output complies with the given rules.
-Respond with only one word: "ok" if it complies, "err" if it doesn't, or "unknown" if uncertain.
-
-Rules:
+func (h *generateCommandHandler) evaluateCompliance(output string, rules []string) (PromptPexEvalResultType, error) {
+	system := `Evaluate if the following <output> complies with the given <rules>.
+Respond with only one word: "ok" if it complies, "err" if it doesn't, or "unknown" if uncertain.`
+	prompt := fmt.Sprintf(`<rules>
 %s
+</rules>
 
-Output to evaluate:
+<output>
 %s
+</output>
 
-Compliance:`, rules, output)
-
+Compliance:`, strings.Join(rules, "\n"), output)
+	// Prepare messages for the model
 	messages := []azuremodels.ChatMessage{
+		{Role: azuremodels.ChatMessageRoleSystem, Content: &system},
 		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
 	}
 
 	options := azuremodels.ChatCompletionOptions{
-		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Model:       *h.options.Models.Compliance, // GitHub Models compatible model
 		Messages:    messages,
 		Temperature: util.Ptr(0.0),
 	}

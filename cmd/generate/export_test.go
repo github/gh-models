@@ -36,7 +36,7 @@ func TestToGitHubModelsPrompt(t *testing.T) {
 						},
 					},
 				},
-				Rules: "1. Be helpful\n2. Be accurate",
+				Rules: []string{"1. Be helpful", "2. Be accurate"},
 				PromptPexTests: []PromptPexTest{
 					{
 						TestInput:   `{"input": "world"}`,
@@ -73,7 +73,7 @@ func TestToGitHubModelsPrompt(t *testing.T) {
 						},
 					},
 				},
-				Rules: "Test rules",
+				Rules: []string{"Test rules"},
 				PromptPexTests: []PromptPexTest{
 					{
 						TestInput: "simple test",
@@ -106,7 +106,7 @@ func TestToGitHubModelsPrompt(t *testing.T) {
 						},
 					},
 				},
-				Rules: "Process data correctly",
+				Rules: []string{"Process data correctly"},
 				PromptPexTests: []PromptPexTest{
 					{
 						TestInput:   `{"data": "test data", "type": "analysis"}`,
@@ -140,7 +140,7 @@ func TestToGitHubModelsPrompt(t *testing.T) {
 						},
 					},
 				},
-				Rules: "Test rules",
+				Rules: []string{"Test rules"},
 				PromptPexTests: []PromptPexTest{
 					{
 						TestInput: "",

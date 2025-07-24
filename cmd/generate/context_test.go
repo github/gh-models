@@ -3,6 +3,7 @@ package generate
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -151,7 +152,7 @@ messages:
 						t.Errorf("Expected %s to be %q, got %q", field, expectedValue, context.Intent)
 					}
 				case "rules":
-					if context.Rules != expectedValue.(string) {
+					if !reflect.DeepEqual(context.Rules, expectedValue.([]string)) {
 						t.Errorf("Expected %s to be %q, got %q", field, expectedValue, context.Rules)
 					}
 				case "inverseRules":
