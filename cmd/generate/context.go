@@ -37,7 +37,8 @@ func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string) (*Pr
 	}
 
 	// Determine session file path
-	if h.sessionFile == nil || *h.sessionFile == "" {
+	defaultSessionFile := h.sessionFile == nil || *h.sessionFile == ""
+	if defaultSessionFile {
 		// Generate default session file name by replacing 'prompt.yml' with '.generate.json'
 		h.sessionFile = util.Ptr(generateDefaultSessionFileName(promptFile))
 	}
@@ -55,11 +56,20 @@ func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string) (*Pr
 		// Check if prompt hashes match
 		if existingContext.PromptHash != nil && context.PromptHash != nil &&
 			*existingContext.PromptHash != *context.PromptHash {
-			return nil, fmt.Errorf("prompt hash mismatch: existing context has different prompt than current file")
+			if !defaultSessionFile {
+				return nil, fmt.Errorf("prompt changed unable to reuse session file")
+			} else {
+				// the prompt changed and the user is implicitely leverage the context file for caching,
+				// silently clear out the context
+				h.cfg.WriteToOut("Prompt changed, ignoring previous session...\n")
+				existingContext = nil
+			}
 		}
 
 		// Merge existing context data
-		context = mergeContexts(existingContext, context)
+		if existingContext != nil {
+			context = mergeContexts(existingContext, context)
+		}
 	}
 
 	return context, nil
