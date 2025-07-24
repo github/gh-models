@@ -233,8 +233,7 @@ Inverse Output Rules:`, strings.Join(context.Rules, "\n"))
 // generateTests generates test cases for the prompt
 func (h *generateCommandHandler) generateTests(context *PromptPexContext) error {
 	h.WriteStartBox("Tests...")
-	if context.Tests != nil && len(context.Tests) == 0 {
-
+	if len(context.Tests) == 0 {
 		testsPerRule := 3
 		if h.options.TestsPerRule != nil {
 			testsPerRule = *h.options.TestsPerRule
@@ -268,6 +267,7 @@ Generate test cases that:
 2. Cover edge cases and boundary conditions
 3. Validate that outputs follow the specified rules
 4. Use realistic inputs that match the input specification
+5. Avoid whitespace only test inputs
 
 Return only a JSON array with this exact format:
 [

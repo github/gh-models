@@ -79,7 +79,7 @@ func (h *generateCommandHandler) WriteEndListBox(items []string, maxItems int) {
 		h.cfg.WriteToOut(fmt.Sprintf("%s\n", renderedItem))
 	}
 	if len(items) != len(renderedItems) {
-		h.cfg.WriteToOut("…")
+		h.cfg.WriteToOut("…\n")
 	}
 	h.WriteEndBox(fmt.Sprintf("%d items", len(items)))
 }
