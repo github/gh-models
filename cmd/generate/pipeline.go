@@ -212,7 +212,12 @@ Inverse Rules:`, context.Rules)
 	if err != nil {
 		return err
 	}
-	context.InverseRules = inverseRules
+
+	parsed := ParseRules(inverseRules)
+	if parsed == nil {
+		return fmt.Errorf("failed to parse inverse output rules: %s", inverseRules)
+	}
+	context.InverseRules = parsed
 
 	return nil
 }

@@ -37,7 +37,7 @@ messages:
 			expectedFields: map[string]interface{}{
 				"intent":       "",
 				"rules":        []string{},
-				"inverseRules": "",
+				"inverseRules": []string{},
 			},
 		},
 		{
@@ -156,7 +156,7 @@ messages:
 						t.Errorf("Expected %s to be %q, got %q", field, expectedValue, context.Rules)
 					}
 				case "inverseRules":
-					if context.InverseRules != expectedValue.(string) {
+					if !reflect.DeepEqual(context.InverseRules, expectedValue.([]string)) {
 						t.Errorf("Expected %s to be %q, got %q", field, expectedValue, context.InverseRules)
 					}
 				}

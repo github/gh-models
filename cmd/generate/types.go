@@ -83,7 +83,7 @@ type PromptPexContext struct {
 	PromptHash     string            `json:"promptHash" yaml:"promptHash"`
 	Intent         string            `json:"intent" yaml:"intent"`
 	Rules          []string          `json:"rules" yaml:"rules"`
-	InverseRules   string            `json:"inverseRules" yaml:"inverseRules"`
+	InverseRules   []string          `json:"inverseRules" yaml:"inverseRules"`
 	InputSpec      string            `json:"inputSpec" yaml:"inputSpec"`
 	Tests          string            `json:"tests" yaml:"tests"`
 	PromptPexTests []PromptPexTest   `json:"promptPexTests" yaml:"promptPexTests"`

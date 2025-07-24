@@ -32,7 +32,7 @@ func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string) (*Pr
 		// Infered intent of the prompt
 		Intent:       "",
 		Rules:        []string{},
-		InverseRules: "",
+		InverseRules: []string{},
 		InputSpec:    "",
 		Tests:        "",
 		TestData:     "",
