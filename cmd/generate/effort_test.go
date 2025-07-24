@@ -256,8 +256,6 @@ func TestApplyEffortConfiguration(t *testing.T) {
 					actualValue = options.MaxRulesPerTestGen
 				case "MaxTestsToRun":
 					actualValue = options.MaxTestsToRun
-				case "Compliance":
-					actualValue = options.Compliance
 				default:
 					t.Errorf("Unknown field name in test: %s", fieldName)
 					continue
@@ -390,8 +388,7 @@ func isOptionsEmpty(options *PromptPexOptions, original *PromptPexOptions) bool 
 			options.TestExpansions == nil &&
 			options.MaxRules == nil &&
 			options.MaxRulesPerTestGen == nil &&
-			options.MaxTestsToRun == nil &&
-			options.Compliance == nil
+			options.MaxTestsToRun == nil
 	}
 
 	// Compare with original values
@@ -401,6 +398,5 @@ func isOptionsEmpty(options *PromptPexOptions, original *PromptPexOptions) bool 
 		reflect.DeepEqual(options.TestExpansions, original.TestExpansions) &&
 		reflect.DeepEqual(options.MaxRules, original.MaxRules) &&
 		reflect.DeepEqual(options.MaxRulesPerTestGen, original.MaxRulesPerTestGen) &&
-		reflect.DeepEqual(options.MaxTestsToRun, original.MaxTestsToRun) &&
-		reflect.DeepEqual(options.Compliance, original.Compliance)
+		reflect.DeepEqual(options.MaxTestsToRun, original.MaxTestsToRun)
 }

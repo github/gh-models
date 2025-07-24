@@ -33,7 +33,6 @@ type PromptPexOptions struct {
 	Models             *PromptPexModelAliases `yaml:"models,omitempty" json:"models,omitempty"`
 	TestsPerRule       *int                   `yaml:"testsPerRule,omitempty" json:"testsPerRule,omitempty"`
 	RunsPerTest        *int                   `yaml:"runsPerTest,omitempty" json:"runsPerTest,omitempty"`
-	Compliance         *bool                  `yaml:"compliance,omitempty" json:"compliance,omitempty"`
 	MaxTestsToRun      *int                   `yaml:"maxTestsToRun,omitempty" json:"maxTestsToRun,omitempty"`
 	MaxRules           *int                   `yaml:"maxRules,omitempty" json:"maxRules,omitempty"`
 	MaxRulesPerTestGen *int                   `yaml:"maxRulesPerTestGeneration,omitempty" json:"maxRulesPerTestGeneration,omitempty"`

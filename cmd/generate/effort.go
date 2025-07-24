@@ -93,7 +93,4 @@ func ApplyEffortConfiguration(options *PromptPexOptions, effort string) {
 	if config.MaxTestsToRun != nil && options.MaxTestsToRun == nil {
 		options.MaxTestsToRun = config.MaxTestsToRun
 	}
-	if config.Compliance != nil && options.Compliance == nil {
-		options.Compliance = config.Compliance
-	}
 }

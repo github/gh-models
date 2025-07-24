@@ -23,7 +23,6 @@ func TestGetDefaultOptions(t *testing.T) {
 		{"TestGenerations", defaults.TestGenerations, util.Ptr(2)},
 		{"TestExpansions", defaults.TestExpansions, util.Ptr(0)},
 		{"FilterTestCount", defaults.FilterTestCount, util.Ptr(5)},
-		{"Compliance", defaults.Compliance, util.Ptr(false)},
 	}
 
 	for _, tt := range tests {
