@@ -50,9 +50,18 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 			// Get organization
 			org, _ := cmd.Flags().GetString("org")
 
+			// Get http-log flag
+			httpLog, _ := cmd.Flags().GetString("http-log")
+
+			ctx := cmd.Context()
+			// Add HTTP log filename to context if provided
+			if httpLog != "" {
+				ctx = azuremodels.WithHTTPLogFile(ctx, httpLog)
+			}
+
 			// Create the command handler
 			handler := &generateCommandHandler{
-				ctx:     cmd.Context(),
+				ctx:     ctx,
 				cfg:     cfg,
 				client:  cfg.Client,
 				options: options,
@@ -97,6 +106,7 @@ func AddCommandLineFlags(cmd *cobra.Command) {
 	flags.String("custom-metric", "", "Custom evaluation metric")
 	flags.Float64("temperature", 0.0, "Temperature for model inference")
 	flags.Bool("verbose", false, "Enable verbose output including LLM payloads")
+	flags.String("http-log", "", "Path to log HTTP requests to (optional)")
 }
 
 // parseFlags parses command-line flags and applies them to the options

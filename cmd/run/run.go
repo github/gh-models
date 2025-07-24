@@ -423,6 +423,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 	cmd.Flags().String("top-p", "", "Controls text diversity by selecting the most probable words until a set probability is reached.")
 	cmd.Flags().String("system-prompt", "", "Prompt the system.")
 	cmd.Flags().String("org", "", "Organization to attribute usage to (omitting will attribute usage to the current actor")
+	cmd.Flags().String("http-log", "", "Path to log HTTP requests to (optional)")
 
 	return cmd
 }
@@ -472,7 +473,15 @@ type runCommandHandler struct {
 }
 
 func newRunCommandHandler(cmd *cobra.Command, cfg *command.Config, args []string) *runCommandHandler {
-	return &runCommandHandler{ctx: cmd.Context(), cfg: cfg, client: cfg.Client, args: args}
+	ctx := cmd.Context()
+	httpLog, _ := cmd.Flags().GetString("http-log")
+	
+	// Add HTTP log filename to context if provided
+	if httpLog != "" {
+		ctx = azuremodels.WithHTTPLogFile(ctx, httpLog)
+	}
+	
+	return &runCommandHandler{ctx: ctx, cfg: cfg, client: cfg.Client, args: args}
 }
 
 func (h *runCommandHandler) loadModels() ([]*azuremodels.ModelSummary, error) {

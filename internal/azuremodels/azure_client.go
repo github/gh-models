@@ -67,19 +67,15 @@ func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompl
 		inferenceURL = c.cfg.InferenceRoot + "/" + c.cfg.InferencePath
 	}
 
-	// TODO: remove logging
-	// Write request details to llm.http file for debugging
-	if os.Getenv("DEBUG") != "" {
-		httpFile, err := os.OpenFile("llm.http", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	// Write request details to specified log file for debugging
+	httpLogFile := HTTPLogFileFromContext(ctx)
+	if httpLogFile != "" {
+		logFile, err := os.OpenFile(httpLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err == nil {
-			defer httpFile.Close()
-			fmt.Fprintf(httpFile, "### %s\n", time.Now().Format(time.RFC3339))
-			fmt.Fprintf(httpFile, "POST %s\n", inferenceURL)
-			fmt.Fprintf(httpFile, "Authorization: Bearer {{$processEnv GITHUB_TOKEN}}\n")
-			fmt.Fprintf(httpFile, "Content-Type: application/json\n")
-			fmt.Fprintf(httpFile, "x-ms-useragent: github-cli-models\n")
-			fmt.Fprintf(httpFile, "x-ms-user-agent: github-cli-models\n")
-			fmt.Fprintf(httpFile, "\n%s\n\n", string(bodyBytes))
+			defer logFile.Close()
+			fmt.Fprintf(logFile, "### %s\nPOST %s\nAuthorization: Bearer {{$processEnv GITHUB_TOKEN}}\nContent-Type: application/json\nx-ms-useragent: github-cli-models\nx-ms-user-agent: github-cli-models\n\n%s\n\n", 
+			const logFormat = "### %s\nPOST %s\nAuthorization: Bearer {{$processEnv GITHUB_TOKEN}}\nContent-Type: application/json\nx-ms-useragent: github-cli-models\nx-ms-user-agent: github-cli-models\n\n%s\n\n"
+			fmt.Fprintf(logFile, logFormat, time.Now().Format(time.RFC3339), inferenceURL, string(bodyBytes))
 		}
 	}
 
