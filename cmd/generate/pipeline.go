@@ -51,18 +51,6 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 		return err
 	}
 
-	// Step 6: Test Expansions (if enabled)
-	/*
-		if h.options.TestExpansions != nil && *h.options.TestExpansions > 0 {
-			if err := h.expandTests(context); err != nil {
-				return fmt.Errorf("failed to expand tests: %w", err)
-			}
-			if err := h.SaveContext(context); err != nil {
-				return err
-			}
-		}
-	*/
-
 	// Step 8: Generate Groundtruth (if model specified)
 	if h.options.Models.Groundtruth != nil && *h.options.Models.Groundtruth != "" && *h.options.Models.Groundtruth != "none" {
 		if err := h.generateGroundtruth(context); err != nil {

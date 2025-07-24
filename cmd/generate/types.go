@@ -4,10 +4,9 @@ import "github.com/github/gh-models/pkg/prompt"
 
 // PromptPexModelAliases represents model aliases for different purposes
 type PromptPexModelAliases struct {
-	Rules         *string `yaml:"rules,omitempty" json:"rules,omitempty"`
-	Tests         *string `yaml:"tests,omitempty" json:"tests,omitempty"`
-	Groundtruth   *string `yaml:"groundtruth,omitempty" json:"groundtruth,omitempty"`
-	TestExpansion *string `yaml:"testExpansion,omitempty" json:"testExpansion,omitempty"`
+	Rules       *string `yaml:"rules,omitempty" json:"rules,omitempty"`
+	Tests       *string `yaml:"tests,omitempty" json:"tests,omitempty"`
+	Groundtruth *string `yaml:"groundtruth,omitempty" json:"groundtruth,omitempty"`
 }
 
 // PromptPexPrompts contains custom prompts for different stages
@@ -16,7 +15,6 @@ type PromptPexPrompts struct {
 	OutputRules        *string `yaml:"outputRules,omitempty" json:"outputRules,omitempty"`
 	InverseOutputRules *string `yaml:"inverseOutputRules,omitempty" json:"inverseOutputRules,omitempty"`
 	Intent             *string `yaml:"intent,omitempty" json:"intent,omitempty"`
-	TestExpansion      *string `yaml:"testExpansion,omitempty" json:"testExpansion,omitempty"`
 }
 
 // WorkspaceFile represents a file in the workspace
