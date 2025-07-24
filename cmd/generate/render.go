@@ -66,17 +66,24 @@ func (h *generateCommandHandler) WriteBox(title, content string) {
 	h.WriteEndBox("")
 }
 
+func (h *generateCommandHandler) WriteToLine(item string) {
+	if len(item) > h.cfg.TerminalWidth-2 {
+		item = item[:h.cfg.TerminalWidth-2] + "…"
+	}
+	if strings.HasSuffix(item, "\n") {
+		h.cfg.WriteToOut(item)
+	} else {
+		h.cfg.WriteToOut(fmt.Sprintf("%s\n", item))
+	}
+}
+
 func (h *generateCommandHandler) WriteEndListBox(items []string, maxItems int) {
 	renderedItems := items
 	if len(renderedItems) > maxItems {
 		renderedItems = renderedItems[:maxItems]
 	}
 	for _, item := range renderedItems {
-		renderedItem := item
-		if len(renderedItem) > h.cfg.TerminalWidth-2 {
-			renderedItem = renderedItem[:h.cfg.TerminalWidth-2] + "…"
-		}
-		h.cfg.WriteToOut(fmt.Sprintf("%s\n", renderedItem))
+		h.WriteToLine(item)
 	}
 	if len(items) != len(renderedItems) {
 		h.cfg.WriteToOut("…\n")

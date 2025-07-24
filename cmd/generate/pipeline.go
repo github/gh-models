@@ -323,8 +323,8 @@ func (h *generateCommandHandler) runSingleTestWithContext(input string, modelNam
 
 	// Build OpenAI messages from our messages format
 	re := regexp.MustCompile(`\{\{\s*text\s*\}\}`)
-	openaiMessages := make([]azuremodels.ChatMessage, 0, len(messages))
-	for i, msg := range messages {
+	openaiMessages := []azuremodels.ChatMessage{}
+	for _, msg := range messages {
 		// Replace template variables in content
 		content := msg.Content
 		if content != "" {
@@ -344,10 +344,11 @@ func (h *generateCommandHandler) runSingleTestWithContext(input string, modelNam
 			return "", fmt.Errorf("unknown role: %s", msg.Role)
 		}
 
-		openaiMessages[i] = azuremodels.ChatMessage{
+		// Handle the openaiMessages array indexing properly
+		openaiMessages = append(openaiMessages, azuremodels.ChatMessage{
 			Role:    role,
 			Content: &content,
-		}
+		})
 	}
 
 	options := azuremodels.ChatCompletionOptions{
@@ -373,20 +374,22 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 	h.cfg.WriteToOut("Groundtruth")
 
 	for i := range context.Tests {
-		test := context.Tests[i]
-
-		// Generate groundtruth output
-		output, err := h.runSingleTestWithContext(test.TestInput, *groundtruthModel, context)
-		if err != nil {
-			h.cfg.WriteToOut(fmt.Sprintf("Failed to generate groundtruth for test %d: %v", i, err))
-			continue
+		test := &context.Tests[i]
+		h.WriteToLine(test.TestInput)
+		if test.Groundtruth == nil || *test.Groundtruth == "" {
+			// Generate groundtruth output
+			output, err := h.runSingleTestWithContext(test.TestInput, *groundtruthModel, context)
+			if err != nil {
+				h.cfg.WriteToOut(fmt.Sprintf("Failed to generate groundtruth for test %d: %v", i, err))
+				continue
+			}
+			test.Groundtruth = &output
+			test.GroundtruthModel = groundtruthModel
 		}
 
-		test.Groundtruth = &output
-		test.GroundtruthModel = groundtruthModel
 	}
 
-	h.WriteEndBox("")
+	h.WriteEndBox(fmt.Sprintf("%d items", len(context.Tests)))
 
 	return nil
 }
