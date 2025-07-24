@@ -352,7 +352,7 @@ messages:
 		}
 
 		// Test context creation
-		ctx, err := handler.CreateContextFromPrompt(promptFile)
+		ctx, err := handler.CreateContextFromPrompt(promptFile, "")
 		require.NoError(t, err)
 		require.NotNil(t, ctx)
 		require.NotEmpty(t, ctx.RunID)
@@ -376,7 +376,7 @@ messages:
 		}
 
 		// Test with nonexistent file
-		_, err := handler.CreateContextFromPrompt("nonexistent.yml")
+		_, err := handler.CreateContextFromPrompt("nonexistent.yml", "")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "failed to load prompt file")
 	})

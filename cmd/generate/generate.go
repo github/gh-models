@@ -34,6 +34,7 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 			gh models generate prompt.yml
 			gh models generate --effort medium --models-under-test "openai/gpt-4o-mini,openai/gpt-4o" prompt.yml
 			gh models generate --org my-org --groundtruth-model "openai/gpt-4o" prompt.yml
+			gh models generate --session-file my-session.json prompt.yml
 		`),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -49,6 +50,9 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 
 			// Get organization
 			org, _ := cmd.Flags().GetString("org")
+
+			// Get session-file flag
+			sessionFile, _ := cmd.Flags().GetString("session-file")
 
 			// Get http-log flag
 			httpLog, _ := cmd.Flags().GetString("http-log")
@@ -69,7 +73,7 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 			}
 
 			// Create PromptPex context
-			context, err := handler.CreateContextFromPrompt(promptFile)
+			context, err := handler.CreateContextFromPrompt(promptFile, sessionFile)
 			if err != nil {
 				return fmt.Errorf("failed to create context: %w", err)
 			}
@@ -103,6 +107,7 @@ func AddCommandLineFlags(cmd *cobra.Command) {
 	flags.Float64("temperature", 0.0, "Temperature for model inference")
 	flags.Bool("verbose", false, "Enable verbose output including LLM payloads")
 	flags.String("http-log", "", "File path to log HTTP requests to (.http, optional)")
+	flags.String("session-file", "", "Session file to load existing context from (defaults to <prompt-file>.generate.json)")
 }
 
 // parseFlags parses command-line flags and applies them to the options
