@@ -31,8 +31,6 @@ func TestNewGenerateCommand(t *testing.T) {
 		require.True(t, flags.Lookup("org") != nil)
 		require.True(t, flags.Lookup("effort") != nil)
 		require.True(t, flags.Lookup("groundtruth-model") != nil)
-		require.True(t, flags.Lookup("tests-per-rule") != nil)
-		require.True(t, flags.Lookup("runs-per-test") != nil)
 	})
 
 	t.Run("--help prints usage info", func(t *testing.T) {
@@ -83,16 +81,6 @@ func TestParseFlags(t *testing.T) {
 			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.NotNil(t, opts.Models.Groundtruth)
 				require.Equal(t, "openai/gpt-4o", *opts.Models.Groundtruth)
-			},
-		},
-		{
-			name: "numeric flags",
-			args: []string{"--tests-per-rule", "10", "--runs-per-test", "3"},
-			validate: func(t *testing.T, opts *PromptPexOptions) {
-				require.NotNil(t, opts.TestsPerRule)
-				require.Equal(t, 10, *opts.TestsPerRule)
-				require.NotNil(t, opts.RunsPerTest)
-				require.Equal(t, 3, *opts.RunsPerTest)
 			},
 		},
 	}

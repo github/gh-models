@@ -105,10 +105,6 @@ func AddCommandLineFlags(cmd *cobra.Command) {
 	flags.String("org", "", "Organization to attribute usage to")
 	flags.String("effort", "", "Effort level (low, medium, high)")
 	flags.String("groundtruth-model", "", "Model to use for generating groundtruth outputs")
-	flags.Int("tests-per-rule", 0, "Number of tests to generate per rule")
-	flags.Int("runs-per-test", 0, "Number of times to run each test")
-	flags.Bool("verbose", false, "Enable verbose output including LLM payloads")
-	flags.String("http-log", "", "File path to log HTTP requests to (.http, optional)")
 	flags.String("session-file", "", "Session file to load existing context from (defaults to <prompt-file>.generate.json)")
 }
 
@@ -127,21 +123,6 @@ func ParseFlags(cmd *cobra.Command, options *PromptPexOptions) error {
 
 	if groundtruthModel, _ := flags.GetString("groundtruth-model"); groundtruthModel != "" {
 		options.Models.Groundtruth = &groundtruthModel
-	}
-
-	if flags.Changed("tests-per-rule") {
-		testsPerRule, _ := flags.GetInt("tests-per-rule")
-		options.TestsPerRule = &testsPerRule
-	}
-
-	if flags.Changed("runs-per-test") {
-		runsPerTest, _ := flags.GetInt("runs-per-test")
-		options.RunsPerTest = &runsPerTest
-	}
-
-	if flags.Changed("verbose") {
-		verbose, _ := flags.GetBool("verbose")
-		options.Verbose = &verbose
 	}
 
 	return nil
