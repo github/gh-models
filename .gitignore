@@ -5,3 +5,4 @@
 /gh-models-windows-*
 /gh-models-android-*
 *.http
+*.generate.json
