@@ -8,29 +8,27 @@ import (
 )
 
 func TestHttpLoggingParameterReplacement(t *testing.T) {
-	// Test that the code no longer references os.Getenv("DEBUG")
-	// This is a simple test to ensure we removed the DEBUG dependency
-	
-	// We'll do a simple code inspection test
-	// The GetChatCompletionStream method should now use httpLogFile parameter
-	// instead of checking os.Getenv("DEBUG")
+	// Test that HTTP logging now uses context instead of function parameters
+	// This test ensures we moved HTTP log configuration to context
 	
 	// Create a mock client to test the interface
 	client := NewMockClient()
 	
-	// Test that the interface accepts the httpLogFile parameter
+	// Test that the interface accepts context and extracts HTTP log filename
 	var capturedHttpLogFile string
-	client.MockGetChatCompletionStream = func(ctx context.Context, req ChatCompletionOptions, org, httpLogFile string) (*ChatCompletionResponse, error) {
-		capturedHttpLogFile = httpLogFile
+	client.MockGetChatCompletionStream = func(ctx context.Context, req ChatCompletionOptions, org string) (*ChatCompletionResponse, error) {
+		capturedHttpLogFile = HTTPLogFileFromContext(ctx)
 		return &ChatCompletionResponse{}, nil
 	}
 	
-	// Test with empty httpLogFile
-	_, _ = client.GetChatCompletionStream(nil, ChatCompletionOptions{}, "", "")
+	// Test with context without HTTP log file
+	ctx := context.Background()
+	_, _ = client.GetChatCompletionStream(ctx, ChatCompletionOptions{}, "")
 	require.Equal(t, "", capturedHttpLogFile)
 	
-	// Test with specific httpLogFile
+	// Test with context containing HTTP log file
 	testLogFile := "/tmp/test.log"
-	_, _ = client.GetChatCompletionStream(nil, ChatCompletionOptions{}, "", testLogFile)
+	ctxWithLog := WithHTTPLogFile(ctx, testLogFile)
+	_, _ = client.GetChatCompletionStream(ctxWithLog, ChatCompletionOptions{}, "")
 	require.Equal(t, testLogFile, capturedHttpLogFile)
 }

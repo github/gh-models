@@ -24,7 +24,7 @@ func (h *generateCommandHandler) callModelWithRetry(step string, req azuremodels
 		//nolint:gocritic,revive // TODO
 		defer sp.Stop()
 
-		resp, err := h.client.GetChatCompletionStream(ctx, req, h.org, h.httpLog)
+		resp, err := h.client.GetChatCompletionStream(ctx, req, h.org)
 		if err != nil {
 			var rateLimitErr *azuremodels.RateLimitError
 			if errors.As(err, &rateLimitErr) {

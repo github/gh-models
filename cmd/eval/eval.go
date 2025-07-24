@@ -127,10 +127,15 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 				evalFile:   evalFile,
 				jsonOutput: jsonOutput,
 				org:        org,
-				httpLog:    httpLog,
 			}
 
-			err = handler.runEvaluation(cmd.Context())
+			ctx := cmd.Context()
+			// Add HTTP log filename to context if provided
+			if httpLog != "" {
+				ctx = azuremodels.WithHTTPLogFile(ctx, httpLog)
+			}
+
+			err = handler.runEvaluation(ctx)
 			if err == FailedTests {
 				// Cobra by default will show the help message when an error occurs,
 				// which is not what we want for failed evaluations.
@@ -153,7 +158,6 @@ type evalCommandHandler struct {
 	evalFile   *prompt.File
 	jsonOutput bool
 	org        string
-	httpLog    string
 }
 
 func loadEvaluationPromptFile(filePath string) (*prompt.File, error) {
@@ -378,7 +382,7 @@ func (h *evalCommandHandler) callModelWithRetry(ctx context.Context, req azuremo
 	const maxRetries = 3
 
 	for attempt := 0; attempt <= maxRetries; attempt++ {
-		resp, err := h.client.GetChatCompletionStream(ctx, req, h.org, h.httpLog)
+		resp, err := h.client.GetChatCompletionStream(ctx, req, h.org)
 		if err != nil {
 			var rateLimitErr *azuremodels.RateLimitError
 			if errors.As(err, &rateLimitErr) {

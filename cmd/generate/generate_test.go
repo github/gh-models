@@ -207,7 +207,7 @@ messages:
 
 		// Setup mock client to return error
 		client := azuremodels.NewMockClient()
-		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org, httpLogFile string) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
 			return nil, errors.New("Mock API error")
 		}
 
@@ -241,7 +241,7 @@ messages:
 		// Setup mock client
 		client := azuremodels.NewMockClient()
 		callCount := 0
-		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org, httpLogFile string) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
 			callCount++
 			var response string
 
@@ -314,7 +314,7 @@ messages:
 
 		// Setup mock client
 		client := azuremodels.NewMockClient()
-		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org, httpLogFile string) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
 			var response string
 			if len(opt.Messages) > 0 && opt.Messages[0].Content != nil {
 				content := *opt.Messages[0].Content
@@ -382,7 +382,7 @@ messages:
 
 		// Setup mock client
 		client := azuremodels.NewMockClient()
-		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org, httpLogFile string) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
 			var response string
 			if len(opt.Messages) > 0 && opt.Messages[0].Content != nil {
 				content := *opt.Messages[0].Content
@@ -451,7 +451,7 @@ messages:
 
 		// Setup mock client
 		client := azuremodels.NewMockClient()
-		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org, httpLogFile string) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
 			var response string
 			if len(opt.Messages) > 0 && opt.Messages[0].Content != nil {
 				content := *opt.Messages[0].Content

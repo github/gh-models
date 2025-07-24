@@ -388,7 +388,7 @@ func (h *generateCommandHandler) runSingleTestWithContext(input, modelName strin
 		Temperature: util.Ptr(0.0),
 	}
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org, h.httpLog)
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 	if err != nil {
 		return "", err
 	}
@@ -469,7 +469,7 @@ Compliance:`, rules, output)
 		Temperature: util.Ptr(0.0),
 	}
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org, h.httpLog)
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 
 	if err != nil {
 		return EvalResultUnknown, err
@@ -510,7 +510,7 @@ Score (0-1):`, metric, output)
 		Temperature: util.Ptr(0.0),
 	}
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org, h.httpLog)
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 
 	if err != nil {
 		return 0.0, err
@@ -615,7 +615,7 @@ Generate variations in JSON format as an array of objects with "scenario", "test
 		Temperature: util.Ptr(0.5),
 	}
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org, h.httpLog)
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 
 	if err != nil {
 		return nil, err
@@ -676,7 +676,7 @@ Analysis:`, strings.Join(testSummary, "\n"))
 		Temperature: util.Ptr(0.2),
 	}
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org, h.httpLog)
+	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
 
 	if err != nil {
 		return err

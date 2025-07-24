@@ -466,16 +466,22 @@ func parseTemplateVariables(flags *pflag.FlagSet) (map[string]string, error) {
 }
 
 type runCommandHandler struct {
-	ctx     context.Context
-	cfg     *command.Config
-	client  azuremodels.Client
-	args    []string
-	httpLog string
+	ctx    context.Context
+	cfg    *command.Config
+	client azuremodels.Client
+	args   []string
 }
 
 func newRunCommandHandler(cmd *cobra.Command, cfg *command.Config, args []string) *runCommandHandler {
+	ctx := cmd.Context()
 	httpLog, _ := cmd.Flags().GetString("http-log")
-	return &runCommandHandler{ctx: cmd.Context(), cfg: cfg, client: cfg.Client, args: args, httpLog: httpLog}
+	
+	// Add HTTP log filename to context if provided
+	if httpLog != "" {
+		ctx = azuremodels.WithHTTPLogFile(ctx, httpLog)
+	}
+	
+	return &runCommandHandler{ctx: ctx, cfg: cfg, client: cfg.Client, args: args}
 }
 
 func (h *runCommandHandler) loadModels() ([]*azuremodels.ModelSummary, error) {
@@ -554,7 +560,7 @@ func validateModelName(modelName string, models []*azuremodels.ModelSummary) (st
 }
 
 func (h *runCommandHandler) getChatCompletionStreamReader(req azuremodels.ChatCompletionOptions, org string) (sse.Reader[azuremodels.ChatCompletion], error) {
-	resp, err := h.client.GetChatCompletionStream(h.ctx, req, org, h.httpLog)
+	resp, err := h.client.GetChatCompletionStream(h.ctx, req, org)
 	if err != nil {
 		return nil, err
 	}

@@ -17,7 +17,6 @@ type generateCommandHandler struct {
 	client  azuremodels.Client
 	options *PromptPexOptions
 	org     string
-	httpLog string
 }
 
 // NewGenerateCommand returns a new command to generate tests using PromptPex.
@@ -54,14 +53,19 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 			// Get http-log flag
 			httpLog, _ := cmd.Flags().GetString("http-log")
 
+			ctx := cmd.Context()
+			// Add HTTP log filename to context if provided
+			if httpLog != "" {
+				ctx = azuremodels.WithHTTPLogFile(ctx, httpLog)
+			}
+
 			// Create the command handler
 			handler := &generateCommandHandler{
-				ctx:     cmd.Context(),
+				ctx:     ctx,
 				cfg:     cfg,
 				client:  cfg.Client,
 				options: options,
 				org:     org,
-				httpLog: httpLog,
 			}
 
 			// Create PromptPex context

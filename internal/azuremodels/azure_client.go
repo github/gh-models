@@ -45,7 +45,7 @@ func NewAzureClient(httpClient *http.Client, authToken string, cfg *AzureClientC
 }
 
 // GetChatCompletionStream returns a stream of chat completions using the given options.
-func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompletionOptions, org, httpLogFile string) (*ChatCompletionResponse, error) {
+func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompletionOptions, org string) (*ChatCompletionResponse, error) {
 	// Check for o1 models, which don't support streaming
 	if req.Model == "o1-mini" || req.Model == "o1-preview" || req.Model == "o1" {
 		req.Stream = false
@@ -68,6 +68,7 @@ func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompl
 	}
 
 	// Write request details to specified log file for debugging
+	httpLogFile := HTTPLogFileFromContext(ctx)
 	if httpLogFile != "" {
 		logFile, err := os.OpenFile(httpLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err == nil {
