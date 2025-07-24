@@ -16,13 +16,10 @@ func TestGetDefaultOptions(t *testing.T) {
 		actual   interface{}
 		expected interface{}
 	}{
-		{"Temperature", defaults.Temperature, util.Ptr(0.0)},
 		{"TestsPerRule", defaults.TestsPerRule, util.Ptr(3)},
 		{"RunsPerTest", defaults.RunsPerTest, util.Ptr(2)},
 		{"MaxRulesPerTestGen", defaults.MaxRulesPerTestGen, util.Ptr(3)},
 		{"TestGenerations", defaults.TestGenerations, util.Ptr(2)},
-		{"TestExpansions", defaults.TestExpansions, util.Ptr(0)},
-		{"FilterTestCount", defaults.FilterTestCount, util.Ptr(5)},
 	}
 
 	for _, tt := range tests {
@@ -52,13 +49,10 @@ func TestGetDefaultOptions_NonNilFields(t *testing.T) {
 		name  string
 		value interface{}
 	}{
-		{"Temperature", defaults.Temperature},
 		{"TestsPerRule", defaults.TestsPerRule},
 		{"RunsPerTest", defaults.RunsPerTest},
 		{"MaxRulesPerTestGen", defaults.MaxRulesPerTestGen},
 		{"TestGenerations", defaults.TestGenerations},
-		{"TestExpansions", defaults.TestExpansions},
-		{"FilterTestCount", defaults.FilterTestCount},
 	}
 
 	for _, field := range nonNilFields {

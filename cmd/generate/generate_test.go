@@ -33,9 +33,6 @@ func TestNewGenerateCommand(t *testing.T) {
 		require.True(t, flags.Lookup("groundtruth-model") != nil)
 		require.True(t, flags.Lookup("tests-per-rule") != nil)
 		require.True(t, flags.Lookup("runs-per-test") != nil)
-		require.True(t, flags.Lookup("test-expansions") != nil)
-		require.True(t, flags.Lookup("rate-tests") != nil)
-		require.True(t, flags.Lookup("temperature") != nil)
 	})
 
 	t.Run("--help prints usage info", func(t *testing.T) {
@@ -54,7 +51,6 @@ func TestNewGenerateCommand(t *testing.T) {
 		require.Contains(t, output, "PromptPex methodology")
 		require.Regexp(t, regexp.MustCompile(`--effort string\s+Effort level`), output)
 		require.Regexp(t, regexp.MustCompile(`--groundtruth-model string\s+Model to use for generating groundtruth`), output)
-		require.Regexp(t, regexp.MustCompile(`--temperature float\s+Temperature for model inference`), output)
 		require.Empty(t, errBuf.String())
 	})
 }
@@ -71,7 +67,6 @@ func TestParseFlags(t *testing.T) {
 			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.Equal(t, 3, *opts.TestsPerRule)
 				require.Equal(t, 2, *opts.RunsPerTest)
-				require.Equal(t, 0, *opts.TestExpansions)
 			},
 		},
 		{
@@ -92,22 +87,12 @@ func TestParseFlags(t *testing.T) {
 		},
 		{
 			name: "numeric flags",
-			args: []string{"--tests-per-rule", "10", "--runs-per-test", "3", "--test-expansions", "2"},
+			args: []string{"--tests-per-rule", "10", "--runs-per-test", "3"},
 			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.NotNil(t, opts.TestsPerRule)
 				require.Equal(t, 10, *opts.TestsPerRule)
 				require.NotNil(t, opts.RunsPerTest)
 				require.Equal(t, 3, *opts.RunsPerTest)
-				require.NotNil(t, opts.TestExpansions)
-				require.Equal(t, 2, *opts.TestExpansions)
-			},
-		},
-		{
-			name: "temperature flag",
-			args: []string{"--temperature", "0.7"},
-			validate: func(t *testing.T, opts *PromptPexOptions) {
-				require.NotNil(t, opts.Temperature)
-				require.Equal(t, 0.7, *opts.Temperature)
 			},
 		},
 	}

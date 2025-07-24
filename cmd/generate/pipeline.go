@@ -1,7 +1,6 @@
 package generate
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -53,14 +52,16 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 	}
 
 	// Step 6: Test Expansions (if enabled)
-	if h.options.TestExpansions != nil && *h.options.TestExpansions > 0 {
-		if err := h.expandTests(context); err != nil {
-			return fmt.Errorf("failed to expand tests: %w", err)
+	/*
+		if h.options.TestExpansions != nil && *h.options.TestExpansions > 0 {
+			if err := h.expandTests(context); err != nil {
+				return fmt.Errorf("failed to expand tests: %w", err)
+			}
+			if err := h.SaveContext(context); err != nil {
+				return err
+			}
 		}
-		if err := h.SaveContext(context); err != nil {
-			return err
-		}
-	}
+	*/
 
 	// Step 8: Generate Groundtruth (if model specified)
 	if h.options.Models.Groundtruth != nil {
@@ -79,12 +80,6 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 	if err := h.SaveContext(context); err != nil {
 		return err
 	}
-
-	// Step 11: Generate GitHub Models Evals
-	// TODO
-	//if err := h.githubModelsEvalsGenerate(context); err != nil {
-	//	return fmt.Errorf("failed to generate GitHub Models evals: %w", err)
-	//}
 
 	// Generate summary report
 	if err := h.GenerateSummary(context); err != nil {
@@ -436,93 +431,4 @@ func (h *generateCommandHandler) updatePromptFile(context *PromptPexContext) err
 	}
 
 	return nil
-}
-
-// expandTests implements test expansion functionality
-func (h *generateCommandHandler) expandTests(context *PromptPexContext) error {
-	h.WriteStartBox("Expansion")
-	originalTestCount := len(context.Tests)
-	for phase := 0; phase < *h.options.TestExpansions; phase++ {
-		h.WriteToLine(fmt.Sprintf("Test expansion phase %d/%d", phase+1, *h.options.TestExpansions))
-
-		var newTests []PromptPexTest
-		for _, test := range context.Tests {
-			// Generate expanded versions of each test
-			expandedTests, err := h.expandSingleTest(test)
-			if err != nil {
-				h.WriteToLine(fmt.Sprintf("Failed to expand test: %v", err))
-				continue
-			}
-			newTests = append(newTests, expandedTests...)
-		}
-		// Add new tests to the collection
-		context.Tests = append(context.Tests, newTests...)
-	}
-
-	h.cfg.WriteToOut(fmt.Sprintf("Expanded from %d to %d tests", originalTestCount, len(context.Tests)))
-
-	return nil
-}
-
-// expandSingleTest expands a single test into multiple variations
-func (h *generateCommandHandler) expandSingleTest(test PromptPexTest) ([]PromptPexTest, error) {
-	prompt := fmt.Sprintf(`Given this test case, generate 2-3 variations that test similar scenarios but with different inputs.
-Keep the same scenario type but vary the specific details.
-
-<original_test>
-<scenario>
-%s
-</scenario>
-<input>
-%s
-</input>
-<reasoning>
-%s
-</reasoning>
-</original_test>
-
-Generate variations in JSON format as an array of objects with "scenario", "testinput", and "reasoning" fields.`,
-		*test.Scenario, test.TestInput, *test.Reasoning)
-
-	messages := []azuremodels.ChatMessage{
-		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-	}
-
-	options := azuremodels.ChatCompletionOptions{
-		Model:       *h.options.Models.TestExpansion, // GitHub Models compatible model
-		Messages:    messages,
-		Temperature: util.Ptr(0.5),
-	}
-
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
-
-	if err != nil {
-		return nil, err
-	}
-
-	completion, err := response.Reader.Read()
-	if err != nil {
-		return nil, err
-	}
-
-	// Parse the JSON response
-	var expandedTests []PromptPexTest
-	content := *completion.Choices[0].Message.Content
-	jsonStr := ExtractJSON(content)
-
-	if err := json.Unmarshal([]byte(jsonStr), &expandedTests); err != nil {
-		return nil, fmt.Errorf("failed to parse expanded tests JSON: %w", err)
-	}
-
-	// Set the original test input for tracking
-	for i := range expandedTests {
-		expandedTests[i].TestInputOriginal = &test.TestInput
-		if test.Generation != nil {
-			expandedTests[i].Generation = util.Ptr(*test.Generation + 1)
-		} else {
-			expandedTests[i].Generation = util.Ptr(1)
-		}
-	}
-
-	return expandedTests, nil
 }

@@ -1,6 +1,7 @@
 name: Funny Joke Test
 description: A test prompt for analyzing jokes
 model: openai/gpt-4o-mini
+temperature: 0.2
 messages:
   - role: system
     content: |

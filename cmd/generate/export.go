@@ -1,85 +1,12 @@
 package generate
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
-
-	"github.com/github/gh-models/pkg/prompt"
 )
 
-// toGitHubModelsPrompt converts PromptPex context to GitHub Models format
-func (h *generateCommandHandler) toGitHubModelsPrompt(modelID string, context *PromptPexContext) (*prompt.File, error) {
-	// Resolve model name (simplified - in real implementation would use LLM client)
-	resolvedModel := modelID
-	if modelID == "evals" {
-		resolvedModel = "gpt-4o" // Default model for evals
-	}
-
-	// Convert messages from the prompt file
-	var messages []prompt.Message
-	if context.Prompt != nil {
-		messages = context.Prompt.Messages
-	}
-
-	// Convert test data
-	var testData []prompt.TestDataItem
-	// Extract template variables from prompt content to determine allowed fields
-	allowedFields := h.extractTemplateVariables(context)
-
-	for _, test := range context.Tests {
-		// Skip empty test inputs
-		if strings.TrimSpace(test.TestInput) == "" {
-			h.cfg.WriteToOut(fmt.Sprintf("Warning: Skipping test with empty input (scenario: %s)", getTestScenario(test)))
-			continue
-		}
-
-		item := prompt.TestDataItem{}
-
-		// Parse test input if it's JSON
-		if strings.HasPrefix(test.TestInput, "{") {
-			var inputMap map[string]interface{}
-			if err := json.Unmarshal([]byte(test.TestInput), &inputMap); err == nil {
-				// Use the parsed JSON as individual fields, only including template variables
-				for k, v := range inputMap {
-					if allowedFields[k] {
-						item[k] = v
-					} else {
-						h.cfg.WriteToOut(fmt.Sprintf("Warning: Skipping field '%s' (not a template variable) in test data", k))
-					}
-				}
-			} else {
-				h.cfg.WriteToOut(fmt.Sprintf("Failed to parse test input as JSON: %v. Using as plain text input.", err))
-				// Fall back to single input field
-				item["input"] = test.TestInput
-			}
-		} else {
-			// Simple text input
-			item["input"] = test.TestInput
-		}
-
-		// Add expected output if available (groundtruth)
-		if test.Groundtruth != nil {
-			item["expected"] = *test.Groundtruth
-		}
-
-		// Add reasoning if available
-		if test.Reasoning != nil {
-			item["reasoning"] = *test.Reasoning
-		}
-
-		testData = append(testData, item)
-	}
-
-	// Create model parameters
-	var modelParams prompt.ModelParameters
-	if h.options.Temperature != nil {
-		modelParams = prompt.ModelParameters{
-			Temperature: h.options.Temperature,
-		}
-	}
-
+/*
 	// Create the base evaluator using rules
 	evaluators := []prompt.Evaluator{
 		{
@@ -101,23 +28,8 @@ func (h *generateCommandHandler) toGitHubModelsPrompt(modelID string, context *P
 		},
 	}
 
-	// Create the prompt file structure
-	promptFile := &prompt.File{
-		Model:           resolvedModel,
-		ModelParameters: modelParams,
-		Messages:        messages,
-		TestData:        testData,
-		Evaluators:      evaluators,
-	}
 
-	// Set name and description from the original prompt if available
-	if context.Prompt != nil {
-		promptFile.Name = context.Prompt.Name
-		promptFile.Description = context.Prompt.Description
-	}
-
-	return promptFile, nil
-}
+*/
 
 // generateRulesEvaluatorSystemPrompt generates the system prompt for rules evaluation
 func (h *generateCommandHandler) generateRulesEvaluatorSystemPrompt(context *PromptPexContext) string {

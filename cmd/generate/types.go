@@ -28,7 +28,6 @@ type WorkspaceFile struct {
 // PromptPexOptions contains all configuration options for PromptPex
 type PromptPexOptions struct {
 	// Core options
-	Temperature        *float64               `yaml:"temperature,omitempty" json:"temperature,omitempty"`
 	Instructions       *PromptPexPrompts      `yaml:"instructions,omitempty" json:"instructions,omitempty"`
 	Models             *PromptPexModelAliases `yaml:"models,omitempty" json:"models,omitempty"`
 	TestsPerRule       *int                   `yaml:"testsPerRule,omitempty" json:"testsPerRule,omitempty"`
@@ -37,8 +36,6 @@ type PromptPexOptions struct {
 	MaxRules           *int                   `yaml:"maxRules,omitempty" json:"maxRules,omitempty"`
 	MaxRulesPerTestGen *int                   `yaml:"maxRulesPerTestGeneration,omitempty" json:"maxRulesPerTestGeneration,omitempty"`
 	TestGenerations    *int                   `yaml:"testGenerations,omitempty" json:"testGenerations,omitempty"`
-	TestExpansions     *int                   `yaml:"testExpansions,omitempty" json:"testExpansions,omitempty"`
-	FilterTestCount    *int                   `yaml:"filterTestCount,omitempty" json:"filterTestCount,omitempty"`
 
 	// CLI-specific options
 	Effort *string `yaml:"effort,omitempty" json:"effort,omitempty"`
@@ -185,7 +182,6 @@ var Constants = PromptPexConstants{
 
 // Effort levels
 const (
-	EffortMin    = "min"
 	EffortLow    = "low"
 	EffortMedium = "medium"
 	EffortHigh   = "high"
