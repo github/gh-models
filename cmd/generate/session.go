@@ -219,8 +219,13 @@ func IsStepCompleted(context *PromptPexContext, step string) bool {
 	case "tests":
 		return len(context.PromptPexTests) > 0
 	case "testExpansions":
-		// Test expansions are considered complete if tests exist (since they modify the existing tests)
-		return len(context.PromptPexTests) > 0
+		// Test expansions are considered complete if any tests have generation > 0
+		for _, test := range context.PromptPexTests {
+			if test.Generation != nil && *test.Generation > 0 {
+				return true
+			}
+		}
+		return false
 	case "groundtruth":
 		// Check if any tests have groundtruth data
 		for _, test := range context.PromptPexTests {

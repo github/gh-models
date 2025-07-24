@@ -178,12 +178,14 @@ func TestGenerateCommandExecution(t *testing.T) {
 		out := new(bytes.Buffer)
 		cfg := command.NewConfig(out, out, client, true, 100)
 
+		tmpDir := t.TempDir()
+		sessionFile := filepath.Join(tmpDir, "session.json")
 		cmd := NewGenerateCommand(cfg)
-		cmd.SetArgs([]string{"nonexistent.yml"})
+		cmd.SetArgs([]string{"--session-file", sessionFile, "nonexistent.yml"})
 
 		err := cmd.Execute()
 		require.Error(t, err)
-		require.Contains(t, err.Error(), "failed to create context")
+		require.Contains(t, err.Error(), "failed to load or create session")
 	})
 
 	t.Run("handles LLM errors gracefully", func(t *testing.T) {
@@ -212,7 +214,8 @@ messages:
 		cfg := command.NewConfig(out, out, client, true, 100)
 
 		cmd := NewGenerateCommand(cfg)
-		cmd.SetArgs([]string{promptFile})
+		sessionFile := filepath.Join(tmpDir, "session.json")
+		cmd.SetArgs([]string{"--session-file", sessionFile, promptFile})
 
 		err = cmd.Execute()
 		require.Error(t, err)
@@ -279,7 +282,9 @@ messages:
 		cfg := command.NewConfig(out, out, client, true, 100)
 
 		cmd := NewGenerateCommand(cfg)
+		sessionFile := filepath.Join(tmpDir, "session.json")
 		cmd.SetArgs([]string{
+			"--session-file", sessionFile,
 			"--models-under-test", "openai/gpt-4o-mini",
 			"--runs-per-test", "1",
 			promptFile,
@@ -348,7 +353,9 @@ messages:
 		cfg := command.NewConfig(out, out, client, true, 100)
 
 		cmd := NewGenerateCommand(cfg)
+		sessionFile := filepath.Join(tmpDir, "session.json")
 		cmd.SetArgs([]string{
+			"--session-file", sessionFile,
 			"--groundtruth-model", "openai/gpt-4o",
 			promptFile,
 		})
@@ -418,7 +425,9 @@ messages:
 		cfg := command.NewConfig(out, out, client, true, 100)
 
 		cmd := NewGenerateCommand(cfg)
+		sessionFile := filepath.Join(tmpDir, "session.json")
 		cmd.SetArgs([]string{
+			"--session-file", sessionFile,
 			"--test-expansions", "1",
 			promptFile,
 		})
@@ -487,7 +496,9 @@ messages:
 		cfg := command.NewConfig(out, out, client, true, 100)
 
 		cmd := NewGenerateCommand(cfg)
+		sessionFile := filepath.Join(tmpDir, "session.json")
 		cmd.SetArgs([]string{
+			"--session-file", sessionFile,
 			"--evals",
 			"--eval-models", "openai/gpt-4o-mini",
 			"--models-under-test", "openai/gpt-4o-mini",
