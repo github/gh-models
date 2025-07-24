@@ -46,7 +46,6 @@ type PromptPexOptions struct {
 	MaxRules              *int                             `yaml:"maxRules,omitempty" json:"maxRules,omitempty"`
 	Cache                 interface{}                      `yaml:"cache,omitempty" json:"cache,omitempty"` // can be bool or string
 	ModelsUnderTest       []string                         `yaml:"modelsUnderTest,omitempty" json:"modelsUnderTest,omitempty"`
-	SplitRules            *bool                            `yaml:"splitRules,omitempty" json:"splitRules,omitempty"`
 	MaxRulesPerTestGen    *int                             `yaml:"maxRulesPerTestGeneration,omitempty" json:"maxRulesPerTestGeneration,omitempty"`
 	TestGenerations       *int                             `yaml:"testGenerations,omitempty" json:"testGenerations,omitempty"`
 	TestExpansions        *int                             `yaml:"testExpansions,omitempty" json:"testExpansions,omitempty"`

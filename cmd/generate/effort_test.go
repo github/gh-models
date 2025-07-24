@@ -17,7 +17,6 @@ func TestGetEffortConfiguration(t *testing.T) {
 			name:   "EffortMin configuration",
 			effort: EffortMin,
 			expected: &EffortConfiguration{
-				SplitRules:                util.Ptr(false),
 				TestGenerations:           util.Ptr(1),
 				TestsPerRule:              util.Ptr(1),
 				RunsPerTest:               util.Ptr(1),
@@ -38,7 +37,6 @@ func TestGetEffortConfiguration(t *testing.T) {
 				TestsPerRule:              util.Ptr(2),
 				RunsPerTest:               util.Ptr(1),
 				MaxRulesPerTestGeneration: util.Ptr(5),
-				SplitRules:                util.Ptr(true),
 				MaxTestsToRun:             util.Ptr(20),
 			},
 		},
@@ -51,7 +49,6 @@ func TestGetEffortConfiguration(t *testing.T) {
 				TestsPerRule:              util.Ptr(3),
 				RunsPerTest:               util.Ptr(1),
 				MaxRulesPerTestGeneration: util.Ptr(5),
-				SplitRules:                util.Ptr(true),
 				TestGenerations:           util.Ptr(1),
 			},
 		},
@@ -62,7 +59,6 @@ func TestGetEffortConfiguration(t *testing.T) {
 				TestExpansions:            util.Ptr(1),
 				MaxRules:                  util.Ptr(50),
 				MaxRulesPerTestGeneration: util.Ptr(2),
-				SplitRules:                util.Ptr(true),
 				TestGenerations:           util.Ptr(2),
 			},
 		},
@@ -124,7 +120,6 @@ func TestGetEffortConfiguration_FieldComparison(t *testing.T) {
 		actual   interface{}
 		expected interface{}
 	}{
-		{"SplitRules", config.SplitRules, util.Ptr(false)},
 		{"TestGenerations", config.TestGenerations, util.Ptr(1)},
 		{"TestsPerRule", config.TestsPerRule, util.Ptr(1)},
 		{"RunsPerTest", config.RunsPerTest, util.Ptr(1)},
@@ -157,7 +152,6 @@ func TestApplyEffortConfiguration(t *testing.T) {
 			initialOptions: &PromptPexOptions{},
 			effort:         EffortMin,
 			expectedChanges: map[string]interface{}{
-				"SplitRules":         util.Ptr(false),
 				"TestGenerations":    util.Ptr(1),
 				"TestsPerRule":       util.Ptr(1),
 				"RunsPerTest":        util.Ptr(1),
@@ -172,14 +166,12 @@ func TestApplyEffortConfiguration(t *testing.T) {
 		{
 			name: "apply to options with existing values",
 			initialOptions: &PromptPexOptions{
-				SplitRules:      util.Ptr(true), // Already set, should not change
-				TestGenerations: util.Ptr(5),    // Already set, should not change
-				TestsPerRule:    nil,            // Not set, should be applied
-				MaxRules:        nil,            // Not set, should be applied
+				TestGenerations: util.Ptr(5), // Already set, should not change
+				TestsPerRule:    nil,         // Not set, should be applied
+				MaxRules:        nil,         // Not set, should be applied
 			},
 			effort: EffortMin,
 			expectedChanges: map[string]interface{}{
-				"SplitRules":         util.Ptr(true),  // Should remain unchanged
 				"TestGenerations":    util.Ptr(5),     // Should remain unchanged
 				"TestsPerRule":       util.Ptr(1),     // Should be applied from EffortMin
 				"RunsPerTest":        util.Ptr(1),     // Should be applied from EffortMin
@@ -216,7 +208,6 @@ func TestApplyEffortConfiguration(t *testing.T) {
 				"TestsPerRule":       util.Ptr(2),
 				"RunsPerTest":        util.Ptr(1),
 				"MaxRulesPerTestGen": util.Ptr(5),
-				"SplitRules":         util.Ptr(true),
 				"MaxTestsToRun":      util.Ptr(20),
 			},
 			description: "All fields should be set from EffortLow configuration",
@@ -229,7 +220,6 @@ func TestApplyEffortConfiguration(t *testing.T) {
 				"TestExpansions":     util.Ptr(1),
 				"MaxRules":           util.Ptr(50),
 				"MaxRulesPerTestGen": util.Ptr(2),
-				"SplitRules":         util.Ptr(true),
 				"TestGenerations":    util.Ptr(2),
 			},
 			description: "All fields should be set from EffortHigh configuration",
@@ -252,8 +242,6 @@ func TestApplyEffortConfiguration(t *testing.T) {
 				var actualValue interface{}
 
 				switch fieldName {
-				case "SplitRules":
-					actualValue = options.SplitRules
 				case "TestGenerations":
 					actualValue = options.TestGenerations
 				case "TestsPerRule":
@@ -396,8 +384,7 @@ func TestEffortConfiguration_ProgressiveComplexity(t *testing.T) {
 // Helper function to check if options are empty or unchanged
 func isOptionsEmpty(options *PromptPexOptions, original *PromptPexOptions) bool {
 	if original == nil {
-		return options.SplitRules == nil &&
-			options.TestGenerations == nil &&
+		return options.TestGenerations == nil &&
 			options.TestsPerRule == nil &&
 			options.RunsPerTest == nil &&
 			options.TestExpansions == nil &&
@@ -408,8 +395,7 @@ func isOptionsEmpty(options *PromptPexOptions, original *PromptPexOptions) bool 
 	}
 
 	// Compare with original values
-	return reflect.DeepEqual(options.SplitRules, original.SplitRules) &&
-		reflect.DeepEqual(options.TestGenerations, original.TestGenerations) &&
+	return reflect.DeepEqual(options.TestGenerations, original.TestGenerations) &&
 		reflect.DeepEqual(options.TestsPerRule, original.TestsPerRule) &&
 		reflect.DeepEqual(options.RunsPerTest, original.RunsPerTest) &&
 		reflect.DeepEqual(options.TestExpansions, original.TestExpansions) &&

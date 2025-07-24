@@ -4,7 +4,6 @@ import "github.com/github/gh-models/pkg/util"
 
 // EffortConfiguration defines the configuration for different effort levels
 type EffortConfiguration struct {
-	SplitRules                *bool `json:"splitRules,omitempty"`
 	TestGenerations           *int  `json:"testGenerations,omitempty"`
 	TestsPerRule              *int  `json:"testsPerRule,omitempty"`
 	RunsPerTest               *int  `json:"runsPerTest,omitempty"`
@@ -21,7 +20,6 @@ func GetEffortConfiguration(effort string) *EffortConfiguration {
 	switch effort {
 	case EffortMin:
 		return &EffortConfiguration{
-			SplitRules:                util.Ptr(false),
 			TestGenerations:           util.Ptr(1),
 			TestsPerRule:              util.Ptr(1),
 			RunsPerTest:               util.Ptr(1),
@@ -39,7 +37,6 @@ func GetEffortConfiguration(effort string) *EffortConfiguration {
 			TestsPerRule:              util.Ptr(2),
 			RunsPerTest:               util.Ptr(1),
 			MaxRulesPerTestGeneration: util.Ptr(5),
-			SplitRules:                util.Ptr(true),
 			MaxTestsToRun:             util.Ptr(20),
 		}
 	case EffortMedium:
@@ -49,7 +46,6 @@ func GetEffortConfiguration(effort string) *EffortConfiguration {
 			TestsPerRule:              util.Ptr(3),
 			RunsPerTest:               util.Ptr(1),
 			MaxRulesPerTestGeneration: util.Ptr(5),
-			SplitRules:                util.Ptr(true),
 			TestGenerations:           util.Ptr(1),
 		}
 	case EffortHigh:
@@ -57,7 +53,6 @@ func GetEffortConfiguration(effort string) *EffortConfiguration {
 			TestExpansions:            util.Ptr(1),
 			MaxRules:                  util.Ptr(50),
 			MaxRulesPerTestGeneration: util.Ptr(2),
-			SplitRules:                util.Ptr(true),
 			TestGenerations:           util.Ptr(2),
 		}
 	default:
@@ -77,9 +72,6 @@ func ApplyEffortConfiguration(options *PromptPexOptions, effort string) {
 	}
 
 	// Apply configuration settings only if not already set
-	if config.SplitRules != nil && options.SplitRules == nil {
-		options.SplitRules = config.SplitRules
-	}
 	if config.TestGenerations != nil && options.TestGenerations == nil {
 		options.TestGenerations = config.TestGenerations
 	}

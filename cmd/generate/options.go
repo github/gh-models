@@ -8,7 +8,6 @@ func GetDefaultOptions() *PromptPexOptions {
 		Temperature:        util.Ptr(0.0),
 		TestsPerRule:       util.Ptr(3),
 		RunsPerTest:        util.Ptr(2),
-		SplitRules:         util.Ptr(true),
 		MaxRulesPerTestGen: util.Ptr(3),
 		TestGenerations:    util.Ptr(2),
 		TestExpansions:     util.Ptr(0),
