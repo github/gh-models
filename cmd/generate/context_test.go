@@ -36,7 +36,7 @@ messages:
 			expectError: false,
 			expectedFields: map[string]interface{}{
 				"intent":       "",
-				"rules":        "",
+				"rules":        []string{},
 				"inverseRules": "",
 			},
 		},
@@ -57,7 +57,7 @@ messages:
 			expectError: false,
 			expectedFields: map[string]interface{}{
 				"intent": "",
-				"rules":  "",
+				"rules":  []string{},
 			},
 		},
 		{

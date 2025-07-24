@@ -479,7 +479,7 @@ func TestParseRules(t *testing.T) {
 		{
 			name:     "rules with leading and trailing whitespace",
 			input:    "  1. Always validate input  \n  2. Handle errors gracefully  ",
-			expected: []string{"Always validate input  ", "  2. Handle errors gracefully"},
+			expected: []string{"Always validate input  ", "Handle errors gracefully"},
 		},
 		{
 			name:     "decimal numbered rules (not matched by regex)",
@@ -504,7 +504,7 @@ func TestParseRules(t *testing.T) {
 		{
 			name:     "rules starting with whitespace",
 			input:    "  1. Indented rule\n\t2. Tab indented rule",
-			expected: []string{"Indented rule", "\t2. Tab indented rule"},
+			expected: []string{"Indented rule", "Tab indented rule"},
 		},
 	}
 
