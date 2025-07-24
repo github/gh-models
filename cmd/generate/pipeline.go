@@ -90,7 +90,7 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 
 // generateIntent generates the intent of the prompt
 func (h *generateCommandHandler) generateIntent(context *PromptPexContext) error {
-	h.WriteStartBox("Intent")
+	h.WriteStartBox("Intent", "")
 	if context.Intent == nil || *context.Intent == "" {
 		system := `Analyze the following prompt and describe its intent in 2-3 sentences.`
 		prompt := fmt.Sprintf(`<prompt>
@@ -125,7 +125,7 @@ Intent:`, RenderMessagesToString(context.Prompt.Messages))
 
 // generateInputSpec generates the input specification
 func (h *generateCommandHandler) generateInputSpec(context *PromptPexContext) error {
-	h.WriteStartBox("Input Specification")
+	h.WriteStartBox("Input Specification", "")
 	if context.InputSpec == nil || *context.InputSpec == "" {
 		system := `Analyze the following prompt and generate a specification for its inputs.
 List the expected input parameters, their types, constraints, and examples.`
@@ -162,7 +162,7 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 
 // generateOutputRules generates output rules for the prompt
 func (h *generateCommandHandler) generateOutputRules(context *PromptPexContext) error {
-	h.WriteStartBox("Output rules")
+	h.WriteStartBox("Output rules", "")
 	if len(context.Rules) == 0 {
 		system := `Analyze the following prompt and generate a list of output rules.
 These rules should describe what makes a valid output from this prompt.
@@ -205,7 +205,7 @@ Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 
 // generateInverseRules generates inverse rules (what makes an invalid output)
 func (h *generateCommandHandler) generateInverseRules(context *PromptPexContext) error {
-	h.WriteStartBox("Inverse output rules")
+	h.WriteStartBox("Inverse output rules", "")
 	if len(context.InverseRules) == 0 {
 
 		system := `Based on the following <output_rules>, generate inverse rules that describe what would make an INVALID output.
@@ -246,7 +246,7 @@ Inverse Output Rules:`, strings.Join(context.Rules, "\n"))
 
 // generateTests generates test cases for the prompt
 func (h *generateCommandHandler) generateTests(context *PromptPexContext) error {
-	h.WriteStartBox(fmt.Sprintf("Tests (%d rules x %d tests per rule)", len(context.Rules)+len(context.InverseRules), *h.options.TestsPerRule))
+	h.WriteStartBox("Tests", fmt.Sprintf("%d rules x %d tests per rule", len(context.Rules)+len(context.InverseRules), *h.options.TestsPerRule))
 	if len(context.Tests) == 0 {
 		testsPerRule := 3
 		if h.options.TestsPerRule != nil {
@@ -311,13 +311,12 @@ Generate exactly %d diverse test cases:`, nTests,
 			Temperature: util.Ptr(0.3),
 		}
 
-		content, err := h.callModelWithRetry("tests", options)
+		tests, err := h.callModelToGenerateTests(options, context)
 		if err != nil {
 			return fmt.Errorf("failed to generate tests: %w", err)
 		}
-		tests, err := h.ParseTestsFromLLMResponse(content)
-		if err != nil {
-			return fmt.Errorf("failed to parse test JSON: %w", err)
+		if len(tests) == 0 {
+			return fmt.Errorf("no tests generated, please check your prompt and rules")
 		}
 		context.Tests = tests
 	}
@@ -329,6 +328,32 @@ Generate exactly %d diverse test cases:`, nTests,
 	}
 	h.WriteEndListBox(testViews, PREVIEW_TEST_COUNT)
 	return nil
+}
+
+func (h *generateCommandHandler) callModelToGenerateTests(options azuremodels.ChatCompletionOptions, context *PromptPexContext) ([]PromptPexTest, error) {
+	// try multiple times to generate tests
+	const maxGenerateTestRetry = 3
+	for i := 0; i < maxGenerateTestRetry; i++ {
+		content, err := h.callModelWithRetry("tests", options)
+		if err != nil {
+			continue
+		}
+		tests, err := h.ParseTestsFromLLMResponse(content)
+		if err != nil {
+			continue
+		}
+		return tests, nil
+	}
+	// last attempt without retry
+	content, err := h.callModelWithRetry("tests", options)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate tests: %w", err)
+	}
+	tests, err := h.ParseTestsFromLLMResponse(content)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse test JSON: %w", err)
+	}
+	return tests, nil
 }
 
 // runSingleTestWithContext runs a single test against a model with context
@@ -384,7 +409,7 @@ func (h *generateCommandHandler) runSingleTestWithContext(input string, modelNam
 // generateGroundtruth generates groundtruth outputs using the specified model
 func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) error {
 	groundtruthModel := h.options.Models.Groundtruth
-	h.WriteStartBox(fmt.Sprintf("Groundtruth with %s", *groundtruthModel))
+	h.WriteStartBox("Groundtruth", fmt.Sprintf("with %s", *groundtruthModel))
 	for i := range context.Tests {
 		test := &context.Tests[i]
 		h.WriteToLine(test.TestInput)

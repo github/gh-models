@@ -13,7 +13,7 @@ import (
 // createContext creates a new PromptPexContext from a prompt file
 func (h *generateCommandHandler) CreateContextFromPrompt() (*PromptPexContext, error) {
 
-	h.WriteStartBox(fmt.Sprintf("Prompt %s", h.promptFile))
+	h.WriteStartBox("Prompt", h.promptFile)
 
 	prompt, err := prompt.LoadFromFile(h.promptFile)
 	if err != nil {
