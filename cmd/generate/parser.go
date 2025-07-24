@@ -12,9 +12,9 @@ func ParseRules(text string) []string {
 	if IsUnassistedResponse(text) {
 		return nil
 	}
-	lines := SplitLines(Unfence(text))
+	lines := SplitLines(UnBacket(UnXml(Unfence(text))))
 	itemsRe := regexp.MustCompile(`^\s*(\d+\.|_|-|\*)\s+`) // remove leading item numbers or bullets
-	rulesRe := regexp.MustCompile(`^\s*Rules:\s*$`)
+	rulesRe := regexp.MustCompile(`^\s*(Inverse\s+)?Rules:\s*$`)
 	pythonWrapRe := regexp.MustCompile(`^\["(.*)"\]$`)
 	var cleaned []string
 	for _, line := range lines {

@@ -223,3 +223,129 @@ func TestSplitLines(t *testing.T) {
 		})
 	}
 }
+
+func TestUnXml(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "removes simple XML tags",
+			input:    "<tag>content</tag>",
+			expected: "content",
+		},
+		{
+			name:     "removes XML tags with content spanning multiple lines",
+			input:    "<code>\nline 1\nline 2\nline 3\n</code>",
+			expected: "line 1\nline 2\nline 3",
+		},
+		{
+			name:     "removes tags with attributes",
+			input:    `<div class="container" id="main">Hello World</div>`,
+			expected: "Hello World",
+		},
+		{
+			name:     "preserves content without XML tags",
+			input:    "just plain text",
+			expected: "just plain text",
+		},
+		{
+			name:     "handles empty string",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "handles whitespace around XML",
+			input:    "  <p>content</p>  ",
+			expected: "content",
+		},
+		{
+			name:     "handles content with leading/trailing whitespace inside tags",
+			input:    "<div>  \n  content  \n  </div>",
+			expected: "content",
+		},
+		{
+			name:     "handles mismatched tag names",
+			input:    "<start>content</end>",
+			expected: "<start>content</end>",
+		},
+		{
+			name:     "handles missing closing tag",
+			input:    "<tag>content without closing",
+			expected: "<tag>content without closing",
+		},
+		{
+			name:     "handles missing opening tag",
+			input:    "content without opening</tag>",
+			expected: "content without opening</tag>",
+		},
+		{
+			name:     "handles nested XML tags (outer only)",
+			input:    "<outer><inner>content</inner></outer>",
+			expected: "<inner>content</inner>",
+		},
+		{
+			name:     "handles complex content with newlines and special characters",
+			input:    "<response>\nHere's some code:\n\nfunc main() {\n    fmt.Println(\"Hello\")\n}\n\nThat should work!\n</response>",
+			expected: "Here's some code:\n\nfunc main() {\n    fmt.Println(\"Hello\")\n}\n\nThat should work!",
+		},
+		{
+			name:     "handles tag names with numbers and hyphens",
+			input:    "<h1>Heading</h1>",
+			expected: "Heading",
+		},
+		{
+			name:     "handles tag names with underscores",
+			input:    "<test_tag>content</test_tag>",
+			expected: "content",
+		},
+		{
+			name:     "handles empty tag content",
+			input:    "<empty></empty>",
+			expected: "",
+		},
+		{
+			name:     "handles XML with only whitespace content",
+			input:    "<space>   \n   </space>",
+			expected: "",
+		},
+		{
+			name:     "handles text that looks like XML but isn't",
+			input:    "This < is not > XML < tags >",
+			expected: "This < is not > XML < tags >",
+		},
+		{
+			name:     "handles single character tag names",
+			input:    "<a>link</a>",
+			expected: "link",
+		},
+		{
+			name:     "handles complex attributes with quotes",
+			input:    `<tag attr1="value1" attr2='value2' attr3=value3>content</tag>`,
+			expected: "content",
+		},
+		{
+			name:     "handles XML declaration-like content (not removed)",
+			input:    `<?xml version="1.0"?>content`,
+			expected: `<?xml version="1.0"?>content`,
+		},
+		{
+			name:     "handles comment-like content (not removed)",
+			input:    `<!-- comment -->content`,
+			expected: `<!-- comment -->content`,
+		},
+		{
+			name:     "handles CDATA-like content (not removed)",
+			input:    `<![CDATA[content]]>`,
+			expected: `<![CDATA[content]]>`,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := UnXml(tt.input)
+			require.Equal(t, tt.expected, result)
+		})
+	}
+}
