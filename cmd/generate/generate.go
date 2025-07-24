@@ -35,9 +35,8 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 		`, "`"),
 		Example: heredoc.Doc(`
 			gh models generate prompt.yml
-			gh models generate --effort medium --models-under-test "openai/gpt-4o-mini,openai/gpt-4o" prompt.yml
-			gh models generate --org my-org --groundtruth-model "openai/gpt-4o" prompt.yml
-			gh models generate --session-file my-session.json prompt.yml
+			gh models generate --org my-org --groundtruth-model "openai/gpt-4.1" prompt.yml
+			gh models generate --session-file prompt.session.json prompt.yml
 		`),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
