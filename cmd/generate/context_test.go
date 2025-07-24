@@ -103,7 +103,7 @@ messages:
 			}
 
 			// Test CreateContext
-			context, err := handler.CreateContext(promptFile)
+			context, err := handler.CreateContextFromPrompt(promptFile)
 
 			if tt.expectError {
 				if err == nil {
@@ -188,7 +188,7 @@ messages:
 	// Create multiple contexts and check that RunIDs are generated
 	var runIDs []string
 	for i := 0; i < 3; i++ {
-		context, err := handler.CreateContext(promptFile)
+		context, err := handler.CreateContextFromPrompt(promptFile)
 		if err != nil {
 			t.Fatalf("Unexpected error: %v", err)
 		}
@@ -223,7 +223,7 @@ func TestCreateContextWithNonExistentFile(t *testing.T) {
 		options: util.Ptr(PromptPexOptions{}),
 	}
 
-	_, err := handler.CreateContext("/nonexistent/file.prompt.yml")
+	_, err := handler.CreateContextFromPrompt("/nonexistent/file.prompt.yml")
 	if err == nil {
 		t.Errorf("Expected error for non-existent file")
 	}
@@ -287,7 +287,7 @@ messages:
 				options: util.Ptr(PromptPexOptions{}),
 			}
 
-			_, err = handler.CreateContext(promptFile)
+			_, err = handler.CreateContextFromPrompt(promptFile)
 
 			if tt.expectError {
 				if err == nil {
