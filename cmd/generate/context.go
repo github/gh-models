@@ -12,8 +12,8 @@ import (
 )
 
 // createContext creates a new PromptPexContext from a prompt file
-func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string) (*PromptPexContext, error) {
-	prompt, err := prompt.LoadFromFile(promptFile)
+func (h *generateCommandHandler) CreateContextFromPrompt() (*PromptPexContext, error) {
+	prompt, err := prompt.LoadFromFile(h.promptFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load prompt file: %w", err)
 	}
@@ -40,7 +40,7 @@ func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string) (*Pr
 	defaultSessionFile := h.sessionFile == nil || *h.sessionFile == ""
 	if defaultSessionFile {
 		// Generate default session file name by replacing 'prompt.yml' with '.generate.json'
-		h.sessionFile = util.Ptr(generateDefaultSessionFileName(promptFile))
+		h.sessionFile = util.Ptr(generateDefaultSessionFileName(h.promptFile))
 	}
 
 	// Try to load existing context from session file

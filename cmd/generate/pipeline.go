@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/github/gh-models/internal/azuremodels"
+	"github.com/github/gh-models/pkg/prompt"
 	"github.com/github/gh-models/pkg/util"
 )
 
@@ -57,6 +58,10 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 		}
 		h.SaveContext(context)
 	}
+
+	// insert test cases in prompt and write back to file
+	h.UpdatePromptFile(context)
+	h.SaveContext(context)
 
 	// Step 11: Generate GitHub Models Evals
 	// TODO
@@ -371,7 +376,7 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 
 	groundtruthModel := h.options.Models.Groundtruth
 
-	h.cfg.WriteToOut("Groundtruth")
+	h.cfg.WriteToOut("Generating groundtruth")
 
 	for i := range context.Tests {
 		test := &context.Tests[i]
@@ -392,6 +397,28 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 	}
 
 	h.WriteEndBox(fmt.Sprintf("%d items", len(context.Tests)))
+
+	return nil
+}
+
+// toGitHubModelsPrompt converts PromptPex context to GitHub Models format
+func (h *generateCommandHandler) UpdatePromptFile(context *PromptPexContext) error {
+	// Convert test data
+	testData := []prompt.TestDataItem{}
+	for _, test := range context.Tests {
+		item := prompt.TestDataItem{}
+		item["input"] = test.TestInput
+		if test.Groundtruth != nil {
+			item["expected"] = *test.Groundtruth
+		}
+		testData = append(testData, item)
+	}
+	context.Prompt.TestData = testData
+
+	// Save updated prompt to file
+	if err := context.Prompt.SaveToFile(h.promptFile); err != nil {
+		return fmt.Errorf("failed to save updated prompt file: %w", err)
+	}
 
 	return nil
 }

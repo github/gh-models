@@ -343,15 +343,16 @@ messages:
 		options := GetDefaultOptions()
 
 		handler := &generateCommandHandler{
-			ctx:     context.Background(),
-			cfg:     cfg,
-			client:  client,
-			options: options,
-			org:     "",
+			ctx:        context.Background(),
+			cfg:        cfg,
+			client:     client,
+			options:    options,
+			promptFile: promptFile,
+			org:        "",
 		}
 
 		// Test context creation
-		ctx, err := handler.CreateContextFromPrompt(promptFile)
+		ctx, err := handler.CreateContextFromPrompt()
 		require.NoError(t, err)
 		require.NotNil(t, ctx)
 		require.NotEmpty(t, ctx.RunID)
@@ -367,15 +368,16 @@ messages:
 		options := GetDefaultOptions()
 
 		handler := &generateCommandHandler{
-			ctx:     context.Background(),
-			cfg:     cfg,
-			client:  client,
-			options: options,
-			org:     "",
+			ctx:        context.Background(),
+			cfg:        cfg,
+			client:     client,
+			options:    options,
+			promptFile: "nonexistent.yml",
+			org:        "",
 		}
 
 		// Test with nonexistent file
-		_, err := handler.CreateContextFromPrompt("nonexistent.yml")
+		_, err := handler.CreateContextFromPrompt()
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "failed to load prompt file")
 	})

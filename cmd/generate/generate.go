@@ -17,8 +17,9 @@ type generateCommandHandler struct {
 	cfg         *command.Config
 	client      azuremodels.Client
 	options     *PromptPexOptions
-	sessionFile *string
+	promptFile  string
 	org         string
+	sessionFile *string
 }
 
 // NewGenerateCommand returns a new command to generate tests using PromptPex.
@@ -71,12 +72,13 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 				cfg:         cfg,
 				client:      cfg.Client,
 				options:     options,
+				promptFile:  promptFile,
 				org:         org,
 				sessionFile: util.Ptr(sessionFile),
 			}
 
 			// Create PromptPex context
-			context, err := handler.CreateContextFromPrompt(promptFile)
+			context, err := handler.CreateContextFromPrompt()
 			if err != nil {
 				return fmt.Errorf("failed to create context: %w", err)
 			}

@@ -120,6 +120,21 @@ func LoadFromFile(filePath string) (*File, error) {
 	return &promptFile, nil
 }
 
+// SaveToFile saves the prompt file to the specified path
+func (f *File) SaveToFile(filePath string) error {
+	data, err := yaml.Marshal(f)
+	if err != nil {
+		return fmt.Errorf("failed to marshal prompt file: %w", err)
+	}
+
+	err = os.WriteFile(filePath, data, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write prompt file: %w", err)
+	}
+
+	return nil
+}
+
 // validateResponseFormat validates the responseFormat field
 func (f *File) validateResponseFormat() error {
 	if f.ResponseFormat == nil {
