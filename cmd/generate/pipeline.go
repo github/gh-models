@@ -76,169 +76,161 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 
 // generateIntent generates the intent of the prompt
 func (h *generateCommandHandler) generateIntent(context *PromptPexContext) error {
-	if context.Intent != nil && *context.Intent != "" {
-		h.WriteBox("Reusing intent...", *context.Intent)
-		return nil
-	}
-
-	h.cfg.WriteToOut("Generating intent...\n")
-
-	system := `Analyze the following prompt and describe its intent in 2-3 sentences.`
-	prompt := fmt.Sprintf(`<prompt>
+	h.WriteStartBox("Intent")
+	if context.Intent == nil || *context.Intent == "" {
+		system := `Analyze the following prompt and describe its intent in 2-3 sentences.`
+		prompt := fmt.Sprintf(`<prompt>
 %s
 </prompt>
 
 Intent:`, RenderMessagesToString(context.Prompt.Messages))
 
-	messages := []azuremodels.ChatMessage{
-		{Role: azuremodels.ChatMessageRoleSystem, Content: &system},
-		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+		messages := []azuremodels.ChatMessage{
+			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(systemPromptTextOnly)},
+			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(system)},
+			{Role: azuremodels.ChatMessageRoleUser, Content: util.Ptr(prompt)},
+		}
+		options := azuremodels.ChatCompletionOptions{
+			Model:       *h.options.Models.Rules, // GitHub Models compatible model
+			Messages:    messages,
+			Temperature: util.Ptr(0.0),
+			Stream:      false,
+		}
+		intent, err := h.callModelWithRetry("intent", options)
+		if err != nil {
+			return err
+		}
+		context.Intent = util.Ptr(intent)
 	}
-	options := azuremodels.ChatCompletionOptions{
-		Model:       *h.options.Models.Rules, // GitHub Models compatible model
-		Messages:    messages,
-		Temperature: util.Ptr(0.0),
-		Stream:      false,
-	}
-	intent, err := h.callModelWithRetry("intent", options)
-	if err != nil {
-		return err
-	}
-	context.Intent = util.Ptr(intent)
+
+	h.cfg.WriteToOut(*context.Intent + "\n")
+	h.WriteEndBox("")
 
 	return nil
 }
 
 // generateInputSpec generates the input specification
 func (h *generateCommandHandler) generateInputSpec(context *PromptPexContext) error {
-	if context.InputSpec != nil && *context.InputSpec != "" {
-		h.WriteBox("Reusing input specification...", *context.InputSpec)
-		return nil
-	}
-
-	h.cfg.WriteToOut("Generating input specification...\n")
-
-	system := `Analyze the following prompt and generate a specification for its inputs.
+	h.WriteStartBox("Input Specification")
+	if context.InputSpec == nil || *context.InputSpec == "" {
+		system := `Analyze the following prompt and generate a specification for its inputs.
 List the expected input parameters, their types, constraints, and examples.`
-	prompt := fmt.Sprintf(`<prompt>
+		prompt := fmt.Sprintf(`<prompt>
 %s
 </prompt>
 
 Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 
-	messages := []azuremodels.ChatMessage{
-		{Role: azuremodels.ChatMessageRoleSystem, Content: &system},
-		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+		messages := []azuremodels.ChatMessage{
+			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(systemPromptTextOnly)},
+			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(system)},
+			{Role: azuremodels.ChatMessageRoleUser, Content: util.Ptr(prompt)},
+		}
+
+		options := azuremodels.ChatCompletionOptions{
+			Model:       *h.options.Models.Rules,
+			Messages:    messages,
+			Temperature: util.Ptr(0.0),
+		}
+
+		inputSpec, err := h.callModelWithRetry("input spec", options)
+		if err != nil {
+			return err
+		}
+		context.InputSpec = util.Ptr(inputSpec)
 	}
 
-	options := azuremodels.ChatCompletionOptions{
-		Model:       *h.options.Models.Rules,
-		Messages:    messages,
-		Temperature: util.Ptr(0.0),
-	}
-
-	inputSpec, err := h.callModelWithRetry("input spec", options)
-	if err != nil {
-		return err
-	}
-	context.InputSpec = util.Ptr(inputSpec)
+	h.cfg.WriteToOut(*context.InputSpec + "\n")
+	h.WriteEndBox("")
 
 	return nil
 }
 
 // generateOutputRules generates output rules for the prompt
 func (h *generateCommandHandler) generateOutputRules(context *PromptPexContext) error {
-	if len(context.Rules) >= 0 {
-		h.WriteStartBox("Reusing output rules...")
-		for _, rule := range context.Rules {
-			h.cfg.WriteToOut(rule)
-		}
-		h.WriteEndBox(fmt.Sprintf("%d rules", len(context.Rules)))
-		return nil
-	}
-
-	h.cfg.WriteToOut("Generating output rules...\n")
-
-	system := `Analyze the following prompt and generate a list of output rules.
+	h.WriteStartBox("Output rules...")
+	if len(context.Rules) == 0 {
+		system := `Analyze the following prompt and generate a list of output rules.
 These rules should describe what makes a valid output from this prompt.
 List each rule on a separate line starting with a number.`
-	prompt := fmt.Sprintf(`<prompt>
+		prompt := fmt.Sprintf(`<prompt>
 %s
 </prompt>
 
 Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 
-	messages := []azuremodels.ChatMessage{
-		{Role: azuremodels.ChatMessageRoleSystem, Content: &system},
-		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-	}
+		messages := []azuremodels.ChatMessage{
+			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(systemPromptTextOnly)},
+			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(system)},
+			{Role: azuremodels.ChatMessageRoleUser, Content: util.Ptr(prompt)},
+		}
 
-	options := azuremodels.ChatCompletionOptions{
-		Model:       *h.options.Models.Rules, // GitHub Models compatible model
-		Messages:    messages,
-		Temperature: util.Ptr(0.0),
-	}
+		options := azuremodels.ChatCompletionOptions{
+			Model:       *h.options.Models.Rules, // GitHub Models compatible model
+			Messages:    messages,
+			Temperature: util.Ptr(0.0),
+		}
 
-	rules, err := h.callModelWithRetry("output rules", options)
-	if err != nil {
-		return err
-	}
+		rules, err := h.callModelWithRetry("output rules", options)
+		if err != nil {
+			return err
+		}
 
-	parsed := ParseRules(rules)
-	if parsed == nil {
-		return fmt.Errorf("failed to parse output rules: %s", rules)
-	}
+		parsed := ParseRules(rules)
+		if parsed == nil {
+			return fmt.Errorf("failed to parse output rules: %s", rules)
+		}
 
-	context.Rules = parsed
+		context.Rules = parsed
+	}
+	for _, rule := range context.Rules {
+		h.cfg.WriteToOut(rule + "\n")
+	}
+	h.WriteEndBox(fmt.Sprintf("%d output rules", len(context.Rules)))
 
 	return nil
 }
 
 // generateInverseRules generates inverse rules (what makes an invalid output)
 func (h *generateCommandHandler) generateInverseRules(context *PromptPexContext) error {
-	if len(context.InverseRules) >= 0 {
-		h.WriteStartBox("Reusing inverse output rules...")
-		for _, rule := range context.InverseRules {
-			h.cfg.WriteToOut(rule)
-		}
-		h.WriteEndBox(fmt.Sprintf("%d rules", len(context.InverseRules)))
-		return nil
-	}
+	h.WriteStartBox("Inverse output rules...")
+	if len(context.InverseRules) == 0 {
 
-	h.cfg.WriteToOut("Generating inverse rules...\n")
-
-	system := `Based on the following <output_rules>, generate inverse rules that describe what would make an INVALID output.
+		system := `Based on the following <output_rules>, generate inverse rules that describe what would make an INVALID output.
 These should be the opposite or negation of the original rules.`
-	prompt := fmt.Sprintf(`
-
-<output_rules>
+		prompt := fmt.Sprintf(`<output_rules>
 %s
 </output_rules>
 
-Inverse Rules:`, context.Rules)
+Inverse Output Rules:`, strings.Join(context.Rules, "\n"))
 
-	messages := []azuremodels.ChatMessage{
-		{Role: azuremodels.ChatMessageRoleSystem, Content: &system},
-		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+		messages := []azuremodels.ChatMessage{
+			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(systemPromptTextOnly)},
+			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(system)},
+			{Role: azuremodels.ChatMessageRoleUser, Content: util.Ptr(prompt)},
+		}
+
+		options := azuremodels.ChatCompletionOptions{
+			Model:       *h.options.Models.Rules, // GitHub Models compatible model
+			Messages:    messages,
+			Temperature: util.Ptr(0.0),
+		}
+
+		inverseRules, err := h.callModelWithRetry("inverse output rules", options)
+		if err != nil {
+			return err
+		}
+
+		parsed := ParseRules(inverseRules)
+		if parsed == nil {
+			return fmt.Errorf("failed to parse inverse output rules: %s", inverseRules)
+		}
+		context.InverseRules = parsed
 	}
-
-	options := azuremodels.ChatCompletionOptions{
-		Model:       *h.options.Models.Rules, // GitHub Models compatible model
-		Messages:    messages,
-		Temperature: util.Ptr(0.0),
+	for _, rule := range context.InverseRules {
+		h.cfg.WriteToOut(rule + "\n")
 	}
-
-	inverseRules, err := h.callModelWithRetry("inverse output rules", options)
-	if err != nil {
-		return err
-	}
-
-	parsed := ParseRules(inverseRules)
-	if parsed == nil {
-		return fmt.Errorf("failed to parse inverse output rules: %s", inverseRules)
-	}
-	context.InverseRules = parsed
-
+	h.WriteEndBox(fmt.Sprintf("%d inverse output rules", len(context.InverseRules)))
 	return nil
 }
 
@@ -250,6 +242,8 @@ func (h *generateCommandHandler) generateTests(context *PromptPexContext) error 
 	if h.options.TestsPerRule != nil {
 		testsPerRule = *h.options.TestsPerRule
 	}
+
+	allRules := append(context.Rules, context.InverseRules...)
 
 	nTests := testsPerRule * len(context.Rules)
 	// Build dynamic prompt based on the actual content (like TypeScript reference)
@@ -289,7 +283,7 @@ Return only a JSON array with this exact format:
 Generate exactly %d diverse test cases:`, nTests,
 		*context.Intent,
 		*context.InputSpec,
-		context.Rules,
+		strings.Join(allRules, "\n"),
 		RenderMessagesToString(context.Prompt.Messages),
 		nTests)
 

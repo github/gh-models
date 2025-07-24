@@ -123,18 +123,18 @@ func mergeContexts(existing *PromptPexContext, new *PromptPexContext) *PromptPex
 	// Preserve existing pipeline data if it exists
 	if existing.Intent != nil {
 		merged.Intent = existing.Intent
-	}
-	if existing.Rules != nil {
-		merged.Rules = existing.Rules
-	}
-	if existing.InverseRules != nil {
-		merged.InverseRules = existing.InverseRules
-	}
-	if existing.InputSpec != nil {
-		merged.InputSpec = existing.InputSpec
-	}
-	if existing.Tests != nil {
-		merged.Tests = existing.Tests
+		if existing.InputSpec != nil {
+			merged.InputSpec = existing.InputSpec
+			if existing.Rules != nil {
+				merged.Rules = existing.Rules
+				if existing.InverseRules != nil {
+					merged.InverseRules = existing.InverseRules
+					if existing.Tests != nil {
+						merged.Tests = existing.Tests
+					}
+				}
+			}
+		}
 	}
 
 	return merged
