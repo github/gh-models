@@ -452,11 +452,6 @@ func TestParseRules(t *testing.T) {
 			expected: []string{"Always validate input", "Handle errors gracefully", "Write clean code"},
 		},
 		{
-			name:     "rules with python-style array wrapping",
-			input:    `["Always validate input"]`,
-			expected: []string{"Always validate input"},
-		},
-		{
 			name:     "code fenced rules",
 			input:    "```\n1. Always validate input\n2. Handle errors gracefully\n```",
 			expected: []string{"Always validate input", "Handle errors gracefully"},

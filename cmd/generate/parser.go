@@ -14,8 +14,8 @@ func ParseRules(text string) []string {
 	}
 	lines := SplitLines(UnBacket(UnXml(Unfence(text))))
 	itemsRe := regexp.MustCompile(`^\s*(\d+\.|_|-|\*)\s+`) // remove leading item numbers or bullets
-	rulesRe := regexp.MustCompile(`^\s*(Inverse\s+)?Rules:\s*$`)
-	pythonWrapRe := regexp.MustCompile(`^\["(.*)"\]$`)
+	rulesRe := regexp.MustCompile(`^\s*(Inverse\s+(Output\s+)?)?Rules:\s*$`)
+	pythonWrapRe := regexp.MustCompile(`^\["?(.*?)"?\]$`)
 	var cleaned []string
 	for _, line := range lines {
 		// Remove leading numbering or bullets
