@@ -247,8 +247,7 @@ messages:
 		require.NoError(t, err)
 
 		output := out.String()
-		require.Contains(t, output, "Generating groundtruth with model")
-		require.Contains(t, output, "openai/gpt-4o")
+		require.Contains(t, output, "Generating groundtruth")
 	})
 
 	t.Run("executes with test expansions", func(t *testing.T) {
@@ -352,7 +351,7 @@ messages:
 		}
 
 		// Test context creation
-		ctx, err := handler.CreateContextFromPrompt(promptFile, "")
+		ctx, err := handler.CreateContextFromPrompt(promptFile)
 		require.NoError(t, err)
 		require.NotNil(t, ctx)
 		require.NotEmpty(t, ctx.RunID)
@@ -376,7 +375,7 @@ messages:
 		}
 
 		// Test with nonexistent file
-		_, err := handler.CreateContextFromPrompt("nonexistent.yml", "")
+		_, err := handler.CreateContextFromPrompt("nonexistent.yml")
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "failed to load prompt file")
 	})

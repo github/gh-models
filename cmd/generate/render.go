@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/prompt"
 )
 
@@ -37,4 +38,25 @@ func RenderMessagesToString(messages []prompt.Message) string {
 	}
 
 	return builder.String()
+}
+
+// logLLMPayload logs the LLM request and response if verbose mode is enabled
+func (h *generateCommandHandler) LogLLMResponse(response string) {
+	if h.options.Verbose != nil && *h.options.Verbose {
+		h.cfg.WriteToOut(fmt.Sprintf("╭─assistant\n%s\n╰─🏁\n", response))
+	}
+}
+
+func (h *generateCommandHandler) LogLLMRequest(step string, options azuremodels.ChatCompletionOptions) {
+	if h.options.Verbose != nil && *h.options.Verbose {
+		h.cfg.WriteToOut(fmt.Sprintf("\n╭─💬 %s %s\n", step, options.Model))
+		for _, msg := range options.Messages {
+			content := ""
+			if msg.Content != nil {
+				content = *msg.Content
+			}
+			h.cfg.WriteToOut(fmt.Sprintf("╭─%s\n%s\n", msg.Role, content))
+		}
+		h.cfg.WriteToOut("╰─\n")
+	}
 }

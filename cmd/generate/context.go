@@ -12,9 +12,7 @@ import (
 )
 
 // createContext creates a new PromptPexContext from a prompt file
-func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string, sessionFile string) (*PromptPexContext, error) {
-	runID := fmt.Sprintf("run_%d", time.Now().Unix())
-
+func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string) (*PromptPexContext, error) {
 	prompt, err := prompt.LoadFromFile(promptFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load prompt file: %w", err)
@@ -26,6 +24,7 @@ func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string, sess
 		return nil, fmt.Errorf("failed to compute prompt hash: %w", err)
 	}
 
+	runID := fmt.Sprintf("run_%d", time.Now().Unix())
 	context := &PromptPexContext{
 		// Unique identifier for the run
 		RunID: util.Ptr(runID),
@@ -38,24 +37,21 @@ func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string, sess
 	}
 
 	// Determine session file path
-	if sessionFile == "" {
+	if h.sessionFile == nil || *h.sessionFile == "" {
 		// Generate default session file name by replacing 'prompt.yml' with '.generate.json'
-		sessionFile = generateDefaultSessionFileName(promptFile)
+		h.sessionFile = util.Ptr(generateDefaultSessionFileName(promptFile))
 	}
 
-	// Store the session file path in the handler for later use
-	h.sessionFile = util.Ptr(sessionFile)
-
 	// Try to load existing context from session file
-	existingContext, err := loadContextFromFile(sessionFile)
+	existingContext, err := loadContextFromFile(*h.sessionFile)
 	if err != nil {
-		h.cfg.WriteToOut(fmt.Sprintf("Creating session file at %s\n", sessionFile))
+		h.cfg.WriteToOut(fmt.Sprintf("Creating session file at %s\n", *h.sessionFile))
 		// If file doesn't exist, that's okay - we'll start fresh
 		if !os.IsNotExist(err) {
-			return nil, fmt.Errorf("failed to load existing context from %s: %w", sessionFile, err)
+			return nil, fmt.Errorf("failed to load existing context from %s: %w", *h.sessionFile, err)
 		}
 	} else {
-		h.cfg.WriteToOut(fmt.Sprintf("Reloading session file at %s\n", sessionFile))
+		h.cfg.WriteToOut(fmt.Sprintf("Reloading session file at %s\n", *h.sessionFile))
 		// Check if prompt hashes match
 		if existingContext.PromptHash != nil && context.PromptHash != nil &&
 			*existingContext.PromptHash != *context.PromptHash {

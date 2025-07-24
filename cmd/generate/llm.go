@@ -16,7 +16,7 @@ func (h *generateCommandHandler) callModelWithRetry(step string, req azuremodels
 	const maxRetries = 3
 	ctx := h.ctx
 
-	h.logLLMRequest(step, req)
+	h.LogLLMRequest(step, req)
 
 	for attempt := 0; attempt <= maxRetries; attempt++ {
 		sp := spinner.New(spinner.CharSets[14], 100*time.Millisecond, spinner.WithWriter(h.cfg.ErrOut))
@@ -69,31 +69,10 @@ func (h *generateCommandHandler) callModelWithRetry(step string, req azuremodels
 		}
 
 		res := strings.TrimSpace(content.String())
-		h.logLLMResponse(res)
+		h.LogLLMResponse(res)
 		return res, nil
 	}
 
 	// This should never be reached, but just in case
 	return "", errors.New("unexpected error calling model")
-}
-
-// logLLMPayload logs the LLM request and response if verbose mode is enabled
-func (h *generateCommandHandler) logLLMResponse(response string) {
-	if h.options.Verbose != nil && *h.options.Verbose {
-		h.cfg.WriteToOut(fmt.Sprintf("╭─assistant\n%s\n╰─🏁\n", response))
-	}
-}
-
-func (h *generateCommandHandler) logLLMRequest(step string, options azuremodels.ChatCompletionOptions) {
-	if h.options.Verbose != nil && *h.options.Verbose {
-		h.cfg.WriteToOut(fmt.Sprintf("\n╭─💬 %s %s\n", step, options.Model))
-		for _, msg := range options.Messages {
-			content := ""
-			if msg.Content != nil {
-				content = *msg.Content
-			}
-			h.cfg.WriteToOut(fmt.Sprintf("╭─%s\n%s\n", msg.Role, content))
-		}
-		h.cfg.WriteToOut("╰─\n")
-	}
 }

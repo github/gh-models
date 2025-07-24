@@ -371,7 +371,7 @@ func (h *generateCommandHandler) runSingleTestWithContext(input, modelName strin
 // generateGroundtruth generates groundtruth outputs using the specified model
 func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) error {
 	groundtruthModel := h.options.Models.Groundtruth
-	h.cfg.WriteToOut(fmt.Sprintf("Generating groundtruth with model: %s", *groundtruthModel))
+	h.cfg.WriteToOut("Generating groundtruth...")
 
 	for i := range context.Tests {
 		test := &context.Tests[i]
