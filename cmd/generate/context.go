@@ -23,9 +23,13 @@ func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string) (*Pr
 	}
 
 	context := &PromptPexContext{
-		RunID:        runID,
-		Prompt:       prompt,
-		PromptHash:   promptHash,
+		// Unique identifier for the run
+		RunID: runID,
+		// The prompt content and metadata
+		Prompt: prompt,
+		// Hash of the prompt messages, model, and parameters
+		PromptHash: promptHash,
+		// Infered intent of the prompt
 		Intent:       "",
 		Rules:        "",
 		InverseRules: "",

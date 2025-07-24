@@ -6,7 +6,6 @@ import "github.com/github/gh-models/pkg/util"
 func GetDefaultOptions() *PromptPexOptions {
 	return &PromptPexOptions{
 		Temperature:        util.Ptr(0.0),
-		Models:             &PromptPexModelAliases{},
 		TestsPerRule:       util.Ptr(3),
 		RunsPerTest:        util.Ptr(2),
 		MaxRulesPerTestGen: util.Ptr(3),
@@ -16,6 +15,10 @@ func GetDefaultOptions() *PromptPexOptions {
 		Evals:              util.Ptr(false),
 		Compliance:         util.Ptr(false),
 		Verbose:            util.Ptr(false),
+		Models: &PromptPexModelAliases{
+			Rules:       util.Ptr("openai/gpt-4o"),
+			Groundtruth: util.Ptr("openai/gpt-4o"),
+		},
 	}
 }
 

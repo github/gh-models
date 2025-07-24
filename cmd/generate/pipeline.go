@@ -98,7 +98,7 @@ Intent:`, RenderMessagesToString(context.Prompt.Messages))
 		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
 	}
 	options := azuremodels.ChatCompletionOptions{
-		Model:       "openai/gpt-4o", // GitHub Models compatible model
+		Model:       *h.options.Models.Rules, // GitHub Models compatible model
 		Messages:    messages,
 		Temperature: util.Ptr(0.0),
 		Stream:      false,
@@ -116,20 +116,21 @@ Intent:`, RenderMessagesToString(context.Prompt.Messages))
 func (h *generateCommandHandler) generateInputSpec(context *PromptPexContext) error {
 	h.cfg.WriteToOut("Generating input specification...\n")
 
-	prompt := fmt.Sprintf(`Analyze the following prompt and generate a specification for its inputs.
-List the expected input parameters, their types, constraints, and examples.
-
-Prompt:
+	system := `Analyze the following prompt and generate a specification for its inputs.
+List the expected input parameters, their types, constraints, and examples.`
+	prompt := fmt.Sprintf(`<prompt>
 %s
+</prompt>
 
 Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 
 	messages := []azuremodels.ChatMessage{
+		{Role: azuremodels.ChatMessageRoleSystem, Content: &system},
 		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
 	}
 
 	options := azuremodels.ChatCompletionOptions{
-		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Model:       *h.options.Models.Rules,
 		Messages:    messages,
 		Temperature: util.Ptr(0.0),
 	}
@@ -147,21 +148,22 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 func (h *generateCommandHandler) generateOutputRules(context *PromptPexContext) error {
 	h.cfg.WriteToOut("Generating output rules...\n")
 
-	prompt := fmt.Sprintf(`Analyze the following prompt and generate a list of output rules.
+	system := `Analyze the following prompt and generate a list of output rules.
 These rules should describe what makes a valid output from this prompt.
-List each rule on a separate line starting with a number.
-
-Prompt:
+List each rule on a separate line starting with a number.`
+	prompt := fmt.Sprintf(`<prompt>
 %s
+</prompt>
 
 Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 
 	messages := []azuremodels.ChatMessage{
+		{Role: azuremodels.ChatMessageRoleSystem, Content: &system},
 		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
 	}
 
 	options := azuremodels.ChatCompletionOptions{
-		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Model:       *h.options.Models.Rules, // GitHub Models compatible model
 		Messages:    messages,
 		Temperature: util.Ptr(0.0),
 	}
@@ -179,20 +181,23 @@ Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 func (h *generateCommandHandler) generateInverseRules(context *PromptPexContext) error {
 	h.cfg.WriteToOut("Generating inverse rules...\n")
 
-	prompt := fmt.Sprintf(`Based on the following output rules, generate inverse rules that describe what would make an INVALID output.
-These should be the opposite or negation of the original rules.
+	system := `Based on the following <output_rules>, generate inverse rules that describe what would make an INVALID output.
+These should be the opposite or negation of the original rules.`
+	prompt := fmt.Sprintf(`
 
-Original Rules:
+<output_rules>
 %s
+</output_rules>
 
 Inverse Rules:`, context.Rules)
 
 	messages := []azuremodels.ChatMessage{
+		{Role: azuremodels.ChatMessageRoleSystem, Content: &system},
 		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
 	}
 
 	options := azuremodels.ChatCompletionOptions{
-		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Model:       *h.options.Models.Rules, // GitHub Models compatible model
 		Messages:    messages,
 		Temperature: util.Ptr(0.0),
 	}
