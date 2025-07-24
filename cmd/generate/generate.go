@@ -128,7 +128,7 @@ func ParseFlags(cmd *cobra.Command, options *PromptPexOptions) error {
 	}
 
 	if groundtruthModel, _ := flags.GetString("groundtruth-model"); groundtruthModel != "" {
-		options.GroundtruthModel = &groundtruthModel
+		options.Models.Groundtruth = &groundtruthModel
 	}
 
 	if flags.Changed("tests-per-rule") {

@@ -23,20 +23,18 @@ func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string) (*Pr
 	}
 
 	context := &PromptPexContext{
-		RunID:         runID,
-		Prompt:        prompt,
-		PromptHash:    promptHash,
-		Intent:        "",
-		Rules:         "",
-		InverseRules:  "",
-		InputSpec:     "",
-		Tests:         "",
-		TestData:      "",
-		TestOutputs:   "",
-		TestEvals:     "",
-		RuleEvals:     "",
-		RuleCoverages: "",
-		Options:       h.options,
+		RunID:        runID,
+		Prompt:       prompt,
+		PromptHash:   promptHash,
+		Intent:       "",
+		Rules:        "",
+		InverseRules: "",
+		InputSpec:    "",
+		Tests:        "",
+		TestData:     "",
+		TestOutputs:  "",
+		TestEvals:    "",
+		Options:      h.options,
 	}
 
 	return context, nil

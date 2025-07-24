@@ -47,7 +47,7 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 	}
 
 	// Step 8: Generate Groundtruth (if model specified)
-	if h.options.GroundtruthModel != nil {
+	if h.options.Models.Groundtruth != nil {
 		if err := h.generateGroundtruth(context); err != nil {
 			return fmt.Errorf("failed to generate groundtruth: %w", err)
 		}
@@ -278,9 +278,6 @@ Generate exactly %d diverse test cases:`, testsPerRule*3,
 		return fmt.Errorf("failed to marshal tests: %w", err)
 	}
 	context.Tests = string(testsJSON)
-
-	// Create test data file
-	context.TestData = string(testsJSON)
 
 	return nil
 }
@@ -527,20 +524,21 @@ Score (0-1):`, metric, output)
 
 // generateGroundtruth generates groundtruth outputs using the specified model
 func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) error {
-	h.cfg.WriteToOut(fmt.Sprintf("Generating groundtruth with model: %s", *h.options.GroundtruthModel))
+	groundtruthModel := h.options.Models.Groundtruth
+	h.cfg.WriteToOut(fmt.Sprintf("Generating groundtruth with model: %s", *groundtruthModel))
 
 	for i := range context.PromptPexTests {
 		test := &context.PromptPexTests[i]
 
 		// Generate groundtruth output
-		output, err := h.runSingleTestWithContext(test.TestInput, *h.options.GroundtruthModel, context)
+		output, err := h.runSingleTestWithContext(test.TestInput, *groundtruthModel, context)
 		if err != nil {
 			h.cfg.WriteToOut(fmt.Sprintf("Failed to generate groundtruth for test %d: %v", i, err))
 			continue
 		}
 
 		test.Groundtruth = &output
-		test.GroundtruthModel = h.options.GroundtruthModel
+		test.GroundtruthModel = groundtruthModel
 	}
 
 	// Update test data

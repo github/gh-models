@@ -25,8 +25,6 @@ func TestGetDefaultOptions(t *testing.T) {
 		{"FilterTestCount", defaults.FilterTestCount, util.Ptr(5)},
 		{"Evals", defaults.Evals, util.Ptr(false)},
 		{"Compliance", defaults.Compliance, util.Ptr(false)},
-		{"LoadContext", defaults.LoadContext, util.Ptr(false)},
-		{"LoadContextFile", defaults.LoadContextFile, util.Ptr("promptpex_context.json")},
 	}
 
 	for _, tt := range tests {
@@ -65,8 +63,6 @@ func TestGetDefaultOptions_NonNilFields(t *testing.T) {
 		{"FilterTestCount", defaults.FilterTestCount},
 		{"Evals", defaults.Evals},
 		{"Compliance", defaults.Compliance},
-		{"LoadContext", defaults.LoadContext},
-		{"LoadContextFile", defaults.LoadContextFile},
 	}
 
 	for _, field := range nonNilFields {
