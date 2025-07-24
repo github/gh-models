@@ -66,6 +66,24 @@ func (h *generateCommandHandler) WriteBox(title, content string) {
 	h.WriteEndBox("")
 }
 
+func (h *generateCommandHandler) WriteEndListBox(items []string, maxItems int) {
+	renderedItems := items
+	if len(renderedItems) > maxItems {
+		renderedItems = renderedItems[:maxItems]
+	}
+	for _, item := range renderedItems {
+		renderedItem := item
+		if len(renderedItem) > h.cfg.TerminalWidth-2 {
+			renderedItem = renderedItem[:h.cfg.TerminalWidth-2] + "…"
+		}
+		h.cfg.WriteToOut(fmt.Sprintf("%s\n", renderedItem))
+	}
+	if len(items) != len(renderedItems) {
+		h.cfg.WriteToOut("…")
+	}
+	h.WriteEndBox(fmt.Sprintf("%d items", len(items)))
+}
+
 // logLLMPayload logs the LLM request and response if verbose mode is enabled
 func (h *generateCommandHandler) LogLLMResponse(response string) {
 	if h.options.Verbose != nil && *h.options.Verbose {

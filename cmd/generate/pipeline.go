@@ -183,10 +183,8 @@ Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 
 		context.Rules = parsed
 	}
-	for _, rule := range context.Rules {
-		h.cfg.WriteToOut(rule + "\n")
-	}
-	h.WriteEndBox(fmt.Sprintf("%d output rules", len(context.Rules)))
+
+	h.WriteEndListBox(context.Rules, 16)
 
 	return nil
 }
@@ -227,27 +225,27 @@ Inverse Output Rules:`, strings.Join(context.Rules, "\n"))
 		}
 		context.InverseRules = parsed
 	}
-	for _, rule := range context.InverseRules {
-		h.cfg.WriteToOut(rule + "\n")
-	}
-	h.WriteEndBox(fmt.Sprintf("%d inverse output rules", len(context.InverseRules)))
+
+	h.WriteEndListBox(context.InverseRules, 16)
 	return nil
 }
 
 // generateTests generates test cases for the prompt
 func (h *generateCommandHandler) generateTests(context *PromptPexContext) error {
-	h.cfg.WriteToOut("Generating tests...\n")
+	h.WriteStartBox("Tests...")
+	if context.Tests != nil && len(context.Tests) == 0 {
 
-	testsPerRule := 3
-	if h.options.TestsPerRule != nil {
-		testsPerRule = *h.options.TestsPerRule
-	}
+		testsPerRule := 3
+		if h.options.TestsPerRule != nil {
+			testsPerRule = *h.options.TestsPerRule
+		}
 
-	allRules := append(context.Rules, context.InverseRules...)
+		allRules := append(context.Rules, context.InverseRules...)
 
-	nTests := testsPerRule * len(context.Rules)
-	// Build dynamic prompt based on the actual content (like TypeScript reference)
-	prompt := fmt.Sprintf(`Generate %d test cases for the following prompt based on the intent, input specification, and output rules.
+		nTests := testsPerRule * len(context.Rules)
+		// Build dynamic prompt based on the actual content (like TypeScript reference)
+		system := `Response in JSON format only.`
+		prompt := fmt.Sprintf(`Generate %d test cases for the following prompt based on the intent, input specification, and output rules.
 
 <intent>
 %s
@@ -281,32 +279,39 @@ Return only a JSON array with this exact format:
 ]
 
 Generate exactly %d diverse test cases:`, nTests,
-		*context.Intent,
-		*context.InputSpec,
-		strings.Join(allRules, "\n"),
-		RenderMessagesToString(context.Prompt.Messages),
-		nTests)
+			*context.Intent,
+			*context.InputSpec,
+			strings.Join(allRules, "\n"),
+			RenderMessagesToString(context.Prompt.Messages),
+			nTests)
 
-	messages := []azuremodels.ChatMessage{
-		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+		messages := []azuremodels.ChatMessage{
+			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(system)},
+			{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+		}
+
+		options := azuremodels.ChatCompletionOptions{
+			Model:       *h.options.Models.Tests, // GitHub Models compatible model
+			Messages:    messages,
+			Temperature: util.Ptr(0.3),
+		}
+
+		content, err := h.callModelWithRetry("tests", options)
+		if err != nil {
+			return fmt.Errorf("failed to generate tests: %w", err)
+		}
+		tests, err := h.ParseTestsFromLLMResponse(content)
+		if err != nil {
+			return fmt.Errorf("failed to parse test JSON: %w", err)
+		}
+		context.Tests = tests
 	}
 
-	options := azuremodels.ChatCompletionOptions{
-		Model:       *h.options.Models.Tests, // GitHub Models compatible model
-		Messages:    messages,
-		Temperature: util.Ptr(0.3),
+	testInputs := make([]string, len(context.Tests))
+	for i, test := range context.Tests {
+		testInputs[i] = test.TestInput
 	}
-
-	content, err := h.callModelWithRetry("tests", options)
-	if err != nil {
-		return fmt.Errorf("failed to generate tests: %w", err)
-	}
-	tests, err := h.ParseTestsFromLLMResponse(content)
-	if err != nil {
-		return fmt.Errorf("failed to parse test JSON: %w", err)
-	}
-	context.Tests = tests
-
+	h.WriteEndListBox(testInputs, 10)
 	return nil
 }
 
