@@ -17,7 +17,6 @@ func GetDefaultOptions() *PromptPexOptions {
 			Rules:       util.Ptr("openai/gpt-4o"),
 			Tests:       util.Ptr("openai/gpt-4o"),
 			Groundtruth: util.Ptr("openai/gpt-4o"),
-			Compliance:  util.Ptr("openai/gpt-4o"),
 		},
 	}
 }

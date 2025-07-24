@@ -4,14 +4,13 @@ import "github.com/github/gh-models/pkg/util"
 
 // EffortConfiguration defines the configuration for different effort levels
 type EffortConfiguration struct {
-	TestGenerations           *int  `json:"testGenerations,omitempty"`
-	TestsPerRule              *int  `json:"testsPerRule,omitempty"`
-	RunsPerTest               *int  `json:"runsPerTest,omitempty"`
-	TestExpansions            *int  `json:"testExpansions,omitempty"`
-	MaxRules                  *int  `json:"maxRules,omitempty"`
-	MaxRulesPerTestGeneration *int  `json:"maxRulesPerTestGeneration,omitempty"`
-	MaxTestsToRun             *int  `json:"maxTestsToRun,omitempty"`
-	Compliance                *bool `json:"compliance,omitempty"`
+	TestGenerations           *int `json:"testGenerations,omitempty"`
+	TestsPerRule              *int `json:"testsPerRule,omitempty"`
+	RunsPerTest               *int `json:"runsPerTest,omitempty"`
+	TestExpansions            *int `json:"testExpansions,omitempty"`
+	MaxRules                  *int `json:"maxRules,omitempty"`
+	MaxRulesPerTestGeneration *int `json:"maxRulesPerTestGeneration,omitempty"`
+	MaxTestsToRun             *int `json:"maxTestsToRun,omitempty"`
 }
 
 // GetEffortConfiguration returns the configuration for a given effort level
@@ -27,7 +26,6 @@ func GetEffortConfiguration(effort string) *EffortConfiguration {
 			MaxRules:                  util.Ptr(6),
 			MaxRulesPerTestGeneration: util.Ptr(100),
 			MaxTestsToRun:             util.Ptr(10),
-			Compliance:                util.Ptr(false),
 		}
 	case EffortLow:
 		return &EffortConfiguration{

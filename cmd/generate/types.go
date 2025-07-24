@@ -7,7 +7,6 @@ type PromptPexModelAliases struct {
 	Rules       *string `yaml:"rules,omitempty" json:"rules,omitempty"`
 	Tests       *string `yaml:"tests,omitempty" json:"tests,omitempty"`
 	Groundtruth *string `yaml:"groundtruth,omitempty" json:"groundtruth,omitempty"`
-	Compliance  *string `yaml:"compliance,omitempty" json:"compliance,omitempty"`
 }
 
 // PromptPexPrompts contains custom prompts for different stages
@@ -119,24 +118,21 @@ type PromptPexEvaluation struct {
 
 // PromptPexTestResult represents the result of running a test
 type PromptPexTestResult struct {
-	ID               string                         `json:"id" yaml:"id"`
-	PromptID         string                         `json:"promptid" yaml:"promptid"`
-	RuleID           int                            `json:"ruleid" yaml:"ruleid"`
-	Rule             string                         `json:"rule" yaml:"rule"`
-	Scenario         string                         `json:"scenario" yaml:"scenario"`
-	TestInput        string                         `json:"testinput" yaml:"testinput"`
-	Inverse          *bool                          `json:"inverse,omitempty" yaml:"inverse,omitempty"`
-	Baseline         *bool                          `json:"baseline,omitempty" yaml:"baseline,omitempty"`
-	Model            string                         `json:"model" yaml:"model"`
-	Input            string                         `json:"input" yaml:"input"`
-	Output           string                         `json:"output" yaml:"output"`
-	Error            *string                        `json:"error,omitempty" yaml:"error,omitempty"`
-	IsGroundtruth    *bool                          `json:"isGroundtruth,omitempty" yaml:"isGroundtruth,omitempty"`
-	Groundtruth      *string                        `json:"groundtruth,omitempty" yaml:"groundtruth,omitempty"`
-	GroundtruthModel *string                        `json:"groundtruthModel,omitempty" yaml:"groundtruthModel,omitempty"`
-	Compliance       *PromptPexEvalResultType       `json:"compliance,omitempty" yaml:"compliance,omitempty"`
-	ComplianceText   *string                        `json:"complianceText,omitempty" yaml:"complianceText,omitempty"`
-	Metrics          map[string]PromptPexEvaluation `json:"metrics" yaml:"metrics"`
+	ID               string  `json:"id" yaml:"id"`
+	PromptID         string  `json:"promptid" yaml:"promptid"`
+	RuleID           int     `json:"ruleid" yaml:"ruleid"`
+	Rule             string  `json:"rule" yaml:"rule"`
+	Scenario         string  `json:"scenario" yaml:"scenario"`
+	TestInput        string  `json:"testinput" yaml:"testinput"`
+	Inverse          *bool   `json:"inverse,omitempty" yaml:"inverse,omitempty"`
+	Baseline         *bool   `json:"baseline,omitempty" yaml:"baseline,omitempty"`
+	Model            string  `json:"model" yaml:"model"`
+	Input            string  `json:"input" yaml:"input"`
+	Output           string  `json:"output" yaml:"output"`
+	Error            *string `json:"error,omitempty" yaml:"error,omitempty"`
+	IsGroundtruth    *bool   `json:"isGroundtruth,omitempty" yaml:"isGroundtruth,omitempty"`
+	Groundtruth      *string `json:"groundtruth,omitempty" yaml:"groundtruth,omitempty"`
+	GroundtruthModel *string `json:"groundtruthModel,omitempty" yaml:"groundtruthModel,omitempty"`
 }
 
 // PromptPexTestEval represents test evaluation results
