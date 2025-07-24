@@ -148,7 +148,7 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 
 // generateOutputRules generates output rules for the prompt
 func (h *generateCommandHandler) generateOutputRules(context *PromptPexContext) error {
-	h.WriteStartBox("Output rules...")
+	h.WriteStartBox("Output rules")
 	if len(context.Rules) == 0 {
 		system := `Analyze the following prompt and generate a list of output rules.
 These rules should describe what makes a valid output from this prompt.
@@ -191,7 +191,7 @@ Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 
 // generateInverseRules generates inverse rules (what makes an invalid output)
 func (h *generateCommandHandler) generateInverseRules(context *PromptPexContext) error {
-	h.WriteStartBox("Inverse output rules...")
+	h.WriteStartBox("Inverse output rules")
 	if len(context.InverseRules) == 0 {
 
 		system := `Based on the following <output_rules>, generate inverse rules that describe what would make an INVALID output.
@@ -232,7 +232,7 @@ Inverse Output Rules:`, strings.Join(context.Rules, "\n"))
 
 // generateTests generates test cases for the prompt
 func (h *generateCommandHandler) generateTests(context *PromptPexContext) error {
-	h.WriteStartBox("Tests...")
+	h.WriteStartBox(fmt.Sprintf("Tests (%d rules x %d tests per rule)", len(context.Rules)+len(context.InverseRules), *h.options.TestsPerRule))
 	if len(context.Tests) == 0 {
 		testsPerRule := 3
 		if h.options.TestsPerRule != nil {
@@ -244,7 +244,7 @@ func (h *generateCommandHandler) generateTests(context *PromptPexContext) error 
 		nTests := testsPerRule * len(context.Rules)
 		// Build dynamic prompt based on the actual content (like TypeScript reference)
 		system := `Response in JSON format only.`
-		prompt := fmt.Sprintf(`Generate %d test cases for the following prompt based on the intent, input specification, and output rules.
+		prompt := fmt.Sprintf(`Generate %d test cases for the following prompt based on the intent, input specification, and output rules. Generate %d tests per rule.		
 
 <intent>
 %s
@@ -279,6 +279,7 @@ Return only a JSON array with this exact format:
 ]
 
 Generate exactly %d diverse test cases:`, nTests,
+			testsPerRule,
 			*context.Intent,
 			*context.InputSpec,
 			strings.Join(allRules, "\n"),
@@ -378,7 +379,7 @@ func (h *generateCommandHandler) runSingleTestWithContext(input, modelName strin
 // generateGroundtruth generates groundtruth outputs using the specified model
 func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) error {
 	groundtruthModel := h.options.Models.Groundtruth
-	h.cfg.WriteToOut("Generating groundtruth...")
+	h.cfg.WriteToOut("Groundtruth")
 
 	for i := range context.Tests {
 		test := &context.Tests[i]
