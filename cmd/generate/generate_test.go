@@ -79,7 +79,6 @@ func TestParseFlags(t *testing.T) {
 				require.Equal(t, 3, *opts.TestsPerRule)
 				require.Equal(t, 2, *opts.RunsPerTest)
 				require.Equal(t, 0, *opts.TestExpansions)
-				require.Equal(t, false, *opts.Evals)
 			},
 		},
 		{
@@ -88,13 +87,6 @@ func TestParseFlags(t *testing.T) {
 			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.NotNil(t, opts.Effort)
 				require.Equal(t, "medium", *opts.Effort)
-			},
-		},
-		{
-			name: "models under test flag",
-			args: []string{"--models-under-test", "openai/gpt-4o", "--models-under-test", "openai/gpt-4o-mini"},
-			validate: func(t *testing.T, opts *PromptPexOptions) {
-				require.Equal(t, []string{"openai/gpt-4o", "openai/gpt-4o-mini"}, opts.ModelsUnderTest)
 			},
 		},
 		{
@@ -118,34 +110,11 @@ func TestParseFlags(t *testing.T) {
 			},
 		},
 		{
-			name: "boolean flags",
-			args: []string{"--rate-tests", "--evals"},
-			validate: func(t *testing.T, opts *PromptPexOptions) {
-				require.NotNil(t, opts.Evals)
-				require.Equal(t, true, *opts.Evals)
-			},
-		},
-		{
 			name: "temperature flag",
 			args: []string{"--temperature", "0.7"},
 			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.NotNil(t, opts.Temperature)
 				require.Equal(t, 0.7, *opts.Temperature)
-			},
-		},
-		{
-			name: "custom metric flag",
-			args: []string{"--custom-metric", "Rate the quality of response from 1-10"},
-			validate: func(t *testing.T, opts *PromptPexOptions) {
-				require.NotNil(t, opts.CustomMetric)
-				require.Equal(t, "Rate the quality of response from 1-10", *opts.CustomMetric)
-			},
-		},
-		{
-			name: "eval models flag",
-			args: []string{"--eval-models", "openai/gpt-4o", "--eval-models", "openai/gpt-4o-mini"},
-			validate: func(t *testing.T, opts *PromptPexOptions) {
-				require.Equal(t, []string{"openai/gpt-4o", "openai/gpt-4o-mini"}, opts.EvalModels)
 			},
 		},
 	}
@@ -217,80 +186,6 @@ messages:
 		err = cmd.Execute()
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "pipeline failed")
-	})
-
-	t.Run("executes with models under test", func(t *testing.T) {
-		// Create test prompt file
-		const yamlBody = `
-name: Simple Test
-description: Simple test prompt
-model: openai/gpt-4o-mini
-messages:
-  - role: user
-    content: "Say hello"
-`
-
-		tmpDir := t.TempDir()
-		promptFile := filepath.Join(tmpDir, "test.prompt.yml")
-		err := os.WriteFile(promptFile, []byte(yamlBody), 0644)
-		require.NoError(t, err)
-
-		// Setup mock client
-		client := azuremodels.NewMockClient()
-		callCount := 0
-		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
-			callCount++
-			var response string
-
-			if len(opt.Messages) > 0 && opt.Messages[0].Content != nil {
-				content := *opt.Messages[0].Content
-				// Generate different responses for different pipeline stages
-				if contains(content, "intent") && !contains(content, "test") {
-					response = "This prompt generates a greeting."
-				} else if contains(content, "input") && !contains(content, "test") {
-					response = "No specific input required."
-				} else if contains(content, "rules") && !contains(content, "test") {
-					response = "1. Must contain greeting\n2. Should be friendly"
-				} else {
-					// For any other prompt, especially test generation, return valid JSON
-					response = `[{"scenario": "Basic greeting", "testinput": "Hello", "reasoning": "Tests basic functionality"}]`
-				}
-			} else {
-				response = `[{"scenario": "Default test", "testinput": "test", "reasoning": "Default test case"}]`
-			}
-
-			chatCompletion := azuremodels.ChatCompletion{
-				Choices: []azuremodels.ChatChoice{
-					{
-						Message: &azuremodels.ChatChoiceMessage{
-							Content: util.Ptr(response),
-							Role:    util.Ptr(string(azuremodels.ChatMessageRoleAssistant)),
-						},
-					},
-				},
-			}
-
-			return &azuremodels.ChatCompletionResponse{
-				Reader: sse.NewMockEventReader([]azuremodels.ChatCompletion{chatCompletion}),
-			}, nil
-		}
-
-		out := new(bytes.Buffer)
-		cfg := command.NewConfig(out, out, client, true, 100)
-
-		cmd := NewGenerateCommand(cfg)
-		cmd.SetArgs([]string{
-			"--models-under-test", "openai/gpt-4o-mini",
-			"--runs-per-test", "1",
-			promptFile,
-		})
-
-		err = cmd.Execute()
-		require.NoError(t, err)
-
-		output := out.String()
-		require.Contains(t, output, "Running tests against models")
-		require.Contains(t, output, "openai/gpt-4o-mini")
 	})
 
 	t.Run("executes with groundtruth model", func(t *testing.T) {
@@ -428,77 +323,6 @@ messages:
 
 		output := out.String()
 		require.Contains(t, output, "Expanding tests with 1 expansion phases")
-	})
-
-	t.Run("executes with evaluations", func(t *testing.T) {
-		// Create test prompt file
-		const yamlBody = `
-name: Eval Test
-description: Test with evaluations
-model: openai/gpt-4o-mini
-messages:
-  - role: user
-    content: "Test prompt"
-`
-
-		tmpDir := t.TempDir()
-		promptFile := filepath.Join(tmpDir, "test.prompt.yml")
-		err := os.WriteFile(promptFile, []byte(yamlBody), 0644)
-		require.NoError(t, err)
-
-		// Setup mock client
-		client := azuremodels.NewMockClient()
-		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
-			var response string
-			if len(opt.Messages) > 0 && opt.Messages[0].Content != nil {
-				content := *opt.Messages[0].Content
-				if contains(content, "intent") && !contains(content, "test") {
-					response = "This prompt tests functionality."
-				} else if contains(content, "input") && !contains(content, "test") {
-					response = "Input: Test data"
-				} else if contains(content, "rules") && !contains(content, "test") {
-					response = "1. Output should be valid\n2. Output should be accurate"
-				} else if contains(content, "Evaluate") && contains(content, "compliance") {
-					response = "ok"
-				} else {
-					response = `[{"scenario": "Test scenario", "testinput": "Test input", "reasoning": "Test reasoning"}]`
-				}
-			} else {
-				response = `[{"scenario": "Default test", "testinput": "test", "reasoning": "Default test case"}]`
-			}
-
-			chatCompletion := azuremodels.ChatCompletion{
-				Choices: []azuremodels.ChatChoice{
-					{
-						Message: &azuremodels.ChatChoiceMessage{
-							Content: util.Ptr(response),
-							Role:    util.Ptr(string(azuremodels.ChatMessageRoleAssistant)),
-						},
-					},
-				},
-			}
-
-			return &azuremodels.ChatCompletionResponse{
-				Reader: sse.NewMockEventReader([]azuremodels.ChatCompletion{chatCompletion}),
-			}, nil
-		}
-
-		out := new(bytes.Buffer)
-		cfg := command.NewConfig(out, out, client, true, 100)
-
-		cmd := NewGenerateCommand(cfg)
-		cmd.SetArgs([]string{
-			"--evals",
-			"--eval-models", "openai/gpt-4o-mini",
-			"--models-under-test", "openai/gpt-4o-mini",
-			promptFile,
-		})
-
-		err = cmd.Execute()
-		require.NoError(t, err)
-
-		output := out.String()
-		require.Contains(t, output, "Evaluating test results")
 	})
 }
 

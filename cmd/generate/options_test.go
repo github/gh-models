@@ -23,7 +23,6 @@ func TestGetDefaultOptions(t *testing.T) {
 		{"TestGenerations", defaults.TestGenerations, util.Ptr(2)},
 		{"TestExpansions", defaults.TestExpansions, util.Ptr(0)},
 		{"FilterTestCount", defaults.FilterTestCount, util.Ptr(5)},
-		{"Evals", defaults.Evals, util.Ptr(false)},
 		{"Compliance", defaults.Compliance, util.Ptr(false)},
 	}
 
@@ -61,7 +60,6 @@ func TestGetDefaultOptions_NonNilFields(t *testing.T) {
 		{"TestGenerations", defaults.TestGenerations},
 		{"TestExpansions", defaults.TestExpansions},
 		{"FilterTestCount", defaults.FilterTestCount},
-		{"Evals", defaults.Evals},
 		{"Compliance", defaults.Compliance},
 	}
 

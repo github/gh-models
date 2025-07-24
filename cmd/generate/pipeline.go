@@ -53,20 +53,6 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 		}
 	}
 
-	// Step 9: Run Tests (if models specified)
-	if len(h.options.ModelsUnderTest) > 0 {
-		if err := h.runTests(context); err != nil {
-			return fmt.Errorf("failed to run tests: %w", err)
-		}
-	}
-
-	// Step 10: Evaluate Results (if enabled)
-	if h.options.Evals != nil && *h.options.Evals && len(h.options.EvalModels) > 0 {
-		if err := h.evaluateResults(context); err != nil {
-			return fmt.Errorf("failed to evaluate results: %w", err)
-		}
-	}
-
 	// Step 11: Generate GitHub Models Evals
 	// TODO
 	//if err := h.githubModelsEvalsGenerate(context); err != nil {
@@ -295,55 +281,6 @@ Generate exactly %d diverse test cases:`, testsPerRule*3,
 	return nil
 }
 
-// runTests executes tests against the specified models
-func (h *generateCommandHandler) runTests(context *PromptPexContext) error {
-	h.cfg.WriteToOut("Running tests against models...\n")
-
-	var results []PromptPexTestResult
-	runsPerTest := 1
-	if h.options.RunsPerTest != nil {
-		runsPerTest = *h.options.RunsPerTest
-	}
-
-	for _, modelName := range h.options.ModelsUnderTest {
-		h.cfg.WriteToOut(fmt.Sprintf("Running tests with model: %s", modelName))
-
-		for i, test := range context.Tests {
-			for run := 0; run < runsPerTest; run++ {
-				result := PromptPexTestResult{
-					ID:        fmt.Sprintf("test_%d_run_%d_%s", i, run, modelName),
-					PromptID:  context.RunID,
-					RuleID:    i,
-					Rule:      fmt.Sprintf("Rule %d", i),
-					Scenario:  *test.Scenario,
-					TestInput: test.TestInput,
-					Model:     modelName,
-					Input:     test.TestInput,
-					Metrics:   make(map[string]PromptPexEvaluation),
-				}
-
-				// Run the test by sending the input to the model
-				output, err := h.runSingleTestWithContext(test.TestInput, modelName, context)
-				if err != nil {
-					errStr := err.Error()
-					result.Error = &errStr
-					result.Output = ""
-				} else {
-					result.Output = output
-				}
-
-				results = append(results, result)
-			}
-		}
-	}
-
-	// Save results
-	resultsJSON, _ := json.MarshalIndent(results, "", "  ")
-	context.TestOutputs = string(resultsJSON)
-
-	return nil
-}
-
 // runSingleTestWithContext runs a single test against a model with context
 func (h *generateCommandHandler) runSingleTestWithContext(input, modelName string, context *PromptPexContext) (string, error) {
 	// Use the context if provided, otherwise use the stored context
@@ -404,139 +341,6 @@ func (h *generateCommandHandler) runSingleTestWithContext(input, modelName strin
 	return result, nil
 }
 
-// evaluateResults evaluates test results using the specified evaluation models
-func (h *generateCommandHandler) evaluateResults(context *PromptPexContext) error {
-	h.cfg.WriteToOut("Evaluating test results...\n")
-
-	// Parse existing test results
-	var results []PromptPexTestResult
-	if err := json.Unmarshal([]byte(context.TestOutputs), &results); err != nil {
-		return fmt.Errorf("failed to parse test results: %w", err)
-	}
-
-	// Evaluate each result
-	for i := range results {
-		if results[i].Error != nil {
-			continue // Skip failed tests
-		}
-
-		// Evaluate against output rules
-		compliance, err := h.evaluateCompliance(results[i].Output, context.Rules)
-		if err != nil {
-			h.cfg.WriteToOut(fmt.Sprintf("Failed to evaluate compliance for test %s: %v", results[i].ID, err))
-		} else {
-			results[i].Compliance = &compliance
-		}
-
-		// Add custom metrics evaluation
-		if h.options.CustomMetric != nil {
-			score, err := h.evaluateCustomMetric(results[i].Output, *h.options.CustomMetric)
-			if err != nil {
-				h.cfg.WriteToOut(fmt.Sprintf("Failed to evaluate custom metric for test %s: %v", results[i].ID, err))
-			} else {
-				results[i].Metrics["custom"] = PromptPexEvaluation{
-					Content: "Custom metric evaluation",
-					Score:   &score,
-				}
-			}
-		}
-	}
-
-	// Save updated results
-	resultsJSON, _ := json.MarshalIndent(results, "", "  ")
-	context.TestOutputs = string(resultsJSON)
-
-	return nil
-}
-
-// evaluateCompliance evaluates if an output complies with the given rules
-func (h *generateCommandHandler) evaluateCompliance(output string, rules []string) (PromptPexEvalResultType, error) {
-	system := `Evaluate if the following <output> complies with the given <rules>.
-Respond with only one word: "ok" if it complies, "err" if it doesn't, or "unknown" if uncertain.`
-	prompt := fmt.Sprintf(`<rules>
-%s
-</rules>
-
-<output>
-%s
-</output>
-
-Compliance:`, strings.Join(rules, "\n"), output)
-	// Prepare messages for the model
-	messages := []azuremodels.ChatMessage{
-		{Role: azuremodels.ChatMessageRoleSystem, Content: &system},
-		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-	}
-
-	options := azuremodels.ChatCompletionOptions{
-		Model:       *h.options.Models.Compliance, // GitHub Models compatible model
-		Messages:    messages,
-		Temperature: util.Ptr(0.0),
-	}
-
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
-
-	if err != nil {
-		return EvalResultUnknown, err
-	}
-
-	completion, err := response.Reader.Read()
-	if err != nil {
-		return EvalResultUnknown, err
-	}
-	result := strings.ToLower(strings.TrimSpace(*completion.Choices[0].Message.Content))
-
-	switch result {
-	case "ok":
-		return EvalResultOK, nil
-	case "err":
-		return EvalResultError, nil
-	default:
-		return EvalResultUnknown, nil
-	}
-}
-
-// evaluateCustomMetric evaluates output using a custom metric
-func (h *generateCommandHandler) evaluateCustomMetric(output, metric string) (float64, error) {
-	prompt := fmt.Sprintf(`%s
-
-Output to evaluate:
-%s
-
-Score (0-1):`, metric, output)
-
-	messages := []azuremodels.ChatMessage{
-		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-	}
-
-	options := azuremodels.ChatCompletionOptions{
-		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
-		Messages:    messages,
-		Temperature: util.Ptr(0.0),
-	}
-
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
-
-	if err != nil {
-		return 0.0, err
-	}
-
-	completion, err := response.Reader.Read()
-	if err != nil {
-		return 0.0, err
-	}
-
-	// Parse the score from the response
-	scoreStr := strings.TrimSpace(*completion.Choices[0].Message.Content)
-
-	var score float64
-	if _, err := fmt.Sscanf(scoreStr, "%f", &score); err != nil {
-		return 0.0, fmt.Errorf("failed to parse score: %w", err)
-	}
-
-	return score, nil
-}
-
 // generateGroundtruth generates groundtruth outputs using the specified model
 func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) error {
 	groundtruthModel := h.options.Models.Groundtruth
@@ -555,10 +359,6 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 		test.Groundtruth = &output
 		test.GroundtruthModel = groundtruthModel
 	}
-
-	// Update test data
-	testData, _ := json.MarshalIndent(context.Tests, "", "  ")
-	context.TestData = string(testData)
 
 	return nil
 }
@@ -590,10 +390,6 @@ func (h *generateCommandHandler) expandTests(context *PromptPexContext) error {
 	}
 
 	h.cfg.WriteToOut(fmt.Sprintf("Expanded from %d to %d tests", originalTestCount, len(context.Tests)))
-
-	// Update test data
-	testData, _ := json.MarshalIndent(context.Tests, "", "  ")
-	context.TestData = string(testData)
 
 	return nil
 }

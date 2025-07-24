@@ -122,11 +122,6 @@ func ParseFlags(cmd *cobra.Command, options *PromptPexOptions) error {
 		ApplyEffortConfiguration(options, *options.Effort)
 	}
 
-	// Parse other flags (these override effort defaults)
-	if modelsUnderTest, _ := flags.GetStringSlice("models-under-test"); len(modelsUnderTest) > 0 {
-		options.ModelsUnderTest = modelsUnderTest
-	}
-
 	if groundtruthModel, _ := flags.GetString("groundtruth-model"); groundtruthModel != "" {
 		options.Models.Groundtruth = &groundtruthModel
 	}
@@ -144,19 +139,6 @@ func ParseFlags(cmd *cobra.Command, options *PromptPexOptions) error {
 	if flags.Changed("test-expansions") {
 		testExpansions, _ := flags.GetInt("test-expansions")
 		options.TestExpansions = &testExpansions
-	}
-
-	if flags.Changed("evals") {
-		evals, _ := flags.GetBool("evals")
-		options.Evals = &evals
-	}
-
-	if evalModels, _ := flags.GetStringSlice("eval-models"); len(evalModels) > 0 {
-		options.EvalModels = evalModels
-	}
-
-	if customMetric, _ := flags.GetString("custom-metric"); customMetric != "" {
-		options.CustomMetric = &customMetric
 	}
 
 	if flags.Changed("temperature") {
