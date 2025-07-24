@@ -29,16 +29,8 @@ func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string) (*Pr
 		Prompt: prompt,
 		// Hash of the prompt messages, model, and parameters
 		PromptHash: promptHash,
-		// Infered intent of the prompt
-		Intent:       "",
-		Rules:        []string{},
-		InverseRules: []string{},
-		InputSpec:    "",
-		Tests:        "",
-		TestData:     "",
-		TestOutputs:  "",
-		TestEvals:    "",
-		Options:      h.options,
+		// The options used to generate the prompt
+		Options: h.options,
 	}
 
 	return context, nil

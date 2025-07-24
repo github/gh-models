@@ -28,7 +28,7 @@ func (h *generateCommandHandler) toGitHubModelsPrompt(modelID string, context *P
 	// Extract template variables from prompt content to determine allowed fields
 	allowedFields := h.extractTemplateVariables(context)
 
-	for _, test := range context.PromptPexTests {
+	for _, test := range context.Tests {
 		// Skip empty test inputs
 		if strings.TrimSpace(test.TestInput) == "" {
 			h.cfg.WriteToOut(fmt.Sprintf("Warning: Skipping test with empty input (scenario: %s)", getTestScenario(test)))

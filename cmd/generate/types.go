@@ -5,6 +5,7 @@ import "github.com/github/gh-models/pkg/prompt"
 // PromptPexModelAliases represents model aliases for different purposes
 type PromptPexModelAliases struct {
 	Rules       *string `yaml:"rules,omitempty" json:"rules,omitempty"`
+	Tests       *string `yaml:"tests,omitempty" json:"tests,omitempty"`
 	Groundtruth *string `yaml:"groundtruth,omitempty" json:"groundtruth,omitempty"`
 	Compliance  *string `yaml:"compliance,omitempty" json:"compliance,omitempty"`
 }
@@ -78,19 +79,18 @@ type PromptPexPromptyFrontmatter struct {
 
 // PromptPexContext represents the main context for PromptPex operations
 type PromptPexContext struct {
-	RunID          string            `json:"runId" yaml:"runId"`
-	Prompt         *prompt.File      `json:"prompt" yaml:"prompt"`
-	PromptHash     string            `json:"promptHash" yaml:"promptHash"`
-	Intent         string            `json:"intent" yaml:"intent"`
-	Rules          []string          `json:"rules" yaml:"rules"`
-	InverseRules   []string          `json:"inverseRules" yaml:"inverseRules"`
-	InputSpec      string            `json:"inputSpec" yaml:"inputSpec"`
-	Tests          string            `json:"tests" yaml:"tests"`
-	PromptPexTests []PromptPexTest   `json:"promptPexTests" yaml:"promptPexTests"`
-	TestData       string            `json:"testData" yaml:"testData"`
-	TestOutputs    string            `json:"testOutputs" yaml:"testOutputs"`
-	TestEvals      string            `json:"testEvals" yaml:"testEvals"`
-	Options        *PromptPexOptions `json:"options" yaml:"options"`
+	RunID        string            `json:"runId" yaml:"runId"`
+	Prompt       *prompt.File      `json:"prompt" yaml:"prompt"`
+	PromptHash   string            `json:"promptHash" yaml:"promptHash"`
+	Intent       string            `json:"intent" yaml:"intent"`
+	Rules        []string          `json:"rules" yaml:"rules"`
+	InverseRules []string          `json:"inverseRules" yaml:"inverseRules"`
+	InputSpec    string            `json:"inputSpec" yaml:"inputSpec"`
+	Tests        []PromptPexTest   `json:"tests" yaml:"tests"`
+	TestData     string            `json:"testData" yaml:"testData"`
+	TestOutputs  string            `json:"testOutputs" yaml:"testOutputs"`
+	TestEvals    string            `json:"testEvals" yaml:"testEvals"`
+	Options      *PromptPexOptions `json:"options" yaml:"options"`
 }
 
 // PromptPexTest represents a single test case

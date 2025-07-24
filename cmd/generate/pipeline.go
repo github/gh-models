@@ -234,17 +234,21 @@ func (h *generateCommandHandler) generateTests(context *PromptPexContext) error 
 	// Build dynamic prompt based on the actual content (like TypeScript reference)
 	prompt := fmt.Sprintf(`Generate %d test cases for the following prompt based on the intent, input specification, and output rules.
 
-INTENT:
+<intent>
 %s
+</intent>
 
-INPUT SPECIFICATION:
+<input_specification>
 %s
+</input_specification>
 
-OUTPUT RULES:
+<output_rules>
 %s
+</output_rules>
 
-PROMPT:
+<prompt>
 %s
+</prompt>
 
 Generate test cases that:
 1. Test the core functionality described in the intent
@@ -273,7 +277,7 @@ Generate exactly %d diverse test cases:`, testsPerRule*3,
 	}
 
 	options := azuremodels.ChatCompletionOptions{
-		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Model:       *h.options.Models.Tests, // GitHub Models compatible model
 		Messages:    messages,
 		Temperature: util.Ptr(0.3),
 	}
@@ -286,14 +290,7 @@ Generate exactly %d diverse test cases:`, testsPerRule*3,
 	if err != nil {
 		return fmt.Errorf("failed to parse test JSON: %w", err)
 	}
-	context.PromptPexTests = tests
-
-	// Serialize tests to JSON
-	testsJSON, err := json.MarshalIndent(tests, "", "  ")
-	if err != nil {
-		return fmt.Errorf("failed to marshal tests: %w", err)
-	}
-	context.Tests = string(testsJSON)
+	context.Tests = tests
 
 	return nil
 }
@@ -311,7 +308,7 @@ func (h *generateCommandHandler) runTests(context *PromptPexContext) error {
 	for _, modelName := range h.options.ModelsUnderTest {
 		h.cfg.WriteToOut(fmt.Sprintf("Running tests with model: %s", modelName))
 
-		for i, test := range context.PromptPexTests {
+		for i, test := range context.Tests {
 			for run := 0; run < runsPerTest; run++ {
 				result := PromptPexTestResult{
 					ID:        fmt.Sprintf("test_%d_run_%d_%s", i, run, modelName),
@@ -545,8 +542,8 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 	groundtruthModel := h.options.Models.Groundtruth
 	h.cfg.WriteToOut(fmt.Sprintf("Generating groundtruth with model: %s", *groundtruthModel))
 
-	for i := range context.PromptPexTests {
-		test := &context.PromptPexTests[i]
+	for i := range context.Tests {
+		test := &context.Tests[i]
 
 		// Generate groundtruth output
 		output, err := h.runSingleTestWithContext(test.TestInput, *groundtruthModel, context)
@@ -560,7 +557,7 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 	}
 
 	// Update test data
-	testData, _ := json.MarshalIndent(context.PromptPexTests, "", "  ")
+	testData, _ := json.MarshalIndent(context.Tests, "", "  ")
 	context.TestData = string(testData)
 
 	return nil
@@ -570,14 +567,14 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 func (h *generateCommandHandler) expandTests(context *PromptPexContext) error {
 	h.cfg.WriteToOut(fmt.Sprintf("Expanding tests with %d expansion phases", *h.options.TestExpansions))
 
-	originalTestCount := len(context.PromptPexTests)
+	originalTestCount := len(context.Tests)
 
 	for phase := 0; phase < *h.options.TestExpansions; phase++ {
 		h.cfg.WriteToOut(fmt.Sprintf("Test expansion phase %d/%d", phase+1, *h.options.TestExpansions))
 
 		var newTests []PromptPexTest
 
-		for _, test := range context.PromptPexTests {
+		for _, test := range context.Tests {
 			// Generate expanded versions of each test
 			expandedTests, err := h.expandSingleTest(test, context)
 			if err != nil {
@@ -589,13 +586,13 @@ func (h *generateCommandHandler) expandTests(context *PromptPexContext) error {
 		}
 
 		// Add new tests to the collection
-		context.PromptPexTests = append(context.PromptPexTests, newTests...)
+		context.Tests = append(context.Tests, newTests...)
 	}
 
-	h.cfg.WriteToOut(fmt.Sprintf("Expanded from %d to %d tests", originalTestCount, len(context.PromptPexTests)))
+	h.cfg.WriteToOut(fmt.Sprintf("Expanded from %d to %d tests", originalTestCount, len(context.Tests)))
 
 	// Update test data
-	testData, _ := json.MarshalIndent(context.PromptPexTests, "", "  ")
+	testData, _ := json.MarshalIndent(context.Tests, "", "  ")
 	context.TestData = string(testData)
 
 	return nil
