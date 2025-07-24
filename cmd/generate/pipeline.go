@@ -16,38 +16,50 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 	if err := h.generateIntent(context); err != nil {
 		return fmt.Errorf("failed to generate intent: %w", err)
 	}
-	h.SaveContext(context)
+	if err := h.SaveContext(context); err != nil {
+		return err
+	}
 
 	// Step 2: Generate Input Specification
 	if err := h.generateInputSpec(context); err != nil {
 		return fmt.Errorf("failed to generate input specification: %w", err)
 	}
-	h.SaveContext(context)
+	if err := h.SaveContext(context); err != nil {
+		return err
+	}
 
 	// Step 3: Generate Output Rules
 	if err := h.generateOutputRules(context); err != nil {
 		return fmt.Errorf("failed to generate output rules: %w", err)
 	}
-	h.SaveContext(context)
+	if err := h.SaveContext(context); err != nil {
+		return err
+	}
 
 	// Step 4: Generate Inverse Output Rules
 	if err := h.generateInverseRules(context); err != nil {
 		return fmt.Errorf("failed to generate inverse rules: %w", err)
 	}
-	h.SaveContext(context)
+	if err := h.SaveContext(context); err != nil {
+		return err
+	}
 
 	// Step 5: Generate Tests
 	if err := h.generateTests(context); err != nil {
 		return fmt.Errorf("failed to generate tests: %w", err)
 	}
-	h.SaveContext(context)
+	if err := h.SaveContext(context); err != nil {
+		return err
+	}
 
 	// Step 6: Test Expansions (if enabled)
 	if h.options.TestExpansions != nil && *h.options.TestExpansions > 0 {
 		if err := h.expandTests(context); err != nil {
 			return fmt.Errorf("failed to expand tests: %w", err)
 		}
-		h.SaveContext(context)
+		if err := h.SaveContext(context); err != nil {
+			return err
+		}
 	}
 
 	// Step 8: Generate Groundtruth (if model specified)
@@ -55,12 +67,18 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 		if err := h.generateGroundtruth(context); err != nil {
 			return fmt.Errorf("failed to generate groundtruth: %w", err)
 		}
-		h.SaveContext(context)
+		if err := h.SaveContext(context); err != nil {
+			return err
+		}
 	}
 
 	// insert test cases in prompt and write back to file
-	h.UpdatePromptFile(context)
-	h.SaveContext(context)
+	if err := h.updatePromptFile(context); err != nil {
+		return err
+	}
+	if err := h.SaveContext(context); err != nil {
+		return err
+	}
 
 	// Step 11: Generate GitHub Models Evals
 	// TODO
@@ -72,7 +90,9 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 	if err := h.GenerateSummary(context); err != nil {
 		return fmt.Errorf("failed to generate summary: %w", err)
 	}
-	h.SaveContext(context)
+	if err := h.SaveContext(context); err != nil {
+		return err
+	}
 
 	h.cfg.WriteToOut("Pipeline completed successfully.")
 	return nil
@@ -372,12 +392,8 @@ func (h *generateCommandHandler) runSingleTestWithContext(input string, modelNam
 
 // generateGroundtruth generates groundtruth outputs using the specified model
 func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) error {
-	h.WriteStartBox("Groundtruth")
-
 	groundtruthModel := h.options.Models.Groundtruth
-
-	h.cfg.WriteToOut("Generating groundtruth")
-
+	h.WriteStartBox("Groundtruth")
 	for i := range context.Tests {
 		test := &context.Tests[i]
 		h.WriteToLine(test.TestInput)
@@ -397,12 +413,11 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 	}
 
 	h.WriteEndBox(fmt.Sprintf("%d items", len(context.Tests)))
-
 	return nil
 }
 
 // toGitHubModelsPrompt converts PromptPex context to GitHub Models format
-func (h *generateCommandHandler) UpdatePromptFile(context *PromptPexContext) error {
+func (h *generateCommandHandler) updatePromptFile(context *PromptPexContext) error {
 	// Convert test data
 	testData := []prompt.TestDataItem{}
 	for _, test := range context.Tests {
@@ -425,26 +440,21 @@ func (h *generateCommandHandler) UpdatePromptFile(context *PromptPexContext) err
 
 // expandTests implements test expansion functionality
 func (h *generateCommandHandler) expandTests(context *PromptPexContext) error {
-	h.cfg.WriteToOut(fmt.Sprintf("Expanding tests with %d expansion phases", *h.options.TestExpansions))
-
+	h.WriteStartBox("Expansion")
 	originalTestCount := len(context.Tests)
-
 	for phase := 0; phase < *h.options.TestExpansions; phase++ {
-		h.cfg.WriteToOut(fmt.Sprintf("Test expansion phase %d/%d", phase+1, *h.options.TestExpansions))
+		h.WriteToLine(fmt.Sprintf("Test expansion phase %d/%d", phase+1, *h.options.TestExpansions))
 
 		var newTests []PromptPexTest
-
 		for _, test := range context.Tests {
 			// Generate expanded versions of each test
 			expandedTests, err := h.expandSingleTest(test)
 			if err != nil {
-				h.cfg.WriteToOut(fmt.Sprintf("Failed to expand test: %v", err))
+				h.WriteToLine(fmt.Sprintf("Failed to expand test: %v", err))
 				continue
 			}
-
 			newTests = append(newTests, expandedTests...)
 		}
-
 		// Add new tests to the collection
 		context.Tests = append(context.Tests, newTests...)
 	}
