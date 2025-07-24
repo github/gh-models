@@ -1,5 +1,10 @@
-check: fmt vet tidy test
+check: fmt vet tidy test ci-lint
 .PHONY: check
+
+ci-lint:
+	@echo "==> running Go linter <=="
+	golangci-lint run --timeout 5m ./**/*.go
+.PHONY: ci-lint
 
 fmt:
 	@echo "==> running Go format <=="
