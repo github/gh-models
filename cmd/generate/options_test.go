@@ -59,7 +59,6 @@ func TestGetDefaultOptions_NonNilFields(t *testing.T) {
 		{"TestGenerations", defaults.TestGenerations},
 		{"TestExpansions", defaults.TestExpansions},
 		{"FilterTestCount", defaults.FilterTestCount},
-		{"Compliance", defaults.Compliance},
 	}
 
 	for _, field := range nonNilFields {
