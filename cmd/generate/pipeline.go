@@ -3,10 +3,10 @@ package generate
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/github/gh-models/internal/azuremodels"
-	"github.com/github/gh-models/pkg/prompt"
 	"github.com/github/gh-models/pkg/util"
 )
 
@@ -317,72 +317,63 @@ Generate exactly %d diverse test cases:`, nTests,
 }
 
 // runSingleTestWithContext runs a single test against a model with context
-func (h *generateCommandHandler) runSingleTestWithContext(input, modelName string, context *PromptPexContext) (string, error) {
+func (h *generateCommandHandler) runSingleTestWithContext(input string, modelName string, context *PromptPexContext) (string, error) {
 	// Use the context if provided, otherwise use the stored context
-	var messages []prompt.Message
-	if context != nil {
-		messages = context.Prompt.Messages
-	} else {
-		// Fallback to basic sentiment analysis prompt
-		systemContent := "You are a sentiment analysis expert. Classify the sentiment of the given text."
-		userContent := "Classify the sentiment of this text as positive, negative, or neutral: {{text}}\n\nRespond with only the sentiment word."
-		messages = []prompt.Message{
-			{Role: "system", Content: systemContent},
-			{Role: "user", Content: userContent},
-		}
-	}
+	messages := context.Prompt.Messages
 
 	// Build OpenAI messages from our messages format
-	var openaiMessages []azuremodels.ChatMessage
-	for _, msg := range messages {
+	re := regexp.MustCompile(`\{\{\s*text\s*\}\}`)
+	openaiMessages := make([]azuremodels.ChatMessage, 0, len(messages))
+	for i, msg := range messages {
 		// Replace template variables in content
-		var content string
-		if msg.Content != "" {
-			content = strings.ReplaceAll(msg.Content, "{{text}}", input)
+		content := msg.Content
+		if content != "" {
+			content = re.ReplaceAllString(content, input)
 		}
 
 		// Convert role format
 		var role azuremodels.ChatMessageRole
-		if msg.Role == "A" || msg.Role == "assistant" {
+		switch msg.Role {
+		case "assistant":
 			role = azuremodels.ChatMessageRoleAssistant
-		} else if msg.Role == "system" {
+		case "system":
 			role = azuremodels.ChatMessageRoleSystem
-		} else {
+		case "user":
 			role = azuremodels.ChatMessageRoleUser
+		default:
+			return "", fmt.Errorf("unknown role: %s", msg.Role)
 		}
 
-		openaiMessages = append(openaiMessages, azuremodels.ChatMessage{
+		openaiMessages[i] = azuremodels.ChatMessage{
 			Role:    role,
 			Content: &content,
-		})
+		}
 	}
 
 	options := azuremodels.ChatCompletionOptions{
-		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Model:       modelName,
 		Messages:    openaiMessages,
 		Temperature: util.Ptr(0.0),
 	}
 
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
+	result, err := h.callModelWithRetry("tests", options)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to run test input: %w", err)
 	}
-	completion, err := response.Reader.Read()
-	if err != nil {
-		return "", err
-	}
-	result := *completion.Choices[0].Message.Content
 
 	return result, nil
 }
 
 // generateGroundtruth generates groundtruth outputs using the specified model
 func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) error {
+	h.WriteStartBox("Groundtruth")
+
 	groundtruthModel := h.options.Models.Groundtruth
+
 	h.cfg.WriteToOut("Groundtruth")
 
 	for i := range context.Tests {
-		test := &context.Tests[i]
+		test := context.Tests[i]
 
 		// Generate groundtruth output
 		output, err := h.runSingleTestWithContext(test.TestInput, *groundtruthModel, context)
@@ -394,6 +385,8 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 		test.Groundtruth = &output
 		test.GroundtruthModel = groundtruthModel
 	}
+
+	h.WriteEndBox("")
 
 	return nil
 }
