@@ -73,13 +73,8 @@ func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompl
 		logFile, err := os.OpenFile(httpLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err == nil {
 			defer logFile.Close()
-			fmt.Fprintf(logFile, "### %s\n", time.Now().Format(time.RFC3339))
-			fmt.Fprintf(logFile, "POST %s\n", inferenceURL)
-			fmt.Fprintf(logFile, "Authorization: Bearer {{$processEnv GITHUB_TOKEN}}\n")
-			fmt.Fprintf(logFile, "Content-Type: application/json\n")
-			fmt.Fprintf(logFile, "x-ms-useragent: github-cli-models\n")
-			fmt.Fprintf(logFile, "x-ms-user-agent: github-cli-models\n")
-			fmt.Fprintf(logFile, "\n%s\n\n", string(bodyBytes))
+			fmt.Fprintf(logFile, "### %s\nPOST %s\nAuthorization: Bearer {{$processEnv GITHUB_TOKEN}}\nContent-Type: application/json\nx-ms-useragent: github-cli-models\nx-ms-user-agent: github-cli-models\n\n%s\n\n", 
+				time.Now().Format(time.RFC3339), inferenceURL, string(bodyBytes))
 		}
 	}
 
