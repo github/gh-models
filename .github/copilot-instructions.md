@@ -8,7 +8,7 @@ This repository implements the GitHub Models CLI extension (`gh models`), enabli
 ### Building and Testing
 
 - `make build`: Compiles the CLI binary
-- `make check`: Runs format, vet, tidy, and tests
+- `make check`: Runs format, vet, tidy, and tests. Always run when you are done with changes.
 - `make test`: Runs the tests.
 
 ### Command Structure
