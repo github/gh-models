@@ -8,6 +8,10 @@ import (
 	"github.com/github/gh-models/pkg/prompt"
 )
 
+var BOX_START = "╭─"
+var BOX_END = "╰─"
+var BOX_LINE = "─"
+
 // RenderMessagesToString converts a slice of Messages to a human-readable string representation
 func RenderMessagesToString(messages []prompt.Message) string {
 	if len(messages) == 0 {
@@ -39,10 +43,6 @@ func RenderMessagesToString(messages []prompt.Message) string {
 
 	return builder.String()
 }
-
-var BOX_START = "╭─"
-var BOX_END = "╰─"
-var BOX_LINE = "─"
 
 func (h *generateCommandHandler) WriteStartBox(title string) {
 	h.cfg.WriteToOut(fmt.Sprintf("%s %s\n", BOX_START, title))
