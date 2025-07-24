@@ -17,6 +17,7 @@ type generateCommandHandler struct {
 	client  azuremodels.Client
 	options *PromptPexOptions
 	org     string
+	httpLog string
 }
 
 // NewGenerateCommand returns a new command to generate tests using PromptPex.
@@ -50,6 +51,9 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 			// Get organization
 			org, _ := cmd.Flags().GetString("org")
 
+			// Get http-log flag
+			httpLog, _ := cmd.Flags().GetString("http-log")
+
 			// Create the command handler
 			handler := &generateCommandHandler{
 				ctx:     cmd.Context(),
@@ -57,6 +61,7 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 				client:  cfg.Client,
 				options: options,
 				org:     org,
+				httpLog: httpLog,
 			}
 
 			// Create PromptPex context
@@ -97,6 +102,7 @@ func AddCommandLineFlags(cmd *cobra.Command) {
 	flags.String("custom-metric", "", "Custom evaluation metric")
 	flags.Float64("temperature", 0.0, "Temperature for model inference")
 	flags.Bool("verbose", false, "Enable verbose output including LLM payloads")
+	flags.String("http-log", "", "Path to log HTTP requests to (optional)")
 }
 
 // parseFlags parses command-line flags and applies them to the options

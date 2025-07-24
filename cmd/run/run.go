@@ -423,6 +423,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 	cmd.Flags().String("top-p", "", "Controls text diversity by selecting the most probable words until a set probability is reached.")
 	cmd.Flags().String("system-prompt", "", "Prompt the system.")
 	cmd.Flags().String("org", "", "Organization to attribute usage to (omitting will attribute usage to the current actor")
+	cmd.Flags().String("http-log", "", "Path to log HTTP requests to (optional)")
 
 	return cmd
 }
@@ -465,14 +466,16 @@ func parseTemplateVariables(flags *pflag.FlagSet) (map[string]string, error) {
 }
 
 type runCommandHandler struct {
-	ctx    context.Context
-	cfg    *command.Config
-	client azuremodels.Client
-	args   []string
+	ctx     context.Context
+	cfg     *command.Config
+	client  azuremodels.Client
+	args    []string
+	httpLog string
 }
 
 func newRunCommandHandler(cmd *cobra.Command, cfg *command.Config, args []string) *runCommandHandler {
-	return &runCommandHandler{ctx: cmd.Context(), cfg: cfg, client: cfg.Client, args: args}
+	httpLog, _ := cmd.Flags().GetString("http-log")
+	return &runCommandHandler{ctx: cmd.Context(), cfg: cfg, client: cfg.Client, args: args, httpLog: httpLog}
 }
 
 func (h *runCommandHandler) loadModels() ([]*azuremodels.ModelSummary, error) {
@@ -551,7 +554,7 @@ func validateModelName(modelName string, models []*azuremodels.ModelSummary) (st
 }
 
 func (h *runCommandHandler) getChatCompletionStreamReader(req azuremodels.ChatCompletionOptions, org string) (sse.Reader[azuremodels.ChatCompletion], error) {
-	resp, err := h.client.GetChatCompletionStream(h.ctx, req, org)
+	resp, err := h.client.GetChatCompletionStream(h.ctx, req, org, h.httpLog)
 	if err != nil {
 		return nil, err
 	}

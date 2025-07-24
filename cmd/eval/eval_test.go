@@ -162,7 +162,7 @@ evaluators:
 		cfg := command.NewConfig(out, out, client, true, 100)
 
 		// Mock a response that returns "4" for the LLM evaluator
-		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org, httpLogFile string) (*azuremodels.ChatCompletionResponse, error) {
 			reader := sse.NewMockEventReader([]azuremodels.ChatCompletion{
 				{
 					Choices: []azuremodels.ChatChoice{
@@ -228,7 +228,7 @@ evaluators:
 		client := azuremodels.NewMockClient()
 
 		// Mock a simple response
-		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org, httpLogFile string) (*azuremodels.ChatCompletionResponse, error) {
 			// Create a mock reader that returns "test response"
 			reader := sse.NewMockEventReader([]azuremodels.ChatCompletion{
 				{
@@ -284,7 +284,7 @@ evaluators:
 		client := azuremodels.NewMockClient()
 
 		// Mock a response that will fail the evaluator
-		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org, httpLogFile string) (*azuremodels.ChatCompletionResponse, error) {
 			reader := sse.NewMockEventReader([]azuremodels.ChatCompletion{
 				{
 					Choices: []azuremodels.ChatChoice{
@@ -347,7 +347,7 @@ evaluators:
 
 		// Mock responses for both test cases
 		callCount := 0
-		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org, httpLogFile string) (*azuremodels.ChatCompletionResponse, error) {
 			callCount++
 			var response string
 			if callCount == 1 {
@@ -445,7 +445,7 @@ evaluators:
 		require.NoError(t, err)
 
 		client := azuremodels.NewMockClient()
-		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org, httpLogFile string) (*azuremodels.ChatCompletionResponse, error) {
 			response := "hello world"
 			reader := sse.NewMockEventReader([]azuremodels.ChatCompletion{
 				{
@@ -528,7 +528,7 @@ evaluators:
 		require.NoError(t, err)
 
 		client := azuremodels.NewMockClient()
-		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org, httpLogFile string) (*azuremodels.ChatCompletionResponse, error) {
 			response := "hello world"
 			reader := sse.NewMockEventReader([]azuremodels.ChatCompletion{
 				{
@@ -590,7 +590,7 @@ evaluators:
 
 		client := azuremodels.NewMockClient()
 		var capturedRequest azuremodels.ChatCompletionOptions
-		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
+		client.MockGetChatCompletionStream = func(ctx context.Context, req azuremodels.ChatCompletionOptions, org, httpLogFile string) (*azuremodels.ChatCompletionResponse, error) {
 			capturedRequest = req
 			response := `{"message": "hello world", "confidence": 0.95}`
 			reader := sse.NewMockEventReader([]azuremodels.ChatCompletion{

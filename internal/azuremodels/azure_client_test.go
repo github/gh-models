@@ -63,7 +63,7 @@ func TestAzureClient(t *testing.T) {
 				},
 			}
 
-			chatCompletionStreamResp, err := client.GetChatCompletionStream(ctx, opts, "")
+			chatCompletionStreamResp, err := client.GetChatCompletionStream(ctx, opts, "", "")
 
 			require.NoError(t, err)
 			require.NotNil(t, chatCompletionStreamResp)
@@ -139,7 +139,7 @@ func TestAzureClient(t *testing.T) {
 				},
 			}
 
-			chatCompletionStreamResp, err := client.GetChatCompletionStream(ctx, opts, "")
+			chatCompletionStreamResp, err := client.GetChatCompletionStream(ctx, opts, "", "")
 
 			require.NoError(t, err)
 			require.NotNil(t, chatCompletionStreamResp)
@@ -181,7 +181,7 @@ func TestAzureClient(t *testing.T) {
 				Messages: []ChatMessage{{Role: "user", Content: util.Ptr("Tell me a story, test model.")}},
 			}
 
-			chatCompletionResp, err := client.GetChatCompletionStream(ctx, opts, "")
+			chatCompletionResp, err := client.GetChatCompletionStream(ctx, opts, "", "")
 
 			require.Error(t, err)
 			require.Nil(t, chatCompletionResp)

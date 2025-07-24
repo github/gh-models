@@ -45,7 +45,7 @@ func NewAzureClient(httpClient *http.Client, authToken string, cfg *AzureClientC
 }
 
 // GetChatCompletionStream returns a stream of chat completions using the given options.
-func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompletionOptions, org string) (*ChatCompletionResponse, error) {
+func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompletionOptions, org, httpLogFile string) (*ChatCompletionResponse, error) {
 	// Check for o1 models, which don't support streaming
 	if req.Model == "o1-mini" || req.Model == "o1-preview" || req.Model == "o1" {
 		req.Stream = false
@@ -67,19 +67,18 @@ func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompl
 		inferenceURL = c.cfg.InferenceRoot + "/" + c.cfg.InferencePath
 	}
 
-	// TODO: remove logging
-	// Write request details to llm.http file for debugging
-	if os.Getenv("DEBUG") != "" {
-		httpFile, err := os.OpenFile("llm.http", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	// Write request details to specified log file for debugging
+	if httpLogFile != "" {
+		logFile, err := os.OpenFile(httpLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 		if err == nil {
-			defer httpFile.Close()
-			fmt.Fprintf(httpFile, "### %s\n", time.Now().Format(time.RFC3339))
-			fmt.Fprintf(httpFile, "POST %s\n", inferenceURL)
-			fmt.Fprintf(httpFile, "Authorization: Bearer {{$processEnv GITHUB_TOKEN}}\n")
-			fmt.Fprintf(httpFile, "Content-Type: application/json\n")
-			fmt.Fprintf(httpFile, "x-ms-useragent: github-cli-models\n")
-			fmt.Fprintf(httpFile, "x-ms-user-agent: github-cli-models\n")
-			fmt.Fprintf(httpFile, "\n%s\n\n", string(bodyBytes))
+			defer logFile.Close()
+			fmt.Fprintf(logFile, "### %s\n", time.Now().Format(time.RFC3339))
+			fmt.Fprintf(logFile, "POST %s\n", inferenceURL)
+			fmt.Fprintf(logFile, "Authorization: Bearer {{$processEnv GITHUB_TOKEN}}\n")
+			fmt.Fprintf(logFile, "Content-Type: application/json\n")
+			fmt.Fprintf(logFile, "x-ms-useragent: github-cli-models\n")
+			fmt.Fprintf(logFile, "x-ms-user-agent: github-cli-models\n")
+			fmt.Fprintf(logFile, "\n%s\n\n", string(bodyBytes))
 		}
 	}
 
