@@ -24,4 +24,8 @@ test:
 build:
 	script/build
 .PHONY: build
-	
+
+clean:
+	@echo "==> cleaning up <=="
+	rm -rf ./gh-models
+.PHONY: clean

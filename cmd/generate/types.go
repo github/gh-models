@@ -103,7 +103,6 @@ type PromptPexPromptyFrontmatter struct {
 // PromptPexContext represents the main context for PromptPex operations
 type PromptPexContext struct {
 	RunID             string                   `json:"runId" yaml:"runId"`
-	WriteResults      *bool                    `json:"writeResults,omitempty" yaml:"writeResults,omitempty"`
 	Prompt            *prompt.File             `json:"prompt" yaml:"prompt"`
 	Intent            string                   `json:"intent" yaml:"intent"`
 	Rules             string                   `json:"rules" yaml:"rules"`

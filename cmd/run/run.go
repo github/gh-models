@@ -475,12 +475,12 @@ type runCommandHandler struct {
 func newRunCommandHandler(cmd *cobra.Command, cfg *command.Config, args []string) *runCommandHandler {
 	ctx := cmd.Context()
 	httpLog, _ := cmd.Flags().GetString("http-log")
-	
+
 	// Add HTTP log filename to context if provided
 	if httpLog != "" {
 		ctx = azuremodels.WithHTTPLogFile(ctx, httpLog)
 	}
-	
+
 	return &runCommandHandler{ctx: ctx, cfg: cfg, client: cfg.Client, args: args}
 }
 

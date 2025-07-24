@@ -34,7 +34,6 @@ messages:
 			},
 			expectError: false,
 			expectedFields: map[string]interface{}{
-				"writeResults": true,
 				"intent":       "",
 				"rules":        "",
 				"inverseRules": "",
@@ -56,9 +55,8 @@ messages:
 			},
 			expectError: false,
 			expectedFields: map[string]interface{}{
-				"writeResults": true,
-				"intent":       "",
-				"rules":        "",
+				"intent": "",
+				"rules":  "",
 			},
 		},
 		{
@@ -69,11 +67,9 @@ model: gpt-4
 messages:
   - role: user
     content: Test`,
-			options:     PromptPexOptions{},
-			expectError: false,
-			expectedFields: map[string]interface{}{
-				"writeResults": true,
-			},
+			options:        PromptPexOptions{},
+			expectError:    false,
+			expectedFields: map[string]interface{}{},
 		},
 		{
 			name:           "invalid yaml",
@@ -134,11 +130,6 @@ messages:
 				t.Errorf("RunID should start with 'run_', got: %s", context.RunID)
 			}
 
-			// Check WriteResults default
-			if context.WriteResults == nil || *context.WriteResults != true {
-				t.Errorf("WriteResults should be true by default")
-			}
-
 			// Check that Prompt is loaded
 			if context.Prompt == nil {
 				t.Errorf("Prompt should not be nil")
@@ -147,10 +138,6 @@ messages:
 			// Check expected fields
 			for field, expectedValue := range tt.expectedFields {
 				switch field {
-				case "writeResults":
-					if context.WriteResults == nil || *context.WriteResults != expectedValue.(bool) {
-						t.Errorf("Expected %s to be %v, got %v", field, expectedValue, context.WriteResults)
-					}
 				case "intent":
 					if context.Intent != expectedValue.(string) {
 						t.Errorf("Expected %s to be %q, got %q", field, expectedValue, context.Intent)
