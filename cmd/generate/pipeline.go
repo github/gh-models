@@ -70,6 +70,11 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 
 // generateIntent generates the intent of the prompt
 func (h *generateCommandHandler) generateIntent(context *PromptPexContext) error {
+	if context.Intent != nil && *context.Intent != "" {
+		h.cfg.WriteToOut("Reusing intent...\n")
+		return nil
+	}
+
 	h.cfg.WriteToOut("Generating intent...\n")
 
 	system := `Analyze the following prompt and describe its intent in 2-3 sentences.`
@@ -93,7 +98,7 @@ Intent:`, RenderMessagesToString(context.Prompt.Messages))
 	if err != nil {
 		return err
 	}
-	context.Intent = intent
+	context.Intent = util.Ptr(intent)
 
 	return nil
 }
@@ -125,7 +130,7 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 	if err != nil {
 		return err
 	}
-	context.InputSpec = inputSpec
+	context.InputSpec = util.Ptr(inputSpec)
 
 	return nil
 }
@@ -217,6 +222,7 @@ func (h *generateCommandHandler) generateTests(context *PromptPexContext) error 
 		testsPerRule = *h.options.TestsPerRule
 	}
 
+	nTests := testsPerRule * len(context.Rules)
 	// Build dynamic prompt based on the actual content (like TypeScript reference)
 	prompt := fmt.Sprintf(`Generate %d test cases for the following prompt based on the intent, input specification, and output rules.
 
@@ -251,12 +257,12 @@ Return only a JSON array with this exact format:
   }
 ]
 
-Generate exactly %d diverse test cases:`, testsPerRule*3,
-		context.Intent,
-		context.InputSpec,
+Generate exactly %d diverse test cases:`, nTests,
+		*context.Intent,
+		*context.InputSpec,
 		context.Rules,
 		RenderMessagesToString(context.Prompt.Messages),
-		testsPerRule*3)
+		nTests)
 
 	messages := []azuremodels.ChatMessage{
 		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},

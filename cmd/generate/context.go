@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/github/gh-models/pkg/prompt"
+	"github.com/github/gh-models/pkg/util"
 )
 
 // createContext creates a new PromptPexContext from a prompt file
@@ -24,11 +25,11 @@ func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string) (*Pr
 
 	context := &PromptPexContext{
 		// Unique identifier for the run
-		RunID: runID,
+		RunID: util.Ptr(runID),
 		// The prompt content and metadata
 		Prompt: prompt,
 		// Hash of the prompt messages, model, and parameters
-		PromptHash: promptHash,
+		PromptHash: util.Ptr(promptHash),
 		// The options used to generate the prompt
 		Options: h.options,
 	}
