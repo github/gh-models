@@ -217,8 +217,3 @@ messages:
 		require.Contains(t, err.Error(), "failed to load prompt file")
 	})
 }
-
-// Helper function to check if a string contains a substring (case-insensitive)
-func contains(s, substr string) bool {
-	return regexp.MustCompile("(?i)" + regexp.QuoteMeta(substr)).MatchString(s)
-}

@@ -64,7 +64,7 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 	*/
 
 	// Step 8: Generate Groundtruth (if model specified)
-	if h.options.Models.Groundtruth != nil {
+	if h.options.Models.Groundtruth != nil && *h.options.Models.Groundtruth != "" && *h.options.Models.Groundtruth != "none" {
 		if err := h.generateGroundtruth(context); err != nil {
 			return fmt.Errorf("failed to generate groundtruth: %w", err)
 		}
@@ -311,7 +311,7 @@ Generate exactly %d diverse test cases:`, nTests,
 			Temperature: util.Ptr(0.3),
 		}
 
-		tests, err := h.callModelToGenerateTests(options, context)
+		tests, err := h.callModelToGenerateTests(options)
 		if err != nil {
 			return fmt.Errorf("failed to generate tests: %w", err)
 		}
@@ -330,7 +330,7 @@ Generate exactly %d diverse test cases:`, nTests,
 	return nil
 }
 
-func (h *generateCommandHandler) callModelToGenerateTests(options azuremodels.ChatCompletionOptions, context *PromptPexContext) ([]PromptPexTest, error) {
+func (h *generateCommandHandler) callModelToGenerateTests(options azuremodels.ChatCompletionOptions) ([]PromptPexTest, error) {
 	// try multiple times to generate tests
 	const maxGenerateTestRetry = 3
 	for i := 0; i < maxGenerateTestRetry; i++ {

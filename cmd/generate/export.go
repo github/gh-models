@@ -1,11 +1,5 @@
 package generate
 
-import (
-	"fmt"
-	"regexp"
-	"strings"
-)
-
 /*
 	// Create the base evaluator using rules
 	evaluators := []prompt.Evaluator{
@@ -31,7 +25,7 @@ import (
 
 */
 
-// generateRulesEvaluatorSystemPrompt generates the system prompt for rules evaluation
+/*
 func (h *generateCommandHandler) generateRulesEvaluatorSystemPrompt(context *PromptPexContext) string {
 	// Get the original prompt content from messages
 	var promptContent string
@@ -72,7 +66,7 @@ Here are the guidelines to follow for your evaluation process:
    - Return 100 if <CHATBOT_OUTPUT> complies with all the constrains in the description and the rules extracted from the description
    - Return 0 if it does not comply with any of the constrains in the description or the rules extracted from the description.
    - Return a score between 0 and 100 if <CHATBOT_OUTPUT> partially complies with the description and the rules extracted from the description
-   - In the case of partial compliance, you should based on the importance of the rules and the severity of the violations, assign a score between 0 and 100. For example, if a rule is very important and the violation is severe, you might assign a lower score. Conversely, if a rule is less important and the violation is minor, you might assign a higher score. 
+   - In the case of partial compliance, you should based on the importance of the rules and the severity of the violations, assign a score between 0 and 100. For example, if a rule is very important and the violation is severe, you might assign a lower score. Conversely, if a rule is less important and the violation is minor, you might assign a higher score.
 
 3. **Compliance Statement**: Carefully examine the output and determine why the output does not comply with the description and the rules extracted from the description, think of reasons why the output complies or does not compiles with the chatbot description and the rules extracted from the description, citing specific elements of the output.
 
@@ -93,67 +87,4 @@ Rate the answer on a scale from 1-5 where:
 5 = Excellent (exceptionally accurate, complete, and well-explained)
 You must respond with ONLY the number rating (1, 2, 3, 4, or 5).`, promptContent, context.Rules)
 }
-
-// getTestScenario extracts scenario information from test data for logging
-func getTestScenario(test PromptPexTest) string {
-	if test.Reasoning != nil && *test.Reasoning != "" {
-		return *test.Reasoning
-	}
-	if test.Groundtruth != nil && *test.Groundtruth != "" {
-		// Use first 50 characters of groundtruth as scenario description
-		gt := *test.Groundtruth
-		if len(gt) > 50 {
-			gt = gt[:50] + "..."
-		}
-		return gt
-	}
-	return "unknown scenario"
-}
-
-// extractTemplateVariables extracts template variables from prompt content
-func (h *generateCommandHandler) extractTemplateVariables(context *PromptPexContext) map[string]bool {
-	allowedFields := make(map[string]bool)
-
-	// Extract variables from all message content in the prompt
-	if context.Prompt != nil {
-		for _, msg := range context.Prompt.Messages {
-			variables := extractVariablesFromText(msg.Content)
-			for _, variable := range variables {
-				allowedFields[variable] = true
-			}
-		}
-	}
-
-	// Always allow 'expected' and 'reasoning' as they are metadata fields
-	allowedFields["expected"] = true
-	allowedFields["reasoning"] = true
-
-	h.cfg.WriteToOut(fmt.Sprintf("Extracted template variables: %v", getMapKeys(allowedFields)))
-	return allowedFields
-}
-
-// extractVariablesFromText extracts template variables like {{variable}} from text
-func extractVariablesFromText(text string) []string {
-	// Regex to match {{variable}} patterns
-	re := regexp.MustCompile(`\{\{([^}]+)\}\}`)
-	matches := re.FindAllStringSubmatch(text, -1)
-
-	var variables []string
-	for _, match := range matches {
-		if len(match) > 1 {
-			variable := strings.TrimSpace(match[1])
-			variables = append(variables, variable)
-		}
-	}
-
-	return variables
-}
-
-// getMapKeys returns the keys of a map[string]bool as a slice
-func getMapKeys(m map[string]bool) []string {
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	return keys
-}
+*/

@@ -337,64 +337,6 @@ func TestParseTestsFromLLMResponse_RealWorldExamples(t *testing.T) {
 	})
 }
 
-// Tests documenting the expected behavior vs actual behavior
-func TestParseTestsFromLLMResponse_BehaviorDocumentation(t *testing.T) {
-	handler := &generateCommandHandler{}
-
-	t.Run("documents field priority behavior", func(t *testing.T) {
-		// Test what happens when multiple input field variations are present
-		content := `[{"scenario": "priority test", "testinput": "testinput_val", "testInput": "testInput_val", "input": "input_val", "reasoning": "test"}]`
-
-		result, err := handler.ParseTestsFromLLMResponse(content)
-		if err != nil {
-			t.Errorf("ParseTestsFromLLMResponse() unexpected error: %v", err)
-		}
-		if len(result) != 1 {
-			t.Errorf("ParseTestsFromLLMResponse() expected 1 test, got %d", len(result))
-		}
-
-		// Document what the function actually does with priority
-		t.Logf("Field priority result: TestInput = '%s'", result[0].TestInput)
-
-		// BEHAVIOR DISCOVERY: The function actually uses Go's JSON unmarshaling behavior
-		// When multiple fields map to the same struct field, the last one in the JSON wins
-		// This documents the actual behavior rather than expected behavior
-		if result[0].TestInput == "testinput_val" {
-			t.Logf("BEHAVIOR: testinput field took priority")
-		} else if result[0].TestInput == "testInput_val" {
-			t.Logf("BEHAVIOR: testInput field took priority (JSON field order dependency)")
-		} else if result[0].TestInput == "input_val" {
-			t.Logf("BEHAVIOR: input field took priority")
-		} else {
-			t.Errorf("Unexpected result: %s", result[0].TestInput)
-		}
-	})
-
-	t.Run("documents fallback behavior differences", func(t *testing.T) {
-		// Test fallback behavior with only testInput (no testinput)
-		content := `[{"scenario": "fallback test", "testInput": "testInput_val", "input": "input_val", "reasoning": "test"}]`
-
-		result, err := handler.ParseTestsFromLLMResponse(content)
-		if err != nil {
-			t.Errorf("ParseTestsFromLLMResponse() unexpected error: %v", err)
-		}
-		if len(result) != 1 {
-			t.Errorf("ParseTestsFromLLMResponse() expected 1 test, got %d", len(result))
-		}
-
-		t.Logf("Fallback behavior: TestInput = '%s'", result[0].TestInput)
-
-		// Document the actual behavior
-		if result[0].TestInput == "testInput_val" {
-			t.Logf("SUCCESS: testInput field parsed correctly in fallback mode")
-		} else if result[0].TestInput == "input_val" {
-			t.Logf("BEHAVIOR: input field used when testInput present (unexpected)")
-		} else {
-			t.Logf("ISSUE: No input field parsed correctly, got: '%s'", result[0].TestInput)
-		}
-	})
-}
-
 func TestParseRules(t *testing.T) {
 	tests := []struct {
 		name     string

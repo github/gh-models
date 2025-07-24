@@ -104,7 +104,7 @@ func AddCommandLineFlags(cmd *cobra.Command) {
 	flags := cmd.Flags()
 	flags.String("org", "", "Organization to attribute usage to")
 	flags.String("effort", "", "Effort level (low, medium, high)")
-	flags.String("groundtruth-model", "", "Model to use for generating groundtruth outputs")
+	flags.String("groundtruth-model", "", "Model to use for generating groundtruth outputs. Defaults to openai/gpt-4o. Use 'none' to disable groundtruth generation.")
 	flags.String("session-file", "", "Session file to load existing context from (defaults to <prompt-file>.generate.json)")
 }
 
