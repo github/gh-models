@@ -77,7 +77,7 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 // generateIntent generates the intent of the prompt
 func (h *generateCommandHandler) generateIntent(context *PromptPexContext) error {
 	if context.Intent != nil && *context.Intent != "" {
-		h.cfg.WriteToOut("Reusing intent...\n")
+		h.WriteBox("Reusing intent...", *context.Intent)
 		return nil
 	}
 
@@ -112,7 +112,7 @@ Intent:`, RenderMessagesToString(context.Prompt.Messages))
 // generateInputSpec generates the input specification
 func (h *generateCommandHandler) generateInputSpec(context *PromptPexContext) error {
 	if context.InputSpec != nil && *context.InputSpec != "" {
-		h.cfg.WriteToOut("Reusing input specification...\n")
+		h.WriteBox("Reusing input specification...", *context.InputSpec)
 		return nil
 	}
 
@@ -149,7 +149,11 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 // generateOutputRules generates output rules for the prompt
 func (h *generateCommandHandler) generateOutputRules(context *PromptPexContext) error {
 	if len(context.Rules) >= 0 {
-		h.cfg.WriteToOut("Reusing output rules...\n")
+		h.WriteStartBox("Reusing output rules...")
+		for _, rule := range context.Rules {
+			h.cfg.WriteToOut(rule)
+		}
+		h.WriteEndBox(fmt.Sprintf("%d rules", len(context.Rules)))
 		return nil
 	}
 
@@ -193,7 +197,11 @@ Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 // generateInverseRules generates inverse rules (what makes an invalid output)
 func (h *generateCommandHandler) generateInverseRules(context *PromptPexContext) error {
 	if len(context.InverseRules) >= 0 {
-		h.cfg.WriteToOut("Reusing inverse rules...\n")
+		h.WriteStartBox("Reusing inverse output rules...")
+		for _, rule := range context.InverseRules {
+			h.cfg.WriteToOut(rule)
+		}
+		h.WriteEndBox(fmt.Sprintf("%d rules", len(context.InverseRules)))
 		return nil
 	}
 

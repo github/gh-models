@@ -40,23 +40,54 @@ func RenderMessagesToString(messages []prompt.Message) string {
 	return builder.String()
 }
 
+var BOX_START = "╭─"
+var BOX_END = "╰─"
+var BOX_LINE = "─"
+
+func (h *generateCommandHandler) WriteStartBox(title string) {
+	h.cfg.WriteToOut(fmt.Sprintf("%s %s\n", BOX_START, title))
+}
+
+func (h *generateCommandHandler) WriteEndBox(suffix string) {
+	if suffix == "" {
+		suffix = BOX_LINE
+	}
+	h.cfg.WriteToOut(fmt.Sprintf("%s%s\n", BOX_END, suffix))
+}
+
+func (h *generateCommandHandler) WriteBox(title, content string) {
+	h.WriteStartBox(title)
+	if content != "" {
+		h.cfg.WriteToOut(content)
+		if !strings.HasSuffix(content, "\n") {
+			h.cfg.WriteToOut("\n")
+		}
+	}
+	h.WriteEndBox("")
+}
+
 // logLLMPayload logs the LLM request and response if verbose mode is enabled
 func (h *generateCommandHandler) LogLLMResponse(response string) {
 	if h.options.Verbose != nil && *h.options.Verbose {
-		h.cfg.WriteToOut(fmt.Sprintf("╭─assistant\n%s\n╰─🏁\n", response))
+		h.WriteStartBox("🏁")
+		h.cfg.WriteToOut(response)
+		if !strings.HasSuffix(response, "\n") {
+			h.cfg.WriteToOut("\n")
+		}
+		h.WriteEndBox("")
 	}
 }
 
 func (h *generateCommandHandler) LogLLMRequest(step string, options azuremodels.ChatCompletionOptions) {
 	if h.options.Verbose != nil && *h.options.Verbose {
-		h.cfg.WriteToOut(fmt.Sprintf("\n╭─💬 %s %s\n", step, options.Model))
+		h.WriteStartBox(fmt.Sprintf("💬 %s %s", step, options.Model))
 		for _, msg := range options.Messages {
 			content := ""
 			if msg.Content != nil {
 				content = *msg.Content
 			}
-			h.cfg.WriteToOut(fmt.Sprintf("╭─%s\n%s\n", msg.Role, content))
+			h.cfg.WriteToOut(fmt.Sprintf("%s%s\n%s\n", BOX_START, msg.Role, content))
 		}
-		h.cfg.WriteToOut("╰─\n")
+		h.WriteEndBox("")
 	}
 }
