@@ -12,6 +12,9 @@ import (
 
 // createContext creates a new PromptPexContext from a prompt file
 func (h *generateCommandHandler) CreateContextFromPrompt() (*PromptPexContext, error) {
+
+	h.WriteStartBox(fmt.Sprintf("Prompt %s", h.promptFile))
+
 	prompt, err := prompt.LoadFromFile(h.promptFile)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load prompt file: %w", err)
@@ -35,17 +38,18 @@ func (h *generateCommandHandler) CreateContextFromPrompt() (*PromptPexContext, e
 		Options: h.options,
 	}
 
+	sessionInfo := ""
 	if h.sessionFile != nil {
 		// Try to load existing context from session file
 		existingContext, err := loadContextFromFile(*h.sessionFile)
 		if err != nil {
-			h.cfg.WriteToOut(fmt.Sprintf("Creating session file at %s\n", *h.sessionFile))
+			sessionInfo = fmt.Sprintf("new session file at %s", *h.sessionFile)
 			// If file doesn't exist, that's okay - we'll start fresh
 			if !os.IsNotExist(err) {
 				return nil, fmt.Errorf("failed to load existing context from %s: %w", *h.sessionFile, err)
 			}
 		} else {
-			h.cfg.WriteToOut(fmt.Sprintf("Reloading session file at %s\n", *h.sessionFile))
+			sessionInfo = fmt.Sprintf("reloading session file at %s", *h.sessionFile)
 			// Check if prompt hashes match
 			if existingContext.PromptHash != nil && context.PromptHash != nil &&
 				*existingContext.PromptHash != *context.PromptHash {
@@ -58,6 +62,9 @@ func (h *generateCommandHandler) CreateContextFromPrompt() (*PromptPexContext, e
 			}
 		}
 	}
+
+	h.WriteToParagraph(RenderMessagesToString(context.Prompt.Messages))
+	h.WriteEndBox(sessionInfo)
 
 	return context, nil
 }
