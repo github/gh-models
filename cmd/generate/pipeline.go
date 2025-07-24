@@ -3,7 +3,6 @@ package generate
 import (
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/github/gh-models/internal/azuremodels"
@@ -327,13 +326,14 @@ func (h *generateCommandHandler) runSingleTestWithContext(input string, modelNam
 	messages := context.Prompt.Messages
 
 	// Build OpenAI messages from our messages format
-	re := regexp.MustCompile(`\{\{\s*text\s*\}\}`)
 	openaiMessages := []azuremodels.ChatMessage{}
 	for _, msg := range messages {
+		templateData := make(map[string]interface{})
+		templateData["input"] = input
 		// Replace template variables in content
-		content := msg.Content
-		if content != "" {
-			content = re.ReplaceAllString(content, input)
+		content, err := prompt.TemplateString(msg.Content, templateData)
+		if err != nil {
+			return "", fmt.Errorf("failed to render message content: %w", err)
 		}
 
 		// Convert role format

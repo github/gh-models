@@ -7,4 +7,4 @@ messages:
       You are an expert at telling jokes. Determine if the Joke below is funny or not funny
   - role: user
     content: |
-      {{text}}
+      {{input}}
