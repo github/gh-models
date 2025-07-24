@@ -12,11 +12,12 @@ import (
 )
 
 type generateCommandHandler struct {
-	ctx     context.Context
-	cfg     *command.Config
-	client  azuremodels.Client
-	options *PromptPexOptions
-	org     string
+	ctx         context.Context
+	cfg         *command.Config
+	client      azuremodels.Client
+	options     *PromptPexOptions
+	org         string
+	sessionFile string
 }
 
 // NewGenerateCommand returns a new command to generate tests using PromptPex.
@@ -50,6 +51,9 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 			// Get organization
 			org, _ := cmd.Flags().GetString("org")
 
+			// Get session file (required)
+			sessionFile, _ := cmd.Flags().GetString("session-file")
+
 			// Get http-log flag
 			httpLog, _ := cmd.Flags().GetString("http-log")
 
@@ -61,21 +65,22 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 
 			// Create the command handler
 			handler := &generateCommandHandler{
-				ctx:     ctx,
-				cfg:     cfg,
-				client:  cfg.Client,
-				options: options,
-				org:     org,
+				ctx:         ctx,
+				cfg:         cfg,
+				client:      cfg.Client,
+				options:     options,
+				org:         org,
+				sessionFile: sessionFile,
 			}
 
-			// Create PromptPex context
-			context, err := handler.CreateContextFromPrompt(promptFile)
+			// Load or create session
+			context, err := handler.LoadOrCreateSession(promptFile)
 			if err != nil {
-				return fmt.Errorf("failed to create context: %w", err)
+				return fmt.Errorf("failed to load or create session: %w", err)
 			}
 
 			// Run the PromptPex pipeline
-			if err := handler.RunTestGenerationPipeline(context); err != nil {
+			if err := handler.RunTestGenerationPipeline(context, promptFile); err != nil {
 				// Disable usage help for pipeline failures
 				cmd.SilenceUsage = true
 				return fmt.Errorf("pipeline failed: %w", err)
@@ -93,6 +98,7 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 
 func AddCommandLineFlags(cmd *cobra.Command) {
 	flags := cmd.Flags()
+	flags.String("session-file", "", "Path to session file for storing progress and results (required)")
 	flags.String("org", "", "Organization to attribute usage to")
 	flags.String("effort", "", "Effort level (min, low, medium, high)")
 	flags.StringSlice("models-under-test", []string{}, "Models to test (can be used multiple times)")
@@ -107,6 +113,9 @@ func AddCommandLineFlags(cmd *cobra.Command) {
 	flags.Float64("temperature", 0.0, "Temperature for model inference")
 	flags.Bool("verbose", false, "Enable verbose output including LLM payloads")
 	flags.String("http-log", "", "File path to log HTTP requests to (.http, optional)")
+	
+	// Mark session-file as required
+	cmd.MarkFlagRequired("session-file")
 }
 
 // parseFlags parses command-line flags and applies them to the options
