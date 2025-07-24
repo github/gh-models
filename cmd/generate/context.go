@@ -39,7 +39,7 @@ func (h *generateCommandHandler) CreateContextFromPrompt() (*PromptPexContext, e
 	}
 
 	sessionInfo := ""
-	if h.sessionFile != nil {
+	if h.sessionFile != nil && *h.sessionFile != "" {
 		// Try to load existing context from session file
 		existingContext, err := loadContextFromFile(*h.sessionFile)
 		if err != nil {
@@ -86,7 +86,7 @@ func loadContextFromFile(filePath string) (*PromptPexContext, error) {
 
 // saveContext saves the context to the session file
 func (h *generateCommandHandler) SaveContext(context *PromptPexContext) error {
-	if h.sessionFile == nil {
+	if h.sessionFile == nil || *h.sessionFile == "" {
 		return nil // No session file specified, skip saving
 	}
 	data, err := json.MarshalIndent(context, "", "  ")
