@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"regexp"
 	"time"
 
 	"github.com/github/gh-models/pkg/prompt"
@@ -36,54 +35,31 @@ func (h *generateCommandHandler) CreateContextFromPrompt() (*PromptPexContext, e
 		Options: h.options,
 	}
 
-	// Determine session file path
-	defaultSessionFile := h.sessionFile == nil || *h.sessionFile == ""
-	if defaultSessionFile {
-		// Generate default session file name by replacing 'prompt.yml' with '.generate.json'
-		h.sessionFile = util.Ptr(generateDefaultSessionFileName(h.promptFile))
-	}
-
-	// Try to load existing context from session file
-	existingContext, err := loadContextFromFile(*h.sessionFile)
-	if err != nil {
-		h.cfg.WriteToOut(fmt.Sprintf("Creating session file at %s\n", *h.sessionFile))
-		// If file doesn't exist, that's okay - we'll start fresh
-		if !os.IsNotExist(err) {
-			return nil, fmt.Errorf("failed to load existing context from %s: %w", *h.sessionFile, err)
-		}
-	} else {
-		h.cfg.WriteToOut(fmt.Sprintf("Reloading session file at %s\n", *h.sessionFile))
-		// Check if prompt hashes match
-		if existingContext.PromptHash != nil && context.PromptHash != nil &&
-			*existingContext.PromptHash != *context.PromptHash {
-			if !defaultSessionFile {
-				return nil, fmt.Errorf("prompt changed unable to reuse session file")
-			} else {
-				// the prompt changed and the user is implicitely leverage the context file for caching,
-				// silently clear out the context
-				h.cfg.WriteToOut("Prompt changed, ignoring previous session...\n")
-				existingContext = nil
+	if h.sessionFile != nil {
+		// Try to load existing context from session file
+		existingContext, err := loadContextFromFile(*h.sessionFile)
+		if err != nil {
+			h.cfg.WriteToOut(fmt.Sprintf("Creating session file at %s\n", *h.sessionFile))
+			// If file doesn't exist, that's okay - we'll start fresh
+			if !os.IsNotExist(err) {
+				return nil, fmt.Errorf("failed to load existing context from %s: %w", *h.sessionFile, err)
 			}
-		}
+		} else {
+			h.cfg.WriteToOut(fmt.Sprintf("Reloading session file at %s\n", *h.sessionFile))
+			// Check if prompt hashes match
+			if existingContext.PromptHash != nil && context.PromptHash != nil &&
+				*existingContext.PromptHash != *context.PromptHash {
+				return nil, fmt.Errorf("prompt changed unable to reuse session file")
+			}
 
-		// Merge existing context data
-		if existingContext != nil {
-			context = mergeContexts(existingContext, context)
+			// Merge existing context data
+			if existingContext != nil {
+				context = mergeContexts(existingContext, context)
+			}
 		}
 	}
 
 	return context, nil
-}
-
-// generateDefaultSessionFileName generates the default session file name
-func generateDefaultSessionFileName(promptFile string) string {
-	// Replace any extension matching /(\.prompt)?\.ya?ml$/ with .generate.json
-	re := regexp.MustCompile(`(\.prompt)?\.ya?ml$`)
-	if re.MatchString(promptFile) {
-		return re.ReplaceAllString(promptFile, ".generate.json")
-	}
-	// If it doesn't match the pattern, just append .generate.json
-	return promptFile + ".generate.json"
 }
 
 // loadContextFromFile loads a PromptPexContext from a JSON file
