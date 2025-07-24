@@ -5,6 +5,12 @@ This repository implements the GitHub Models CLI extension (`gh models`), enabli
 
 ## Architecture & Key Components
 
+### Building and Testing
+
+- `make build`: Compiles the CLI binary
+- `make check`: Runs format, vet, tidy, and tests
+- `make test`: Runs the tests.
+
 ### Command Structure
 - **cmd/root.go**: Entry point that initializes all subcommands and handles GitHub authentication
 - **cmd/{command}/**: Each subcommand (generate, eval, list, run, view) is self-contained with its own types and tests
