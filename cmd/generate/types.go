@@ -17,12 +17,6 @@ type PromptPexPrompts struct {
 	Intent             *string `yaml:"intent,omitempty" json:"intent,omitempty"`
 }
 
-// WorkspaceFile represents a file in the workspace
-type WorkspaceFile struct {
-	Filename string `json:"filename" yaml:"filename"`
-	Content  string `json:"content" yaml:"content"`
-}
-
 // PromptPexOptions contains all configuration options for PromptPex
 type PromptPexOptions struct {
 	// Core options
@@ -30,39 +24,15 @@ type PromptPexOptions struct {
 	Models             *PromptPexModelAliases `yaml:"models,omitempty" json:"models,omitempty"`
 	TestsPerRule       *int                   `yaml:"testsPerRule,omitempty" json:"testsPerRule,omitempty"`
 	RunsPerTest        *int                   `yaml:"runsPerTest,omitempty" json:"runsPerTest,omitempty"`
-	MaxTestsToRun      *int                   `yaml:"maxTestsToRun,omitempty" json:"maxTestsToRun,omitempty"`
 	MaxRules           *int                   `yaml:"maxRules,omitempty" json:"maxRules,omitempty"`
 	MaxRulesPerTestGen *int                   `yaml:"maxRulesPerTestGeneration,omitempty" json:"maxRulesPerTestGeneration,omitempty"`
-	TestGenerations    *int                   `yaml:"testGenerations,omitempty" json:"testGenerations,omitempty"`
 
 	// CLI-specific options
 	Effort *string `yaml:"effort,omitempty" json:"effort,omitempty"`
 	Prompt *string `yaml:"prompt,omitempty" json:"prompt,omitempty"`
 
 	// Loader options
-	TestSamplesCount   *int  `yaml:"testSamplesCount,omitempty" json:"testSamplesCount,omitempty"`
-	TestSamplesShuffle *bool `yaml:"testSamplesShuffle,omitempty" json:"testSamplesShuffle,omitempty"`
-	Verbose            *bool `yaml:"verbose,omitempty" json:"verbose,omitempty"`
-}
-
-// PromptPexTestGenerationScenario represents a test generation scenario
-type PromptPexTestGenerationScenario struct {
-	Name         string                 `yaml:"name" json:"name"`
-	Instructions *string                `yaml:"instructions,omitempty" json:"instructions,omitempty"`
-	Parameters   map[string]interface{} `yaml:"parameters,omitempty" json:"parameters,omitempty"`
-}
-
-// PromptPexPromptyFrontmatter represents the frontmatter of a prompty file
-type PromptPexPromptyFrontmatter struct {
-	Name         *string                           `yaml:"name,omitempty" json:"name,omitempty"`
-	Description  *string                           `yaml:"description,omitempty" json:"description,omitempty"`
-	Tags         []string                          `yaml:"tags,omitempty" json:"tags,omitempty"`
-	Inputs       map[string]interface{}            `yaml:"inputs,omitempty" json:"inputs,omitempty"`
-	Outputs      map[string]interface{}            `yaml:"outputs,omitempty" json:"outputs,omitempty"`
-	Instructions *PromptPexPrompts                 `yaml:"instructions,omitempty" json:"instructions,omitempty"`
-	Scenarios    []PromptPexTestGenerationScenario `yaml:"scenarios,omitempty" json:"scenarios,omitempty"`
-	TestSamples  []interface{}                     `yaml:"testSamples,omitempty" json:"testSamples,omitempty"`
-	Imported     map[string]interface{}            `yaml:"imported,omitempty" json:"imported,omitempty"`
+	Verbose *bool `yaml:"verbose,omitempty" json:"verbose,omitempty"`
 }
 
 // PromptPexContext represents the main context for PromptPex operations
@@ -91,91 +61,6 @@ type PromptPexTest struct {
 	Reasoning         *string `json:"reasoning,omitempty" yaml:"reasoning,omitempty"`
 	Scenario          *string `json:"scenario,omitempty" yaml:"scenario,omitempty"`
 	Generation        *int    `json:"generation,omitempty" yaml:"generation,omitempty"`
-}
-
-// PromptPexEvalResultType represents the result of an evaluation
-type PromptPexEvalResultType string
-
-const (
-	EvalResultOK      PromptPexEvalResultType = "ok"
-	EvalResultError   PromptPexEvalResultType = "err"
-	EvalResultUnknown PromptPexEvalResultType = "unknown"
-)
-
-// PromptPexEvaluation represents an evaluation result
-type PromptPexEvaluation struct {
-	Content     string                   `json:"content" yaml:"content"`
-	Uncertainty *float64                 `json:"uncertainty,omitempty" yaml:"uncertainty,omitempty"`
-	Perplexity  *float64                 `json:"perplexity,omitempty" yaml:"perplexity,omitempty"`
-	Outcome     *PromptPexEvalResultType `json:"outcome,omitempty" yaml:"outcome,omitempty"`
-	Score       *float64                 `json:"score,omitempty" yaml:"score,omitempty"`
-}
-
-// PromptPexTestResult represents the result of running a test
-type PromptPexTestResult struct {
-	ID               string  `json:"id" yaml:"id"`
-	PromptID         string  `json:"promptid" yaml:"promptid"`
-	RuleID           int     `json:"ruleid" yaml:"ruleid"`
-	Rule             string  `json:"rule" yaml:"rule"`
-	Scenario         string  `json:"scenario" yaml:"scenario"`
-	TestInput        string  `json:"testinput" yaml:"testinput"`
-	Inverse          *bool   `json:"inverse,omitempty" yaml:"inverse,omitempty"`
-	Baseline         *bool   `json:"baseline,omitempty" yaml:"baseline,omitempty"`
-	Model            string  `json:"model" yaml:"model"`
-	Input            string  `json:"input" yaml:"input"`
-	Output           string  `json:"output" yaml:"output"`
-	Error            *string `json:"error,omitempty" yaml:"error,omitempty"`
-	IsGroundtruth    *bool   `json:"isGroundtruth,omitempty" yaml:"isGroundtruth,omitempty"`
-	Groundtruth      *string `json:"groundtruth,omitempty" yaml:"groundtruth,omitempty"`
-	GroundtruthModel *string `json:"groundtruthModel,omitempty" yaml:"groundtruthModel,omitempty"`
-}
-
-// PromptPexTestEval represents test evaluation results
-type PromptPexTestEval struct {
-	ID                  string                   `json:"id" yaml:"id"`
-	PromptID            string                   `json:"promptid" yaml:"promptid"`
-	Model               *string                  `json:"model,omitempty" yaml:"model,omitempty"`
-	Rule                string                   `json:"rule" yaml:"rule"`
-	Inverse             *bool                    `json:"inverse,omitempty" yaml:"inverse,omitempty"`
-	Input               string                   `json:"input" yaml:"input"`
-	Coverage            *PromptPexEvalResultType `json:"coverage,omitempty" yaml:"coverage,omitempty"`
-	CoverageEvalText    *string                  `json:"coverageEvalText,omitempty" yaml:"coverageEvalText,omitempty"`
-	CoverageText        *string                  `json:"coverageText,omitempty" yaml:"coverageText,omitempty"`
-	CoverageUncertainty *float64                 `json:"coverageUncertainty,omitempty" yaml:"coverageUncertainty,omitempty"`
-	Validity            *PromptPexEvalResultType `json:"validity,omitempty" yaml:"validity,omitempty"`
-	ValidityText        *string                  `json:"validityText,omitempty" yaml:"validityText,omitempty"`
-	ValidityUncertainty *float64                 `json:"validityUncertainty,omitempty" yaml:"validityUncertainty,omitempty"`
-	Error               *string                  `json:"error,omitempty" yaml:"error,omitempty"`
-}
-
-// PromptPexRule represents a rule
-type PromptPexRule struct {
-	Rule    string `json:"rule" yaml:"rule"`
-	Inverse *bool  `json:"inverse,omitempty" yaml:"inverse,omitempty"`
-}
-
-// PromptPexRuleEval represents rule evaluation results
-type PromptPexRuleEval struct {
-	ID           string                   `json:"id" yaml:"id"`
-	PromptID     string                   `json:"promptid" yaml:"promptid"`
-	RuleID       int                      `json:"ruleid" yaml:"ruleid"`
-	Rule         string                   `json:"rule" yaml:"rule"`
-	GroundedText *string                  `json:"groundedText,omitempty" yaml:"groundedText,omitempty"`
-	Grounded     *PromptPexEvalResultType `json:"grounded,omitempty" yaml:"grounded,omitempty"`
-	Error        *string                  `json:"error,omitempty" yaml:"error,omitempty"`
-}
-
-// PromptPexConstants contains constant values used throughout the application
-type PromptPexConstants struct {
-	PromptPexContext string
-	ModelAliasRules  string
-	ModelAliasStore  string
-}
-
-var Constants = PromptPexConstants{
-	PromptPexContext: "promptpex_context.json",
-	ModelAliasRules:  "rules",
-	ModelAliasStore:  "store",
 }
 
 // Effort levels

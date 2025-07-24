@@ -8,7 +8,6 @@ func GetDefaultOptions() *PromptPexOptions {
 		TestsPerRule:       util.Ptr(3),
 		RunsPerTest:        util.Ptr(2),
 		MaxRulesPerTestGen: util.Ptr(3),
-		TestGenerations:    util.Ptr(2),
 		Verbose:            util.Ptr(false),
 		Models: &PromptPexModelAliases{
 			Rules:       util.Ptr("openai/gpt-4o"),

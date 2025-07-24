@@ -19,7 +19,6 @@ func TestGetDefaultOptions(t *testing.T) {
 		{"TestsPerRule", defaults.TestsPerRule, util.Ptr(3)},
 		{"RunsPerTest", defaults.RunsPerTest, util.Ptr(2)},
 		{"MaxRulesPerTestGen", defaults.MaxRulesPerTestGen, util.Ptr(3)},
-		{"TestGenerations", defaults.TestGenerations, util.Ptr(2)},
 	}
 
 	for _, tt := range tests {
@@ -52,7 +51,6 @@ func TestGetDefaultOptions_NonNilFields(t *testing.T) {
 		{"TestsPerRule", defaults.TestsPerRule},
 		{"RunsPerTest", defaults.RunsPerTest},
 		{"MaxRulesPerTestGen", defaults.MaxRulesPerTestGen},
-		{"TestGenerations", defaults.TestGenerations},
 	}
 
 	for _, field := range nonNilFields {
