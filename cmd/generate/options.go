@@ -18,8 +18,6 @@ func GetDefaultOptions() *PromptPexOptions {
 		BaselineTests:      util.Ptr(false),
 		StoreCompletions:   util.Ptr(false),
 		CreateEvalRuns:     util.Ptr(false),
-		RateTests:          util.Ptr(false),
-		DisableSafety:      util.Ptr(false),
 		EvalCache:          util.Ptr(false),
 		TestRunCache:       util.Ptr(false),
 		OutputPrompts:      util.Ptr(false),

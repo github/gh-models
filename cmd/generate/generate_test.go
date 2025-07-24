@@ -79,7 +79,6 @@ func TestParseFlags(t *testing.T) {
 				require.Equal(t, 3, *opts.TestsPerRule)
 				require.Equal(t, 2, *opts.RunsPerTest)
 				require.Equal(t, 0, *opts.TestExpansions)
-				require.Equal(t, false, *opts.RateTests)
 				require.Equal(t, false, *opts.Evals)
 			},
 		},
@@ -122,8 +121,6 @@ func TestParseFlags(t *testing.T) {
 			name: "boolean flags",
 			args: []string{"--rate-tests", "--evals"},
 			validate: func(t *testing.T, opts *PromptPexOptions) {
-				require.NotNil(t, opts.RateTests)
-				require.Equal(t, true, *opts.RateTests)
 				require.NotNil(t, opts.Evals)
 				require.Equal(t, true, *opts.Evals)
 			},

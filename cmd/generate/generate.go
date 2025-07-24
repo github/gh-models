@@ -146,11 +146,6 @@ func ParseFlags(cmd *cobra.Command, options *PromptPexOptions) error {
 		options.TestExpansions = &testExpansions
 	}
 
-	if flags.Changed("rate-tests") {
-		rateTests, _ := flags.GetBool("rate-tests")
-		options.RateTests = &rateTests
-	}
-
 	if flags.Changed("evals") {
 		evals, _ := flags.GetBool("evals")
 		options.Evals = &evals

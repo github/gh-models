@@ -26,7 +26,6 @@ func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string) (*Pr
 		BaselineTests:     "",
 		Tests:             "",
 		TestData:          "",
-		RateTests:         "",
 		TestOutputs:       "",
 		TestEvals:         "",
 		RuleEvals:         "",

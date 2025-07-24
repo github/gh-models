@@ -46,13 +46,6 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 		}
 	}
 
-	// Step 7: Rate Tests (if enabled)
-	if h.options.RateTests != nil && *h.options.RateTests {
-		if err := h.rateTests(context); err != nil {
-			return fmt.Errorf("failed to rate tests: %w", err)
-		}
-	}
-
 	// Step 8: Generate Groundtruth (if model specified)
 	if h.options.GroundtruthModel != nil {
 		if err := h.generateGroundtruth(context); err != nil {
@@ -646,50 +639,4 @@ Generate variations in JSON format as an array of objects with "scenario", "test
 	}
 
 	return expandedTests, nil
-}
-
-// rateTests generates a quality assessment of the test collection
-func (h *generateCommandHandler) rateTests(context *PromptPexContext) error {
-	h.cfg.WriteToOut("Rating test collection quality...\n")
-
-	testSummary := make([]string, len(context.PromptPexTests))
-	for i, test := range context.PromptPexTests {
-		testSummary[i] = fmt.Sprintf("Test %d: %s - %s", i+1, *test.Scenario, test.TestInput)
-	}
-
-	prompt := fmt.Sprintf(`Analyze the following collection of test cases and provide a quality assessment.
-Rate the overall test coverage, diversity, and effectiveness on a scale of 1-10.
-Identify any gaps or areas for improvement.
-
-Test Collection:
-%s
-
-Analysis:`, strings.Join(testSummary, "\n"))
-
-	messages := []azuremodels.ChatMessage{
-		{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-	}
-
-	options := azuremodels.ChatCompletionOptions{
-		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
-		Messages:    messages,
-		Temperature: util.Ptr(0.2),
-	}
-
-	response, err := h.client.GetChatCompletionStream(h.ctx, options, h.org)
-
-	if err != nil {
-		return err
-	}
-
-	completion, err := response.Reader.Read()
-	if err != nil {
-		return err
-	}
-
-	rating := *completion.Choices[0].Message.Content
-
-	context.RateTests = rating
-
-	return nil
 }

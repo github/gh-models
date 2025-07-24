@@ -57,7 +57,6 @@ type PromptPexOptions struct {
 	TestGenerations       *int                             `yaml:"testGenerations,omitempty" json:"testGenerations,omitempty"`
 	CreateEvalRuns        *bool                            `yaml:"createEvalRuns,omitempty" json:"createEvalRuns,omitempty"`
 	TestExpansions        *int                             `yaml:"testExpansions,omitempty" json:"testExpansions,omitempty"`
-	RateTests             *bool                            `yaml:"rateTests,omitempty" json:"rateTests,omitempty"`
 	FilterTestCount       *int                             `yaml:"filterTestCount,omitempty" json:"filterTestCount,omitempty"`
 	EvalModels            []string                         `yaml:"evalModels,omitempty" json:"evalModels,omitempty"`
 	EvalModelsGroundtruth []string                         `yaml:"evalModelsGroundtruth,omitempty" json:"evalModelsGroundtruth,omitempty"`
@@ -72,7 +71,6 @@ type PromptPexOptions struct {
 	TestExpansionInstructions      *string `yaml:"testExpansionInstructions,omitempty" json:"testExpansionInstructions,omitempty"`
 
 	// Loader options
-	DisableSafety      *bool   `yaml:"disableSafety,omitempty" json:"disableSafety,omitempty"`
 	TestSamplesCount   *int    `yaml:"testSamplesCount,omitempty" json:"testSamplesCount,omitempty"`
 	TestSamplesShuffle *bool   `yaml:"testSamplesShuffle,omitempty" json:"testSamplesShuffle,omitempty"`
 	LoadContext        *bool   `yaml:"loadContext,omitempty" json:"loadContext,omitempty"`
@@ -112,7 +110,6 @@ type PromptPexContext struct {
 	Tests             string                   `json:"tests" yaml:"tests"`
 	PromptPexTests    []PromptPexTest          `json:"promptPexTests" yaml:"promptPexTests"`
 	TestData          string                   `json:"testData" yaml:"testData"`
-	RateTests         string                   `json:"rateTests" yaml:"rateTests"`
 	TestOutputs       string                   `json:"testOutputs" yaml:"testOutputs"`
 	TestEvals         string                   `json:"testEvals" yaml:"testEvals"`
 	RuleEvals         string                   `json:"ruleEvals" yaml:"ruleEvals"`
