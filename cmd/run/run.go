@@ -423,7 +423,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 	cmd.Flags().String("top-p", "", "Controls text diversity by selecting the most probable words until a set probability is reached.")
 	cmd.Flags().String("system-prompt", "", "Prompt the system.")
 	cmd.Flags().String("org", "", "Organization to attribute usage to (omitting will attribute usage to the current actor")
-	cmd.Flags().String("http-log", "", "Path to log HTTP requests to (optional)")
+	cmd.Flags().String("http-log", "", "File path to log HTTP requests to (.http, optional)")
 
 	return cmd
 }

@@ -106,7 +106,7 @@ func AddCommandLineFlags(cmd *cobra.Command) {
 	flags.String("custom-metric", "", "Custom evaluation metric")
 	flags.Float64("temperature", 0.0, "Temperature for model inference")
 	flags.Bool("verbose", false, "Enable verbose output including LLM payloads")
-	flags.String("http-log", "", "Path to log HTTP requests to (optional)")
+	flags.String("http-log", "", "File path to log HTTP requests to (.http, optional)")
 }
 
 // parseFlags parses command-line flags and applies them to the options
