@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
+	"regexp"
 	"time"
 
 	"github.com/github/gh-models/pkg/prompt"
@@ -12,7 +12,7 @@ import (
 )
 
 // createContext creates a new PromptPexContext from a prompt file
-func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string, contextFile string) (*PromptPexContext, error) {
+func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string, sessionFile string) (*PromptPexContext, error) {
 	runID := fmt.Sprintf("run_%d", time.Now().Unix())
 
 	prompt, err := prompt.LoadFromFile(promptFile)
@@ -38,30 +38,32 @@ func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string, cont
 	}
 
 	// Determine session file path
-	sessionFile := contextFile
 	if sessionFile == "" {
 		// Generate default session file name by replacing 'prompt.yml' with '.generate.json'
 		sessionFile = generateDefaultSessionFileName(promptFile)
 	}
 
-	// Try to load existing context from session file
-	if sessionFile != "" {
-		existingContext, err := loadContextFromFile(sessionFile)
-		if err != nil {
-			// If file doesn't exist, that's okay - we'll start fresh
-			if !os.IsNotExist(err) {
-				return nil, fmt.Errorf("failed to load existing context from %s: %w", sessionFile, err)
-			}
-		} else {
-			// Check if prompt hashes match
-			if existingContext.PromptHash != nil && context.PromptHash != nil &&
-				*existingContext.PromptHash != *context.PromptHash {
-				return nil, fmt.Errorf("prompt hash mismatch: existing context has different prompt than current file")
-			}
+	// Store the session file path in the handler for later use
+	h.sessionFile = util.Ptr(sessionFile)
 
-			// Merge existing context data
-			context = mergeContexts(existingContext, context)
+	// Try to load existing context from session file
+	existingContext, err := loadContextFromFile(sessionFile)
+	if err != nil {
+		h.cfg.WriteToOut(fmt.Sprintf("Creating session file at %s\n", sessionFile))
+		// If file doesn't exist, that's okay - we'll start fresh
+		if !os.IsNotExist(err) {
+			return nil, fmt.Errorf("failed to load existing context from %s: %w", sessionFile, err)
 		}
+	} else {
+		h.cfg.WriteToOut(fmt.Sprintf("Reloading session file at %s\n", sessionFile))
+		// Check if prompt hashes match
+		if existingContext.PromptHash != nil && context.PromptHash != nil &&
+			*existingContext.PromptHash != *context.PromptHash {
+			return nil, fmt.Errorf("prompt hash mismatch: existing context has different prompt than current file")
+		}
+
+		// Merge existing context data
+		context = mergeContexts(existingContext, context)
 	}
 
 	return context, nil
@@ -69,11 +71,12 @@ func (h *generateCommandHandler) CreateContextFromPrompt(promptFile string, cont
 
 // generateDefaultSessionFileName generates the default session file name
 func generateDefaultSessionFileName(promptFile string) string {
-	// Replace .prompt.yml with .generate.json
-	if strings.HasSuffix(promptFile, ".prompt.yml") {
-		return strings.TrimSuffix(promptFile, ".prompt.yml") + ".generate.json"
+	// Replace any extension matching /(\.prompt)?\.ya?ml$/ with .generate.json
+	re := regexp.MustCompile(`(\.prompt)?\.ya?ml$`)
+	if re.MatchString(promptFile) {
+		return re.ReplaceAllString(promptFile, ".generate.json")
 	}
-	// If it doesn't end with .prompt.yml, just append .generate.json
+	// If it doesn't match the pattern, just append .generate.json
 	return promptFile + ".generate.json"
 }
 
@@ -90,6 +93,23 @@ func loadContextFromFile(filePath string) (*PromptPexContext, error) {
 	}
 
 	return &context, nil
+}
+
+// saveContext saves the context to the session file
+func (h *generateCommandHandler) SaveContext(context *PromptPexContext) error {
+	if h.sessionFile == nil {
+		return nil // No session file specified, skip saving
+	}
+	data, err := json.MarshalIndent(context, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal context to JSON: %w", err)
+	}
+
+	if err := os.WriteFile(*h.sessionFile, data, 0644); err != nil {
+		h.cfg.WriteToOut(fmt.Sprintf("Failed to write context to session file %s: %v", *h.sessionFile, err))
+	}
+
+	return nil
 }
 
 // mergeContexts merges an existing context with a new context

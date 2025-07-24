@@ -12,38 +12,42 @@ import (
 
 // RunTestGenerationPipeline executes the main PromptPex pipeline
 func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexContext) error {
-	h.cfg.WriteToOut(fmt.Sprintf("Generating tests for '%s'\n", context.Prompt.Name))
-
 	// Step 1: Generate Intent
 	if err := h.generateIntent(context); err != nil {
 		return fmt.Errorf("failed to generate intent: %w", err)
 	}
+	h.SaveContext(context)
 
 	// Step 2: Generate Input Specification
 	if err := h.generateInputSpec(context); err != nil {
 		return fmt.Errorf("failed to generate input specification: %w", err)
 	}
+	h.SaveContext(context)
 
 	// Step 3: Generate Output Rules
 	if err := h.generateOutputRules(context); err != nil {
 		return fmt.Errorf("failed to generate output rules: %w", err)
 	}
+	h.SaveContext(context)
 
 	// Step 4: Generate Inverse Output Rules
 	if err := h.generateInverseRules(context); err != nil {
 		return fmt.Errorf("failed to generate inverse rules: %w", err)
 	}
+	h.SaveContext(context)
 
 	// Step 5: Generate Tests
 	if err := h.generateTests(context); err != nil {
 		return fmt.Errorf("failed to generate tests: %w", err)
 	}
+	h.SaveContext(context)
 
 	// Step 6: Test Expansions (if enabled)
 	if h.options.TestExpansions != nil && *h.options.TestExpansions > 0 {
 		if err := h.expandTests(context); err != nil {
 			return fmt.Errorf("failed to expand tests: %w", err)
 		}
+		h.SaveContext(context)
 	}
 
 	// Step 8: Generate Groundtruth (if model specified)
@@ -51,6 +55,7 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 		if err := h.generateGroundtruth(context); err != nil {
 			return fmt.Errorf("failed to generate groundtruth: %w", err)
 		}
+		h.SaveContext(context)
 	}
 
 	// Step 11: Generate GitHub Models Evals
@@ -63,6 +68,7 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 	if err := h.GenerateSummary(context); err != nil {
 		return fmt.Errorf("failed to generate summary: %w", err)
 	}
+	h.SaveContext(context)
 
 	h.cfg.WriteToOut("Pipeline completed successfully.")
 	return nil
@@ -105,6 +111,11 @@ Intent:`, RenderMessagesToString(context.Prompt.Messages))
 
 // generateInputSpec generates the input specification
 func (h *generateCommandHandler) generateInputSpec(context *PromptPexContext) error {
+	if context.InputSpec != nil && *context.InputSpec != "" {
+		h.cfg.WriteToOut("Reusing input specification...\n")
+		return nil
+	}
+
 	h.cfg.WriteToOut("Generating input specification...\n")
 
 	system := `Analyze the following prompt and generate a specification for its inputs.
@@ -137,6 +148,11 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 
 // generateOutputRules generates output rules for the prompt
 func (h *generateCommandHandler) generateOutputRules(context *PromptPexContext) error {
+	if len(context.Rules) >= 0 {
+		h.cfg.WriteToOut("Reusing output rules...\n")
+		return nil
+	}
+
 	h.cfg.WriteToOut("Generating output rules...\n")
 
 	system := `Analyze the following prompt and generate a list of output rules.
@@ -176,6 +192,11 @@ Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 
 // generateInverseRules generates inverse rules (what makes an invalid output)
 func (h *generateCommandHandler) generateInverseRules(context *PromptPexContext) error {
+	if len(context.InverseRules) >= 0 {
+		h.cfg.WriteToOut("Reusing inverse rules...\n")
+		return nil
+	}
+
 	h.cfg.WriteToOut("Generating inverse rules...\n")
 
 	system := `Based on the following <output_rules>, generate inverse rules that describe what would make an INVALID output.

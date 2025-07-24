@@ -8,15 +8,17 @@ import (
 	"github.com/MakeNowJust/heredoc"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/command"
+	"github.com/github/gh-models/pkg/util"
 	"github.com/spf13/cobra"
 )
 
 type generateCommandHandler struct {
-	ctx     context.Context
-	cfg     *command.Config
-	client  azuremodels.Client
-	options *PromptPexOptions
-	org     string
+	ctx         context.Context
+	cfg         *command.Config
+	client      azuremodels.Client
+	options     *PromptPexOptions
+	sessionFile *string
+	org         string
 }
 
 // NewGenerateCommand returns a new command to generate tests using PromptPex.
@@ -65,11 +67,12 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 
 			// Create the command handler
 			handler := &generateCommandHandler{
-				ctx:     ctx,
-				cfg:     cfg,
-				client:  cfg.Client,
-				options: options,
-				org:     org,
+				ctx:         ctx,
+				cfg:         cfg,
+				client:      cfg.Client,
+				options:     options,
+				org:         org,
+				sessionFile: util.Ptr(sessionFile),
 			}
 
 			// Create PromptPex context
