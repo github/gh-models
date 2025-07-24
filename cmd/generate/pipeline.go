@@ -376,7 +376,7 @@ func (h *generateCommandHandler) expandTests(context *PromptPexContext) error {
 
 		for _, test := range context.Tests {
 			// Generate expanded versions of each test
-			expandedTests, err := h.expandSingleTest(test, context)
+			expandedTests, err := h.expandSingleTest(test)
 			if err != nil {
 				h.cfg.WriteToOut(fmt.Sprintf("Failed to expand test: %v", err))
 				continue
@@ -395,14 +395,21 @@ func (h *generateCommandHandler) expandTests(context *PromptPexContext) error {
 }
 
 // expandSingleTest expands a single test into multiple variations
-func (h *generateCommandHandler) expandSingleTest(test PromptPexTest, context *PromptPexContext) ([]PromptPexTest, error) {
+func (h *generateCommandHandler) expandSingleTest(test PromptPexTest) ([]PromptPexTest, error) {
 	prompt := fmt.Sprintf(`Given this test case, generate 2-3 variations that test similar scenarios but with different inputs.
 Keep the same scenario type but vary the specific details.
 
-Original test:
-Scenario: %s
-Input: %s
-Reasoning: %s
+<original_test>
+<scenario>
+%s
+</scenario>
+<input>
+%s
+</input>
+<reasoning>
+%s
+</reasoning>
+</original_test>
 
 Generate variations in JSON format as an array of objects with "scenario", "testinput", and "reasoning" fields.`,
 		*test.Scenario, test.TestInput, *test.Reasoning)
@@ -412,7 +419,7 @@ Generate variations in JSON format as an array of objects with "scenario", "test
 	}
 
 	options := azuremodels.ChatCompletionOptions{
-		Model:       "openai/gpt-4o-mini", // GitHub Models compatible model
+		Model:       *h.options.Models.TestExpansion, // GitHub Models compatible model
 		Messages:    messages,
 		Temperature: util.Ptr(0.5),
 	}

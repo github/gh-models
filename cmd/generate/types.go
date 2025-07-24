@@ -4,9 +4,10 @@ import "github.com/github/gh-models/pkg/prompt"
 
 // PromptPexModelAliases represents model aliases for different purposes
 type PromptPexModelAliases struct {
-	Rules       *string `yaml:"rules,omitempty" json:"rules,omitempty"`
-	Tests       *string `yaml:"tests,omitempty" json:"tests,omitempty"`
-	Groundtruth *string `yaml:"groundtruth,omitempty" json:"groundtruth,omitempty"`
+	Rules         *string `yaml:"rules,omitempty" json:"rules,omitempty"`
+	Tests         *string `yaml:"tests,omitempty" json:"tests,omitempty"`
+	Groundtruth   *string `yaml:"groundtruth,omitempty" json:"groundtruth,omitempty"`
+	TestExpansion *string `yaml:"testExpansion,omitempty" json:"testExpansion,omitempty"`
 }
 
 // PromptPexPrompts contains custom prompts for different stages
