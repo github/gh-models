@@ -94,6 +94,7 @@ type PromptPexPromptyFrontmatter struct {
 type PromptPexContext struct {
 	RunID          string                   `json:"runId" yaml:"runId"`
 	Prompt         *prompt.File             `json:"prompt" yaml:"prompt"`
+	PromptHash     string                   `json:"promptHash" yaml:"promptHash"`
 	Intent         string                   `json:"intent" yaml:"intent"`
 	Rules          string                   `json:"rules" yaml:"rules"`
 	InverseRules   string                   `json:"inverseRules" yaml:"inverseRules"`

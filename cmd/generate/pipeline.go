@@ -14,61 +14,55 @@ import (
 func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexContext, promptFile string) error {
 	h.cfg.WriteToOut(fmt.Sprintf("Generating tests for '%s'\n", context.Prompt.Name))
 
-	// Calculate prompt hash for session saving
-	promptHash, err := calculateFileHash(promptFile)
-	if err != nil {
-		return fmt.Errorf("failed to calculate prompt file hash: %w", err)
-	}
-
 	// Step 1: Generate Intent
-	if err := h.runStepWithSession(context, promptFile, promptHash, "intent", h.generateIntent); err != nil {
+	if err := h.runStepWithSession(context, promptFile, "intent", h.generateIntent); err != nil {
 		return fmt.Errorf("failed to generate intent: %w", err)
 	}
 
 	// Step 2: Generate Input Specification
-	if err := h.runStepWithSession(context, promptFile, promptHash, "inputSpec", h.generateInputSpec); err != nil {
+	if err := h.runStepWithSession(context, promptFile, "inputSpec", h.generateInputSpec); err != nil {
 		return fmt.Errorf("failed to generate input specification: %w", err)
 	}
 
 	// Step 3: Generate Output Rules
-	if err := h.runStepWithSession(context, promptFile, promptHash, "rules", h.generateOutputRules); err != nil {
+	if err := h.runStepWithSession(context, promptFile, "rules", h.generateOutputRules); err != nil {
 		return fmt.Errorf("failed to generate output rules: %w", err)
 	}
 
 	// Step 4: Generate Inverse Output Rules
-	if err := h.runStepWithSession(context, promptFile, promptHash, "inverseRules", h.generateInverseRules); err != nil {
+	if err := h.runStepWithSession(context, promptFile, "inverseRules", h.generateInverseRules); err != nil {
 		return fmt.Errorf("failed to generate inverse rules: %w", err)
 	}
 
 	// Step 5: Generate Tests
-	if err := h.runStepWithSession(context, promptFile, promptHash, "tests", h.generateTests); err != nil {
+	if err := h.runStepWithSession(context, promptFile, "tests", h.generateTests); err != nil {
 		return fmt.Errorf("failed to generate tests: %w", err)
 	}
 
 	// Step 6: Test Expansions (if enabled)
 	if h.options.TestExpansions != nil && *h.options.TestExpansions > 0 {
-		if err := h.runStepWithSession(context, promptFile, promptHash, "testExpansions", h.expandTests); err != nil {
+		if err := h.runStepWithSession(context, promptFile, "testExpansions", h.expandTests); err != nil {
 			return fmt.Errorf("failed to expand tests: %w", err)
 		}
 	}
 
 	// Step 8: Generate Groundtruth (if model specified)
 	if h.options.GroundtruthModel != nil {
-		if err := h.runStepWithSession(context, promptFile, promptHash, "groundtruth", h.generateGroundtruth); err != nil {
+		if err := h.runStepWithSession(context, promptFile, "groundtruth", h.generateGroundtruth); err != nil {
 			return fmt.Errorf("failed to generate groundtruth: %w", err)
 		}
 	}
 
 	// Step 9: Run Tests (if models specified)
 	if len(h.options.ModelsUnderTest) > 0 {
-		if err := h.runStepWithSession(context, promptFile, promptHash, "testOutputs", h.runTests); err != nil {
+		if err := h.runStepWithSession(context, promptFile, "testOutputs", h.runTests); err != nil {
 			return fmt.Errorf("failed to run tests: %w", err)
 		}
 	}
 
 	// Step 10: Evaluate Results (if enabled)
 	if h.options.Evals != nil && *h.options.Evals && len(h.options.EvalModels) > 0 {
-		if err := h.runStepWithSession(context, promptFile, promptHash, "testEvals", h.evaluateResults); err != nil {
+		if err := h.runStepWithSession(context, promptFile, "testEvals", h.evaluateResults); err != nil {
 			return fmt.Errorf("failed to evaluate results: %w", err)
 		}
 	}
@@ -89,7 +83,7 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 }
 
 // runStepWithSession runs a pipeline step with session management
-func (h *generateCommandHandler) runStepWithSession(context *PromptPexContext, promptFile, promptHash, stepName string, stepFunc func(*PromptPexContext) error) error {
+func (h *generateCommandHandler) runStepWithSession(context *PromptPexContext, promptFile, stepName string, stepFunc func(*PromptPexContext) error) error {
 	// Check if step is already completed
 	if IsStepCompleted(context, stepName) {
 		h.cfg.WriteToOut(fmt.Sprintf("Skipping %s (already completed)\n", stepName))
@@ -102,7 +96,7 @@ func (h *generateCommandHandler) runStepWithSession(context *PromptPexContext, p
 	}
 
 	// Save session after successful completion
-	if err := h.SaveSession(context, promptFile, promptHash); err != nil {
+	if err := h.SaveSession(context, promptFile); err != nil {
 		h.cfg.WriteToOut(fmt.Sprintf("Warning: Failed to save session after %s: %v\n", stepName, err))
 		// Don't fail the pipeline if session save fails, just warn
 	}

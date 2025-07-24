@@ -16,7 +16,6 @@ type SessionFile struct {
 	Created      time.Time         `json:"created"`
 	LastModified time.Time         `json:"lastModified"`
 	PromptFile   string            `json:"promptFile"`
-	PromptHash   string            `json:"promptHash"`
 	Context      *PromptPexContext `json:"context"`
 }
 
@@ -71,7 +70,7 @@ func (h *generateCommandHandler) loadExistingSession(promptFile, promptHash stri
 		return nil, fmt.Errorf("prompt file mismatch: session expects '%s' but got '%s'", session.PromptFile, promptFile)
 	}
 
-	if session.PromptHash != promptHash {
+	if session.Context.PromptHash != promptHash {
 		return nil, fmt.Errorf("prompt file has been modified since session was created (hash mismatch)")
 	}
 
@@ -91,8 +90,11 @@ func (h *generateCommandHandler) createNewSession(promptFile, promptHash string)
 		return nil, fmt.Errorf("failed to create context: %w", err)
 	}
 
+	// Set the prompt hash in the context
+	context.PromptHash = promptHash
+
 	// Save initial session
-	if err := h.SaveSession(context, promptFile, promptHash); err != nil {
+	if err := h.SaveSession(context, promptFile); err != nil {
 		return nil, fmt.Errorf("failed to save initial session: %w", err)
 	}
 
@@ -100,14 +102,13 @@ func (h *generateCommandHandler) createNewSession(promptFile, promptHash string)
 }
 
 // SaveSession saves the current context to the session file
-func (h *generateCommandHandler) SaveSession(context *PromptPexContext, promptFile, promptHash string) error {
+func (h *generateCommandHandler) SaveSession(context *PromptPexContext, promptFile string) error {
 	// Create session structure
 	session := SessionFile{
 		Version:      SessionFileVersion,
 		Created:      time.Now(),
 		LastModified: time.Now(),
 		PromptFile:   promptFile,
-		PromptHash:   promptHash,
 		Context:      context,
 	}
 

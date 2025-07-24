@@ -57,7 +57,7 @@ messages:
 		require.NoError(t, err)
 		require.Equal(t, SessionFileVersion, session.Version)
 		require.Equal(t, promptFilePath, session.PromptFile)
-		require.NotEmpty(t, session.PromptHash)
+		require.NotEmpty(t, session.Context.PromptHash)
 		require.NotNil(t, session.Context)
 	})
 
@@ -94,8 +94,7 @@ messages:
 
 		// Modify context to simulate progress
 		context1.Intent = "Test intent"
-		promptHash, _ := calculateFileHash(promptFilePath)
-		err = handler.SaveSession(context1, promptFilePath, promptHash)
+		err = handler.SaveSession(context1, promptFilePath)
 		require.NoError(t, err)
 
 		// Load session again (should load existing)
@@ -267,8 +266,9 @@ func TestSessionFileSaveLoad(t *testing.T) {
 
 	// Create test context
 	context := &PromptPexContext{
-		RunID:  "test-run-123",
-		Intent: "Test intent",
+		RunID:      "test-run-123",
+		Intent:     "Test intent",
+		PromptHash: "testhash",
 	}
 
 	// Create handler with proper config
@@ -283,7 +283,7 @@ func TestSessionFileSaveLoad(t *testing.T) {
 	}
 
 	// Save session
-	err := handler.SaveSession(context, "test.yml", "testhash")
+	err := handler.SaveSession(context, "test.yml")
 	require.NoError(t, err)
 
 	// Verify file exists
@@ -299,7 +299,7 @@ func TestSessionFileSaveLoad(t *testing.T) {
 
 	require.Equal(t, SessionFileVersion, session.Version)
 	require.Equal(t, "test.yml", session.PromptFile)
-	require.Equal(t, "testhash", session.PromptHash)
+	require.Equal(t, "testhash", session.Context.PromptHash)
 	require.Equal(t, "test-run-123", session.Context.RunID)
 	require.Equal(t, "Test intent", session.Context.Intent)
 	require.True(t, time.Since(session.Created) < time.Minute)
