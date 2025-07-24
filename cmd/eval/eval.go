@@ -111,9 +111,6 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 			// Get the org flag
 			org, _ := cmd.Flags().GetString("org")
 
-			// Get the http-log flag
-			httpLog, _ := cmd.Flags().GetString("http-log")
-
 			// Load the evaluation prompt file
 			evalFile, err := loadEvaluationPromptFile(promptFilePath)
 			if err != nil {
@@ -130,11 +127,6 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 			}
 
 			ctx := cmd.Context()
-			// Add HTTP log filename to context if provided
-			if httpLog != "" {
-				ctx = azuremodels.WithHTTPLogFile(ctx, httpLog)
-			}
-
 			err = handler.runEvaluation(ctx)
 			if err == FailedTests {
 				// Cobra by default will show the help message when an error occurs,
@@ -148,7 +140,6 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 
 	cmd.Flags().Bool("json", false, "Output results in JSON format")
 	cmd.Flags().String("org", "", "Organization to attribute usage to (omitting will attribute usage to the current actor")
-	cmd.Flags().String("http-log", "", "File path to log HTTP requests to (.http, optional)")
 	return cmd
 }
 

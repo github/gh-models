@@ -1,12 +1,19 @@
 package azuremodels
 
-import "context"
+import (
+	"context"
+	"os"
+)
 
 // httpLogFileKey is the context key for the HTTP log filename
 type httpLogFileKey struct{}
 
 // WithHTTPLogFile returns a new context with the HTTP log filename attached
 func WithHTTPLogFile(ctx context.Context, httpLogFile string) context.Context {
+	// reset http-log file
+	if httpLogFile != "" {
+		_ = os.Remove(httpLogFile)
+	}
 	return context.WithValue(ctx, httpLogFileKey{}, httpLogFile)
 }
 
