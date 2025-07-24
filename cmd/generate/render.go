@@ -11,6 +11,7 @@ import (
 var BOX_START = "╭─"
 var BOX_END = "╰─"
 var BOX_LINE = "─"
+var PREVIEW_TEST_COUNT = 16
 
 // RenderMessagesToString converts a slice of Messages to a human-readable string representation
 func RenderMessagesToString(messages []prompt.Message) string {

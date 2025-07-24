@@ -82,14 +82,9 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 	}
 
 	// Generate summary report
-	if err := h.GenerateSummary(context); err != nil {
+	if err := h.generateSummary(context); err != nil {
 		return fmt.Errorf("failed to generate summary: %w", err)
 	}
-	if err := h.SaveContext(context); err != nil {
-		return err
-	}
-
-	h.cfg.WriteToOut("Pipeline completed successfully.")
 	return nil
 }
 
@@ -327,11 +322,12 @@ Generate exactly %d diverse test cases:`, nTests,
 		context.Tests = tests
 	}
 
-	testInputs := make([]string, len(context.Tests))
+	testViews := make([]string, len(context.Tests)*2)
 	for i, test := range context.Tests {
-		testInputs[i] = test.TestInput
+		testViews[i*2] = test.TestInput
+		testViews[i*2+1] = fmt.Sprintf("    %s%s", BOX_END, *test.Reasoning)
 	}
-	h.WriteEndListBox(testInputs, 10)
+	h.WriteEndListBox(testViews, PREVIEW_TEST_COUNT)
 	return nil
 }
 
@@ -388,7 +384,7 @@ func (h *generateCommandHandler) runSingleTestWithContext(input string, modelNam
 // generateGroundtruth generates groundtruth outputs using the specified model
 func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) error {
 	groundtruthModel := h.options.Models.Groundtruth
-	h.WriteStartBox("Groundtruth")
+	h.WriteStartBox(fmt.Sprintf("Groundtruth with %s", *groundtruthModel))
 	for i := range context.Tests {
 		test := &context.Tests[i]
 		h.WriteToLine(test.TestInput)
@@ -404,7 +400,7 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 
 			h.SaveContext(context) // Save context after generating groundtruth
 		}
-
+		h.WriteToLine(fmt.Sprintf("    %s%s", BOX_END, *test.Groundtruth)) // Write groundtruth output
 	}
 
 	h.WriteEndBox(fmt.Sprintf("%d items", len(context.Tests)))
