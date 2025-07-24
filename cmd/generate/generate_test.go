@@ -173,6 +173,57 @@ func TestParseFlags(t *testing.T) {
 
 func TestGenerateCommandExecution(t *testing.T) {
 
+	t.Run("works without session file", func(t *testing.T) {
+		// Create test prompt file
+		const yamlBody = `
+name: Test Without Session
+description: Test running without session file
+model: openai/gpt-4o-mini
+messages:
+  - role: user
+    content: "Test prompt"
+`
+
+		tmpDir := t.TempDir()
+		promptFile := filepath.Join(tmpDir, "test.prompt.yml")
+		err := os.WriteFile(promptFile, []byte(yamlBody), 0644)
+		require.NoError(t, err)
+
+		// Setup mock client
+		client := azuremodels.NewMockClient()
+		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
+			response := `[{"scenario": "Test scenario", "testinput": "Test input", "reasoning": "Test reasoning"}]`
+
+			chatCompletion := azuremodels.ChatCompletion{
+				Choices: []azuremodels.ChatChoice{
+					{
+						Message: &azuremodels.ChatChoiceMessage{
+							Content: util.Ptr(response),
+							Role:    util.Ptr(string(azuremodels.ChatMessageRoleAssistant)),
+						},
+					},
+				},
+			}
+
+			return &azuremodels.ChatCompletionResponse{
+				Reader: sse.NewMockEventReader([]azuremodels.ChatCompletion{chatCompletion}),
+			}, nil
+		}
+
+		out := new(bytes.Buffer)
+		cfg := command.NewConfig(out, out, client, true, 100)
+
+		cmd := NewGenerateCommand(cfg)
+		// Run without session file
+		cmd.SetArgs([]string{promptFile})
+
+		err = cmd.Execute()
+		require.NoError(t, err)
+
+		output := out.String()
+		require.Contains(t, output, "Generating tests for 'Test Without Session'")
+	})
+
 	t.Run("fails with invalid prompt file", func(t *testing.T) {
 		client := azuremodels.NewMockClient()
 		out := new(bytes.Buffer)

@@ -14,7 +14,6 @@ import (
 func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexContext, promptFile string) error {
 	h.cfg.WriteToOut(fmt.Sprintf("Generating tests for '%s'\n", context.Prompt.Name))
 
-	// Step 1: Generate Intent
 	if err := h.runStepWithSession(context, promptFile, "intent", h.generateIntent); err != nil {
 		return fmt.Errorf("failed to generate intent: %w", err)
 	}

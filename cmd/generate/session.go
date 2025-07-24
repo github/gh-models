@@ -23,6 +23,15 @@ const SessionFileVersion = "1.0"
 
 // LoadOrCreateSession loads an existing session file or creates a new one
 func (h *generateCommandHandler) LoadOrCreateSession(promptFile string) (*PromptPexContext, error) {
+	// If no session file is provided, create a context without session persistence
+	if h.sessionFile == "" {
+		context, err := h.CreateContextFromPrompt(promptFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create context: %w", err)
+		}
+		return context, nil
+	}
+
 	// Calculate prompt file hash for consistency checking
 	promptHash, err := calculateFileHash(promptFile)
 	if err != nil {
@@ -103,6 +112,11 @@ func (h *generateCommandHandler) createNewSession(promptFile, promptHash string)
 
 // SaveSession saves the current context to the session file
 func (h *generateCommandHandler) SaveSession(context *PromptPexContext, promptFile string) error {
+	// If no session file is provided, skip saving
+	if h.sessionFile == "" {
+		return nil
+	}
+
 	// Create session structure
 	session := SessionFile{
 		Version:      SessionFileVersion,

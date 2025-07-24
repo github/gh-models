@@ -51,7 +51,7 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 			// Get organization
 			org, _ := cmd.Flags().GetString("org")
 
-			// Get session file (required)
+			// Get session file (optional)
 			sessionFile, _ := cmd.Flags().GetString("session-file")
 
 			// Get http-log flag
@@ -98,7 +98,7 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 
 func AddCommandLineFlags(cmd *cobra.Command) {
 	flags := cmd.Flags()
-	flags.String("session-file", "", "Path to session file for storing progress and results (required)")
+	flags.String("session-file", "", "Path to session file for storing progress and results (optional)")
 	flags.String("org", "", "Organization to attribute usage to")
 	flags.String("effort", "", "Effort level (min, low, medium, high)")
 	flags.StringSlice("models-under-test", []string{}, "Models to test (can be used multiple times)")
@@ -113,9 +113,6 @@ func AddCommandLineFlags(cmd *cobra.Command) {
 	flags.Float64("temperature", 0.0, "Temperature for model inference")
 	flags.Bool("verbose", false, "Enable verbose output including LLM payloads")
 	flags.String("http-log", "", "File path to log HTTP requests to (.http, optional)")
-	
-	// Mark session-file as required
-	cmd.MarkFlagRequired("session-file")
 }
 
 // parseFlags parses command-line flags and applies them to the options
