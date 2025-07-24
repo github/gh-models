@@ -6,11 +6,14 @@ import (
 
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/prompt"
+	"github.com/mgutz/ansi"
 )
 
-var BOX_START = "╭─"
-var BOX_END = "╰─"
-var BOX_LINE = "─"
+var (
+	secondary = ansi.ColorFunc(ansi.LightBlack)
+)
+var BOX_START = "╭──"
+var BOX_END = "╰──"
 var PREVIEW_TEST_COUNT = 16
 
 // RenderMessagesToString converts a slice of Messages to a human-readable string representation
@@ -50,10 +53,7 @@ func (h *generateCommandHandler) WriteStartBox(title string) {
 }
 
 func (h *generateCommandHandler) WriteEndBox(suffix string) {
-	if suffix == "" {
-		suffix = BOX_LINE
-	}
-	h.cfg.WriteToOut(fmt.Sprintf("%s%s\n", BOX_END, suffix))
+	h.cfg.WriteToOut(fmt.Sprintf("%s %s\n", BOX_END, secondary(suffix)))
 }
 
 func (h *generateCommandHandler) WriteBox(title, content string) {
@@ -67,14 +67,21 @@ func (h *generateCommandHandler) WriteBox(title, content string) {
 	h.WriteEndBox("")
 }
 
+func (h *generateCommandHandler) WriteToParagraph(s string) {
+	h.cfg.WriteToOut(secondary(s))
+	if !strings.HasSuffix(s, "\n") {
+		h.cfg.WriteToOut("\n")
+	}
+}
+
 func (h *generateCommandHandler) WriteToLine(item string) {
 	if len(item) > h.cfg.TerminalWidth-2 {
 		item = item[:h.cfg.TerminalWidth-2] + "…"
 	}
 	if strings.HasSuffix(item, "\n") {
-		h.cfg.WriteToOut(item)
+		h.cfg.WriteToOut(secondary(item))
 	} else {
-		h.cfg.WriteToOut(fmt.Sprintf("%s\n", item))
+		h.cfg.WriteToOut(fmt.Sprintf("%s\n", secondary(item)))
 	}
 }
 

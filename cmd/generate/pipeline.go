@@ -117,7 +117,7 @@ Intent:`, RenderMessagesToString(context.Prompt.Messages))
 		context.Intent = util.Ptr(intent)
 	}
 
-	h.cfg.WriteToOut(*context.Intent + "\n")
+	h.WriteToParagraph(*context.Intent)
 	h.WriteEndBox("")
 
 	return nil
@@ -154,7 +154,7 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 		context.InputSpec = util.Ptr(inputSpec)
 	}
 
-	h.cfg.WriteToOut(*context.InputSpec + "\n")
+	h.WriteToParagraph(*context.InputSpec)
 	h.WriteEndBox("")
 
 	return nil
