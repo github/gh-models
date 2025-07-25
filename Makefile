@@ -3,7 +3,7 @@ check: fmt vet tidy test ci-lint
 
 ci-lint:
 	@echo "==> running Go linter <=="
-	golangci-lint run --timeout 5m ./**/*.go
+	golangci-lint run --timeout 5m ./...
 .PHONY: ci-lint
 
 fmt:

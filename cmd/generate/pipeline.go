@@ -517,7 +517,10 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 			}
 			test.Expected = output
 
-			h.SaveContext(context) // Save context after generating groundtruth
+			if err := h.SaveContext(context); err != nil {
+				// keep going even if saving fails
+				h.cfg.WriteToOut(fmt.Sprintf("Saving context failed: %v", err))
+			}
 		}
 		h.WriteToLine(fmt.Sprintf("    %s%s", BOX_END, test.Expected)) // Write groundtruth output
 	}
