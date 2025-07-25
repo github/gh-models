@@ -25,10 +25,10 @@ func TestParseTestsFromLLMResponse_DirectUnmarshal(t *testing.T) {
 		if result[0].TestInput != "input" {
 			t.Errorf("ParseTestsFromLLMResponse() TestInput mismatch. Expected: 'input', Got: '%s'", result[0].TestInput)
 		}
-		if result[0].Scenario == nil || *result[0].Scenario != "test" {
+		if result[0].Scenario != "test" {
 			t.Errorf("ParseTestsFromLLMResponse() Scenario mismatch")
 		}
-		if result[0].Reasoning == nil || *result[0].Reasoning != "reason" {
+		if result[0].Reasoning != "reason" {
 			t.Errorf("ParseTestsFromLLMResponse() Reasoning mismatch")
 		}
 	})
@@ -210,12 +210,12 @@ func TestParseTestsFromLLMResponse_SpecialValues(t *testing.T) {
 			t.Errorf("ParseTestsFromLLMResponse() expected 1 test, got %d", len(result))
 		}
 
-		// Null values should not set the pointer fields
-		if result[0].Scenario != nil {
-			t.Errorf("ParseTestsFromLLMResponse() Scenario should be nil for null value")
+		// Null values should result in empty strings with non-pointer fields
+		if result[0].Scenario != "" {
+			t.Errorf("ParseTestsFromLLMResponse() Scenario should be empty for null value")
 		}
-		if result[0].Reasoning != nil {
-			t.Errorf("ParseTestsFromLLMResponse() Reasoning should be nil for null value")
+		if result[0].Reasoning != "" {
+			t.Errorf("ParseTestsFromLLMResponse() Reasoning should be empty for null value")
 		}
 		if result[0].TestInput != "test" {
 			t.Errorf("ParseTestsFromLLMResponse() TestInput mismatch")
@@ -234,13 +234,13 @@ func TestParseTestsFromLLMResponse_SpecialValues(t *testing.T) {
 		}
 
 		// Empty strings should set the fields to empty strings
-		if result[0].Scenario == nil || *result[0].Scenario != "" {
+		if result[0].Scenario != "" {
 			t.Errorf("ParseTestsFromLLMResponse() Scenario should be empty string")
 		}
 		if result[0].TestInput != "" {
 			t.Errorf("ParseTestsFromLLMResponse() TestInput should be empty string")
 		}
-		if result[0].Reasoning == nil || *result[0].Reasoning != "" {
+		if result[0].Reasoning != "" {
 			t.Errorf("ParseTestsFromLLMResponse() Reasoning should be empty string")
 		}
 	})
@@ -256,7 +256,7 @@ func TestParseTestsFromLLMResponse_SpecialValues(t *testing.T) {
 			t.Errorf("ParseTestsFromLLMResponse() expected 1 test, got %d", len(result))
 		}
 
-		if result[0].Scenario == nil || *result[0].Scenario != "unicode test 🚀" {
+		if result[0].Scenario != "unicode test 🚀" {
 			t.Errorf("ParseTestsFromLLMResponse() unicode scenario failed")
 		}
 		if result[0].TestInput != "测试输入 with émojis 🎉" {
@@ -301,7 +301,7 @@ func TestParseTestsFromLLMResponse_RealWorldExamples(t *testing.T) {
 			if test.TestInput == "" {
 				t.Errorf("ParseTestsFromLLMResponse() test %d has empty TestInput", i)
 			}
-			if test.Scenario == nil || *test.Scenario == "" {
+			if test.Scenario == "" {
 				t.Errorf("ParseTestsFromLLMResponse() test %d has empty Scenario", i)
 			}
 		}
@@ -328,10 +328,10 @@ func TestParseTestsFromLLMResponse_RealWorldExamples(t *testing.T) {
 			t.Errorf("ParseTestsFromLLMResponse() expected 1 test, got %d", len(result))
 		}
 
-		if result[0].Scenario == nil || *result[0].Scenario != "API request validation" {
+		if result[0].Scenario != "API request validation" {
 			t.Errorf("ParseTestsFromLLMResponse() concatenation failed in scenario")
 		}
-		if result[0].Reasoning == nil || *result[0].Reasoning != "Tests API endpoint validation" {
+		if result[0].Reasoning != "Tests API endpoint validation" {
 			t.Errorf("ParseTestsFromLLMResponse() concatenation failed in reasoning")
 		}
 	})

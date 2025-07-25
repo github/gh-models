@@ -55,7 +55,7 @@ func (h *generateCommandHandler) ParseTestsFromLLMResponse(content string) ([]Pr
 		test := PromptPexTest{}
 
 		if scenario, ok := rawTest["scenario"].(string); ok {
-			test.Scenario = &scenario
+			test.Scenario = scenario
 		}
 
 		// Handle testinput - can be string or structured object
@@ -83,7 +83,7 @@ func (h *generateCommandHandler) ParseTestsFromLLMResponse(content string) ([]Pr
 		}
 
 		if reasoning, ok := rawTest["reasoning"].(string); ok {
-			test.Reasoning = &reasoning
+			test.Reasoning = reasoning
 		}
 
 		tests = append(tests, test)

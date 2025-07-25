@@ -50,17 +50,16 @@ type PromptPexContext struct {
 
 // PromptPexTest represents a single test case
 type PromptPexTest struct {
-	RuleID            *int    `json:"ruleid,omitempty" yaml:"ruleid,omitempty"`
-	TestID            *int    `json:"testid,omitempty" yaml:"testid,omitempty"`
-	Baseline          *bool   `json:"baseline,omitempty" yaml:"baseline,omitempty"`
-	GroundtruthModel  *string `json:"groundtruthModel,omitempty" yaml:"groundtruthModel,omitempty"`
-	Groundtruth       *string `json:"groundtruth,omitempty" yaml:"groundtruth,omitempty"`
-	TestInput         string  `json:"testinput" yaml:"testinput"`
-	TestInputOriginal *string `json:"testinputOriginal,omitempty" yaml:"testinputOriginal,omitempty"`
-	ExpectedOutput    *string `json:"expectedoutput,omitempty" yaml:"expectedoutput,omitempty"`
-	Reasoning         *string `json:"reasoning,omitempty" yaml:"reasoning,omitempty"`
-	Scenario          *string `json:"scenario,omitempty" yaml:"scenario,omitempty"`
-	Generation        *int    `json:"generation,omitempty" yaml:"generation,omitempty"`
+	RuleID            int    `json:"ruleid,omitempty" yaml:"ruleid,omitempty"`
+	TestID            int    `json:"testid,omitempty" yaml:"testid,omitempty"`
+	Baseline          bool   `json:"baseline,omitempty" yaml:"baseline,omitempty"`
+	GroundtruthModel  string `json:"groundtruthModel,omitempty" yaml:"groundtruthModel,omitempty"`
+	Groundtruth       string `json:"groundtruth,omitempty" yaml:"groundtruth,omitempty"`
+	TestInput         string `json:"testinput" yaml:"testinput"`
+	TestInputOriginal string `json:"testinputOriginal,omitempty" yaml:"testinputOriginal,omitempty"`
+	ExpectedOutput    string `json:"expectedoutput,omitempty" yaml:"expectedoutput,omitempty"`
+	Reasoning         string `json:"reasoning,omitempty" yaml:"reasoning,omitempty"`
+	Scenario          string `json:"scenario,omitempty" yaml:"scenario,omitempty"`
 }
 
 // Effort levels

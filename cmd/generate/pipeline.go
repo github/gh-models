@@ -312,7 +312,7 @@ Generate exactly %d diverse test cases:`, nTests,
 	testViews := make([]string, len(context.Tests)*2)
 	for i, test := range context.Tests {
 		testViews[i*2] = test.TestInput
-		testViews[i*2+1] = fmt.Sprintf("    %s%s", BOX_END, *test.Reasoning)
+		testViews[i*2+1] = fmt.Sprintf("    %s%s", BOX_END, test.Reasoning)
 	}
 	h.WriteEndListBox(testViews, PREVIEW_TEST_COUNT)
 	return nil
@@ -401,19 +401,19 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 	for i := range context.Tests {
 		test := &context.Tests[i]
 		h.WriteToLine(test.TestInput)
-		if test.Groundtruth == nil || *test.Groundtruth == "" {
+		if test.Groundtruth == "" {
 			// Generate groundtruth output
 			output, err := h.runSingleTestWithContext(test.TestInput, groundtruthModel, context)
 			if err != nil {
 				h.cfg.WriteToOut(fmt.Sprintf("Failed to generate groundtruth for test %d: %v", i, err))
 				continue
 			}
-			test.Groundtruth = &output
-			test.GroundtruthModel = &groundtruthModel
+			test.Groundtruth = output
+			test.GroundtruthModel = groundtruthModel
 
 			h.SaveContext(context) // Save context after generating groundtruth
 		}
-		h.WriteToLine(fmt.Sprintf("    %s%s", BOX_END, *test.Groundtruth)) // Write groundtruth output
+		h.WriteToLine(fmt.Sprintf("    %s%s", BOX_END, test.Groundtruth)) // Write groundtruth output
 	}
 
 	h.WriteEndBox(fmt.Sprintf("%d items", len(context.Tests)))
@@ -427,8 +427,8 @@ func (h *generateCommandHandler) updatePromptFile(context *PromptPexContext) err
 	for _, test := range context.Tests {
 		item := prompt.TestDataItem{}
 		item["input"] = test.TestInput
-		if test.Groundtruth != nil {
-			item["expected"] = *test.Groundtruth
+		if test.Groundtruth != "" {
+			item["expected"] = test.Groundtruth
 		}
 		testData = append(testData, item)
 	}
