@@ -128,12 +128,25 @@ The `generate` command is based on [PromptPex](https://github.com/microsoft/prom
 1. **Intent Analysis**: Understanding what the prompt is trying to achieve
 2. **Input Specification**: Defining the expected input format and constraints
 3. **Output Rules**: Establishing what constitutes correct output
-4. **Test Generation**: Creating diverse test cases that cover various scenarios
+4. **Inverse Output Rules**: Force generating _negated_ output rules to test the prompt with invalid inputs
+5. **Test Generation**: Creating diverse test cases that cover various scenarios using the prompt, the intent, input specification and output rules
 
-For deeper understanding of the PromptPex methodology:
-- [PromptPex Documentation](https://microsoft.github.io/promptpex)
-- [Test Generation Reference](https://microsoft.github.io/promptpex/reference/test-generation/)
-- [Microsoft Research Repository](https://github.com/microsoft/promptpex)
+```mermaid
+graph TD
+    PUT(["Prompt Under Test (PUT)"])
+    IS["Input Specification (IS)"]
+    OR["Output Rules (OR)"]
+    IOR["Inverse Output Rules (IOR)"]
+    PPT["PromptPex Tests (PPT)"]
+
+    PUT --> IS
+    PUT --> OR
+    OR --> IOR
+    IS ==> PPT
+    OR ==> PPT
+    PUT ==> PPT
+    IOR ==> PPT
+```  
 
 ## Notice
 
