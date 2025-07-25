@@ -9,6 +9,7 @@ import (
 
 	"github.com/briandowns/spinner"
 	"github.com/github/gh-models/internal/azuremodels"
+	"github.com/github/gh-models/internal/modelkey"
 )
 
 // callModelWithRetry makes an API call with automatic retry on rate limiting
@@ -17,6 +18,12 @@ func (h *generateCommandHandler) callModelWithRetry(step string, req azuremodels
 	ctx := h.ctx
 
 	h.LogLLMRequest(step, req)
+
+	parsedModel, err := modelkey.ParseModelKey(req.Model)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse model key: %w", err)
+	}
+	req.Model = parsedModel.String()
 
 	for attempt := 0; attempt <= maxRetries; attempt++ {
 		sp := spinner.New(spinner.CharSets[14], 100*time.Millisecond, spinner.WithWriter(h.cfg.ErrOut))
