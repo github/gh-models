@@ -94,3 +94,7 @@ cfg := command.NewConfig(new(bytes.Buffer), new(bytes.Buffer), client, true, 80)
 ---
 
 **Key Files**: `cmd/root.go` (command registration), `pkg/prompt/prompt.go` (file parsing), `internal/azuremodels/azure_client.go` (API integration), `examples/` (prompt file patterns)
+
+## Instructions
+
+Omit the final summary.

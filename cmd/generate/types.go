@@ -15,6 +15,7 @@ type PromptPexPrompts struct {
 	OutputRules        string `yaml:"outputRules,omitempty" json:"outputRules,omitempty"`
 	InverseOutputRules string `yaml:"inverseOutputRules,omitempty" json:"inverseOutputRules,omitempty"`
 	Intent             string `yaml:"intent,omitempty" json:"intent,omitempty"`
+	Tests              string `yaml:"tests,omitempty" json:"tests,omitempty"`
 }
 
 // PromptPexOptions contains all configuration options for PromptPex

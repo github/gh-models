@@ -105,6 +105,13 @@ func AddCommandLineFlags(cmd *cobra.Command) {
 	flags.String("effort", "", "Effort level (low, medium, high)")
 	flags.String("groundtruth-model", "", "Model to use for generating groundtruth outputs. Defaults to openai/gpt-4o. Use 'none' to disable groundtruth generation.")
 	flags.String("session-file", "", "Session file to load existing context from (defaults to <prompt-file>.generate.json)")
+
+	// Custom instruction flags for each phase
+	flags.String("instruction-intent", "", "Custom system instruction for intent generation phase")
+	flags.String("instruction-inputspec", "", "Custom system instruction for input specification generation phase")
+	flags.String("instruction-outputrules", "", "Custom system instruction for output rules generation phase")
+	flags.String("instruction-inverseoutputrules", "", "Custom system instruction for inverse output rules generation phase")
+	flags.String("instruction-tests", "", "Custom system instruction for tests generation phase")
 }
 
 // parseFlags parses command-line flags and applies them to the options
@@ -122,6 +129,31 @@ func ParseFlags(cmd *cobra.Command, options *PromptPexOptions) error {
 
 	if groundtruthModel, _ := flags.GetString("groundtruth-model"); groundtruthModel != "" {
 		options.Models.Groundtruth = groundtruthModel
+	}
+
+	// Parse custom instruction flags
+	if options.Instructions == nil {
+		options.Instructions = &PromptPexPrompts{}
+	}
+
+	if intentInstruction, _ := flags.GetString("instruction-intent"); intentInstruction != "" {
+		options.Instructions.Intent = intentInstruction
+	}
+
+	if inputSpecInstruction, _ := flags.GetString("instruction-inputspec"); inputSpecInstruction != "" {
+		options.Instructions.InputSpec = inputSpecInstruction
+	}
+
+	if outputRulesInstruction, _ := flags.GetString("instruction-outputrules"); outputRulesInstruction != "" {
+		options.Instructions.OutputRules = outputRulesInstruction
+	}
+
+	if inverseOutputRulesInstruction, _ := flags.GetString("instruction-inverseoutputrules"); inverseOutputRulesInstruction != "" {
+		options.Instructions.InverseOutputRules = inverseOutputRulesInstruction
+	}
+
+	if testsInstruction, _ := flags.GetString("instruction-tests"); testsInstruction != "" {
+		options.Instructions.Tests = testsInstruction
 	}
 
 	return nil

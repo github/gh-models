@@ -90,8 +90,20 @@ Intent:`, RenderMessagesToString(context.Prompt.Messages))
 		messages := []azuremodels.ChatMessage{
 			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(systemPromptTextOnly)},
 			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(system)},
-			{Role: azuremodels.ChatMessageRoleUser, Content: util.Ptr(prompt)},
 		}
+
+		// Add custom instruction if provided
+		if h.options.Instructions != nil && h.options.Instructions.Intent != "" {
+			messages = append(messages, azuremodels.ChatMessage{
+				Role:    azuremodels.ChatMessageRoleSystem,
+				Content: util.Ptr(h.options.Instructions.Intent),
+			})
+		}
+
+		messages = append(messages,
+			azuremodels.ChatMessage{Role: azuremodels.ChatMessageRoleUser, Content: util.Ptr(prompt)},
+		)
+
 		options := azuremodels.ChatCompletionOptions{
 			Model:       h.options.Models.Rules, // GitHub Models compatible model
 			Messages:    messages,
@@ -127,8 +139,19 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 		messages := []azuremodels.ChatMessage{
 			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(systemPromptTextOnly)},
 			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(system)},
-			{Role: azuremodels.ChatMessageRoleUser, Content: util.Ptr(prompt)},
 		}
+
+		// Add custom instruction if provided
+		if h.options.Instructions != nil && h.options.Instructions.InputSpec != "" {
+			messages = append(messages, azuremodels.ChatMessage{
+				Role:    azuremodels.ChatMessageRoleSystem,
+				Content: util.Ptr(h.options.Instructions.InputSpec),
+			})
+		}
+
+		messages = append(messages,
+			azuremodels.ChatMessage{Role: azuremodels.ChatMessageRoleUser, Content: util.Ptr(prompt)},
+		)
 
 		options := azuremodels.ChatCompletionOptions{
 			Model:       h.options.Models.Rules,
@@ -166,8 +189,19 @@ Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 		messages := []azuremodels.ChatMessage{
 			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(systemPromptTextOnly)},
 			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(system)},
-			{Role: azuremodels.ChatMessageRoleUser, Content: util.Ptr(prompt)},
 		}
+
+		// Add custom instruction if provided
+		if h.options.Instructions != nil && h.options.Instructions.OutputRules != "" {
+			messages = append(messages, azuremodels.ChatMessage{
+				Role:    azuremodels.ChatMessageRoleSystem,
+				Content: util.Ptr(h.options.Instructions.OutputRules),
+			})
+		}
+
+		messages = append(messages,
+			azuremodels.ChatMessage{Role: azuremodels.ChatMessageRoleUser, Content: util.Ptr(prompt)},
+		)
 
 		options := azuremodels.ChatCompletionOptions{
 			Model:       h.options.Models.Rules, // GitHub Models compatible model
@@ -209,8 +243,19 @@ Inverse Output Rules:`, strings.Join(context.Rules, "\n"))
 		messages := []azuremodels.ChatMessage{
 			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(systemPromptTextOnly)},
 			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(system)},
-			{Role: azuremodels.ChatMessageRoleUser, Content: util.Ptr(prompt)},
 		}
+
+		// Add custom instruction if provided
+		if h.options.Instructions != nil && h.options.Instructions.InverseOutputRules != "" {
+			messages = append(messages, azuremodels.ChatMessage{
+				Role:    azuremodels.ChatMessageRoleSystem,
+				Content: util.Ptr(h.options.Instructions.InverseOutputRules),
+			})
+		}
+
+		messages = append(messages,
+			azuremodels.ChatMessage{Role: azuremodels.ChatMessageRoleUser, Content: util.Ptr(prompt)},
+		)
 
 		options := azuremodels.ChatCompletionOptions{
 			Model:       h.options.Models.Rules, // GitHub Models compatible model
@@ -292,8 +337,19 @@ Generate exactly %d diverse test cases:`, nTests,
 
 		messages := []azuremodels.ChatMessage{
 			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(system)},
-			{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
 		}
+
+		// Add custom instruction if provided
+		if h.options.Instructions != nil && h.options.Instructions.Tests != "" {
+			messages = append(messages, azuremodels.ChatMessage{
+				Role:    azuremodels.ChatMessageRoleSystem,
+				Content: util.Ptr(h.options.Instructions.Tests),
+			})
+		}
+
+		messages = append(messages,
+			azuremodels.ChatMessage{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+		)
 
 		options := azuremodels.ChatCompletionOptions{
 			Model:       h.options.Models.Tests, // GitHub Models compatible model

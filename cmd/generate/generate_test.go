@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/github/gh-models/internal/azuremodels"
@@ -81,6 +82,58 @@ func TestParseFlags(t *testing.T) {
 				require.Equal(t, "openai/gpt-4o", opts.Models.Groundtruth)
 			},
 		},
+		{
+			name: "intent instruction flag",
+			args: []string{"--instruction-intent", "Custom intent instruction"},
+			validate: func(t *testing.T, opts *PromptPexOptions) {
+				require.NotNil(t, opts.Instructions)
+				require.Equal(t, "Custom intent instruction", opts.Instructions.Intent)
+			},
+		},
+		{
+			name: "inputspec instruction flag",
+			args: []string{"--instruction-inputspec", "Custom inputspec instruction"},
+			validate: func(t *testing.T, opts *PromptPexOptions) {
+				require.NotNil(t, opts.Instructions)
+				require.Equal(t, "Custom inputspec instruction", opts.Instructions.InputSpec)
+			},
+		},
+		{
+			name: "outputrules instruction flag",
+			args: []string{"--instruction-outputrules", "Custom outputrules instruction"},
+			validate: func(t *testing.T, opts *PromptPexOptions) {
+				require.NotNil(t, opts.Instructions)
+				require.Equal(t, "Custom outputrules instruction", opts.Instructions.OutputRules)
+			},
+		},
+		{
+			name: "inverseoutputrules instruction flag",
+			args: []string{"--instruction-inverseoutputrules", "Custom inverseoutputrules instruction"},
+			validate: func(t *testing.T, opts *PromptPexOptions) {
+				require.NotNil(t, opts.Instructions)
+				require.Equal(t, "Custom inverseoutputrules instruction", opts.Instructions.InverseOutputRules)
+			},
+		},
+		{
+			name: "tests instruction flag",
+			args: []string{"--instruction-tests", "Custom tests instruction"},
+			validate: func(t *testing.T, opts *PromptPexOptions) {
+				require.NotNil(t, opts.Instructions)
+				require.Equal(t, "Custom tests instruction", opts.Instructions.Tests)
+			},
+		},
+		{
+			name: "multiple instruction flags",
+			args: []string{
+				"--instruction-intent", "Intent custom instruction",
+				"--instruction-inputspec", "InputSpec custom instruction",
+			},
+			validate: func(t *testing.T, opts *PromptPexOptions) {
+				require.NotNil(t, opts.Instructions)
+				require.Equal(t, "Intent custom instruction", opts.Instructions.Intent)
+				require.Equal(t, "InputSpec custom instruction", opts.Instructions.InputSpec)
+			},
+		},
 	}
 
 	for _, tt := range tests {
@@ -151,6 +204,60 @@ messages:
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "pipeline failed")
 	})
+}
+
+func TestCustomInstructionsInMessages(t *testing.T) {
+	// Create test prompt file
+	const yamlBody = `
+name: Test Prompt
+description: Test description
+model: openai/gpt-4o-mini
+messages:
+  - role: user
+    content: "Test prompt"
+`
+
+	tmpDir := t.TempDir()
+	promptFile := filepath.Join(tmpDir, "test.prompt.yml")
+	err := os.WriteFile(promptFile, []byte(yamlBody), 0644)
+	require.NoError(t, err)
+
+	// Setup mock client to capture messages
+	capturedMessages := make([][]azuremodels.ChatMessage, 0)
+	client := azuremodels.NewMockClient()
+	client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
+		// Capture the messages
+		capturedMessages = append(capturedMessages, opt.Messages)
+		// Return an error to stop execution after capturing
+		return nil, errors.New("Test error to stop pipeline")
+	}
+
+	out := new(bytes.Buffer)
+	cfg := command.NewConfig(out, out, client, true, 100)
+
+	cmd := NewGenerateCommand(cfg)
+	cmd.SetArgs([]string{
+		"--instruction-intent", "Custom intent instruction",
+		promptFile,
+	})
+
+	// Execute the command - we expect it to fail, but we should capture messages first
+	_ = cmd.Execute() // Ignore error since we're only testing message capture
+
+	// Verify that custom instructions were included in the messages
+	require.Greater(t, len(capturedMessages), 0, "Expected at least one API call")
+
+	// Check the first call (intent generation) for custom instruction
+	intentMessages := capturedMessages[0]
+	foundCustomIntentInstruction := false
+	for _, msg := range intentMessages {
+		if msg.Role == azuremodels.ChatMessageRoleSystem && msg.Content != nil &&
+			strings.Contains(*msg.Content, "Custom intent instruction") {
+			foundCustomIntentInstruction = true
+			break
+		}
+	}
+	require.True(t, foundCustomIntentInstruction, "Custom intent instruction should be included in messages")
 }
 
 func TestGenerateCommandHandlerContext(t *testing.T) {
