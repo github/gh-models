@@ -3,8 +3,6 @@ package generate
 import (
 	"reflect"
 	"testing"
-
-	"github.com/github/gh-models/pkg/util"
 )
 
 func TestGetDefaultOptions(t *testing.T) {
@@ -16,9 +14,9 @@ func TestGetDefaultOptions(t *testing.T) {
 		actual   interface{}
 		expected interface{}
 	}{
-		{"TestsPerRule", defaults.TestsPerRule, util.Ptr(3)},
-		{"RunsPerTest", defaults.RunsPerTest, util.Ptr(2)},
-		{"MaxRulesPerTestGen", defaults.MaxRulesPerTestGen, util.Ptr(3)},
+		{"TestsPerRule", defaults.TestsPerRule, 3},
+		{"RunsPerTest", defaults.RunsPerTest, 2},
+		{"MaxRulesPerTestGen", defaults.MaxRulesPerTestGen, 3},
 	}
 
 	for _, tt := range tests {

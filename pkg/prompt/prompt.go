@@ -16,7 +16,7 @@ type File struct {
 	Name            string          `yaml:"name"`
 	Description     string          `yaml:"description"`
 	Model           string          `yaml:"model"`
-	ModelParameters ModelParameters `yaml:"modelParameters"`
+	ModelParameters ModelParameters `yaml:"modelParameters,omitempty"`
 	ResponseFormat  *string         `yaml:"responseFormat,omitempty"`
 	JsonSchema      *JsonSchema     `yaml:"jsonSchema,omitempty"`
 	Messages        []Message       `yaml:"messages"`
@@ -27,9 +27,9 @@ type File struct {
 
 // ModelParameters represents model configuration parameters
 type ModelParameters struct {
-	MaxTokens   *int     `yaml:"maxTokens"`
-	Temperature *float64 `yaml:"temperature"`
-	TopP        *float64 `yaml:"topP"`
+	MaxTokens   *int     `yaml:"maxTokens,omitempty"`
+	Temperature *float64 `yaml:"temperature,omitempty"`
+	TopP        *float64 `yaml:"topP,omitempty"`
 }
 
 // Message represents a conversation message

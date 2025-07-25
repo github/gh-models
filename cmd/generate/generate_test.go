@@ -63,16 +63,15 @@ func TestParseFlags(t *testing.T) {
 			name: "default options preserve initial state",
 			args: []string{},
 			validate: func(t *testing.T, opts *PromptPexOptions) {
-				require.Equal(t, 3, *opts.TestsPerRule)
-				require.Equal(t, 2, *opts.RunsPerTest)
+				require.Equal(t, 3, opts.TestsPerRule)
+				require.Equal(t, 2, opts.RunsPerTest)
 			},
 		},
 		{
 			name: "effort flag is set",
 			args: []string{"--effort", "medium"},
 			validate: func(t *testing.T, opts *PromptPexOptions) {
-				require.NotNil(t, opts.Effort)
-				require.Equal(t, "medium", *opts.Effort)
+				require.Equal(t, "medium", opts.Effort)
 			},
 		},
 		{

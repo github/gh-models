@@ -50,16 +50,16 @@ func ApplyEffortConfiguration(options *PromptPexOptions, effort string) {
 	}
 
 	// Apply configuration settings only if not already set
-	if config.TestsPerRule != nil && options.TestsPerRule == nil {
-		options.TestsPerRule = config.TestsPerRule
+	if config.TestsPerRule != nil && options.TestsPerRule == 0 {
+		options.TestsPerRule = *config.TestsPerRule
 	}
-	if config.RunsPerTest != nil && options.RunsPerTest == nil {
-		options.RunsPerTest = config.RunsPerTest
+	if config.RunsPerTest != nil && options.RunsPerTest == 0 {
+		options.RunsPerTest = *config.RunsPerTest
 	}
-	if config.MaxRules != nil && options.MaxRules == nil {
-		options.MaxRules = config.MaxRules
+	if config.MaxRules != nil && options.MaxRules == 0 {
+		options.MaxRules = *config.MaxRules
 	}
-	if config.MaxRulesPerTestGeneration != nil && options.MaxRulesPerTestGen == nil {
-		options.MaxRulesPerTestGen = config.MaxRulesPerTestGeneration
+	if config.MaxRulesPerTestGeneration != nil && options.MaxRulesPerTestGen == 0 {
+		options.MaxRulesPerTestGen = *config.MaxRulesPerTestGeneration
 	}
 }

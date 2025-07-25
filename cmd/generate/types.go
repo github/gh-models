@@ -22,17 +22,17 @@ type PromptPexOptions struct {
 	// Core options
 	Instructions       *PromptPexPrompts      `yaml:"instructions,omitempty" json:"instructions,omitempty"`
 	Models             *PromptPexModelAliases `yaml:"models,omitempty" json:"models,omitempty"`
-	TestsPerRule       *int                   `yaml:"testsPerRule,omitempty" json:"testsPerRule,omitempty"`
-	RunsPerTest        *int                   `yaml:"runsPerTest,omitempty" json:"runsPerTest,omitempty"`
-	MaxRules           *int                   `yaml:"maxRules,omitempty" json:"maxRules,omitempty"`
-	MaxRulesPerTestGen *int                   `yaml:"maxRulesPerTestGeneration,omitempty" json:"maxRulesPerTestGeneration,omitempty"`
+	TestsPerRule       int                    `yaml:"testsPerRule,omitempty" json:"testsPerRule,omitempty"`
+	RunsPerTest        int                    `yaml:"runsPerTest,omitempty" json:"runsPerTest,omitempty"`
+	MaxRules           int                    `yaml:"maxRules,omitempty" json:"maxRules,omitempty"`
+	MaxRulesPerTestGen int                    `yaml:"maxRulesPerTestGeneration,omitempty" json:"maxRulesPerTestGeneration,omitempty"`
 
 	// CLI-specific options
-	Effort *string `yaml:"effort,omitempty" json:"effort,omitempty"`
-	Prompt *string `yaml:"prompt,omitempty" json:"prompt,omitempty"`
+	Effort string `yaml:"effort,omitempty" json:"effort,omitempty"`
+	Prompt string `yaml:"prompt,omitempty" json:"prompt,omitempty"`
 
 	// Loader options
-	Verbose *bool `yaml:"verbose,omitempty" json:"verbose,omitempty"`
+	Verbose bool `yaml:"verbose,omitempty" json:"verbose,omitempty"`
 }
 
 // PromptPexContext represents the main context for PromptPex operations

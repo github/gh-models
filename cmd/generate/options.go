@@ -1,14 +1,12 @@
 package generate
 
-import "github.com/github/gh-models/pkg/util"
-
 // GetDefaultOptions returns default options for PromptPex
 func GetDefaultOptions() *PromptPexOptions {
 	return &PromptPexOptions{
-		TestsPerRule:       util.Ptr(3),
-		RunsPerTest:        util.Ptr(2),
-		MaxRulesPerTestGen: util.Ptr(3),
-		Verbose:            util.Ptr(false),
+		TestsPerRule:       3,
+		RunsPerTest:        2,
+		MaxRulesPerTestGen: 3,
+		Verbose:            false,
 		Models: &PromptPexModelAliases{
 			Rules:       "openai/gpt-4o",
 			Tests:       "openai/gpt-4o",

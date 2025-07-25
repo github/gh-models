@@ -105,7 +105,7 @@ func (h *generateCommandHandler) WriteEndListBox(items []string, maxItems int) {
 
 // logLLMPayload logs the LLM request and response if verbose mode is enabled
 func (h *generateCommandHandler) LogLLMResponse(response string) {
-	if h.options.Verbose != nil && *h.options.Verbose {
+	if h.options.Verbose {
 		h.WriteStartBox("🏁", "")
 		h.cfg.WriteToOut(response)
 		if !strings.HasSuffix(response, "\n") {
@@ -116,7 +116,7 @@ func (h *generateCommandHandler) LogLLMResponse(response string) {
 }
 
 func (h *generateCommandHandler) LogLLMRequest(step string, options azuremodels.ChatCompletionOptions) {
-	if h.options.Verbose != nil && *h.options.Verbose {
+	if h.options.Verbose {
 		h.WriteStartBox(fmt.Sprintf("💬 %s", step), options.Model)
 		for _, msg := range options.Messages {
 			content := ""

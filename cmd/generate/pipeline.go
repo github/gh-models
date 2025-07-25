@@ -234,11 +234,11 @@ Inverse Output Rules:`, strings.Join(context.Rules, "\n"))
 
 // generateTests generates test cases for the prompt
 func (h *generateCommandHandler) generateTests(context *PromptPexContext) error {
-	h.WriteStartBox("Tests", fmt.Sprintf("%d rules x %d tests per rule", len(context.Rules)+len(context.InverseRules), *h.options.TestsPerRule))
+	h.WriteStartBox("Tests", fmt.Sprintf("%d rules x %d tests per rule", len(context.Rules)+len(context.InverseRules), h.options.TestsPerRule))
 	if len(context.Tests) == 0 {
 		testsPerRule := 3
-		if h.options.TestsPerRule != nil {
-			testsPerRule = *h.options.TestsPerRule
+		if h.options.TestsPerRule != 0 {
+			testsPerRule = h.options.TestsPerRule
 		}
 
 		allRules := append(context.Rules, context.InverseRules...)

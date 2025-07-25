@@ -112,12 +112,12 @@ func ParseFlags(cmd *cobra.Command, options *PromptPexOptions) error {
 	flags := cmd.Flags()
 	// Parse effort first so it can set defaults
 	if effort, _ := flags.GetString("effort"); effort != "" {
-		options.Effort = &effort
+		options.Effort = effort
 	}
 
 	// Apply effort configuration
-	if options.Effort != nil {
-		ApplyEffortConfiguration(options, *options.Effort)
+	if options.Effort != "" {
+		ApplyEffortConfiguration(options, options.Effort)
 	}
 
 	if groundtruthModel, _ := flags.GetString("groundtruth-model"); groundtruthModel != "" {
