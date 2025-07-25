@@ -76,7 +76,7 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 				sessionFile: util.Ptr(sessionFile),
 			}
 
-			// Create PromptPex context
+			// Create context
 			context, err := handler.CreateContextFromPrompt()
 			if err != nil {
 				return fmt.Errorf("failed to create context: %w", err)
