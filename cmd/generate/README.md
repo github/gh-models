@@ -6,5 +6,5 @@ This command is based on [PromptPex](https://github.com/microsoft/promptpex), a 
 - Source https://github.com/microsoft/promptpex/tree/dev
 - Agentic implementation plan: https://github.com/microsoft/promptpex/blob/dev/.github/instructions/implementation.instructions.md
 
-In a nutshel, read https://microsoft.github.io/promptpex/reference/test-generation/
+In a nutshell, read https://microsoft.github.io/promptpex/reference/test-generation/
 
