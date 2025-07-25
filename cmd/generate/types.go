@@ -53,11 +53,11 @@ type PromptPexContext struct {
 
 // PromptPexTest represents a single test case
 type PromptPexTest struct {
-	Groundtruth    string `json:"groundtruth,omitempty" yaml:"groundtruth,omitempty"`
-	TestInput      string `json:"testInput" yaml:"testInput"`
-	ExpectedOutput string `json:"expectedOutput,omitempty" yaml:"expectedOutput,omitempty"`
-	Reasoning      string `json:"reasoning,omitempty" yaml:"reasoning,omitempty"`
-	Scenario       string `json:"scenario,omitempty" yaml:"scenario,omitempty"`
+	Input     string `json:"input" yaml:"input"`
+	Expected  string `json:"expected,omitempty" yaml:"expected,omitempty"`
+	Predicted string `json:"predicted,omitempty" yaml:"predicted,omitempty"`
+	Reasoning string `json:"reasoning,omitempty" yaml:"reasoning,omitempty"`
+	Scenario  string `json:"scenario,omitempty" yaml:"scenario,omitempty"`
 }
 
 // Effort levels

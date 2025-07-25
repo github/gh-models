@@ -322,8 +322,8 @@ Return only a JSON array with this exact format:
 [
   {
     "scenario": "Description of what this test validates",
-    "testInput": "The actual input text or data",
-    "reasoning": "Why this test is important and what it validates"
+    "reasoning": "Why this test is important and what it validates",
+    "input": "The actual input text or data"
   }
 ]
 
@@ -369,7 +369,7 @@ Generate exactly %d diverse test cases:`, nTests,
 
 	testViews := make([]string, len(context.Tests)*2)
 	for i, test := range context.Tests {
-		testViews[i*2] = test.TestInput
+		testViews[i*2] = test.Input
 		testViews[i*2+1] = fmt.Sprintf("    %s%s", BOX_END, test.Reasoning)
 	}
 	h.WriteEndListBox(testViews, PREVIEW_TEST_COUNT)
@@ -458,19 +458,19 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 	h.WriteStartBox("Groundtruth", fmt.Sprintf("with %s", groundtruthModel))
 	for i := range context.Tests {
 		test := &context.Tests[i]
-		h.WriteToLine(test.TestInput)
-		if test.Groundtruth == "" {
+		h.WriteToLine(test.Input)
+		if test.Expected == "" {
 			// Generate groundtruth output
-			output, err := h.runSingleTestWithContext(test.TestInput, groundtruthModel, context)
+			output, err := h.runSingleTestWithContext(test.Input, groundtruthModel, context)
 			if err != nil {
 				h.cfg.WriteToOut(fmt.Sprintf("Failed to generate groundtruth for test %d: %v", i, err))
 				continue
 			}
-			test.Groundtruth = output
+			test.Expected = output
 
 			h.SaveContext(context) // Save context after generating groundtruth
 		}
-		h.WriteToLine(fmt.Sprintf("    %s%s", BOX_END, test.Groundtruth)) // Write groundtruth output
+		h.WriteToLine(fmt.Sprintf("    %s%s", BOX_END, test.Expected)) // Write groundtruth output
 	}
 
 	h.WriteEndBox(fmt.Sprintf("%d items", len(context.Tests)))
@@ -483,9 +483,9 @@ func (h *generateCommandHandler) updatePromptFile(context *PromptPexContext) err
 	testData := []prompt.TestDataItem{}
 	for _, test := range context.Tests {
 		item := prompt.TestDataItem{}
-		item["input"] = test.TestInput
-		if test.Groundtruth != "" {
-			item["expected"] = test.Groundtruth
+		item["input"] = test.Input
+		if test.Expected != "" {
+			item["expected"] = test.Expected
 		}
 		testData = append(testData, item)
 	}

@@ -54,36 +54,32 @@ func (h *generateCommandHandler) ParseTestsFromLLMResponse(content string) ([]Pr
 	for _, rawTest := range rawTests {
 		test := PromptPexTest{}
 
+		for _, key := range []string{"testInput", "testinput", "testInput"} {
+			if input, ok := rawTest[key].(string); ok {
+				test.Input = input
+				break
+			} else if inputObj, ok := rawTest[key].(map[string]interface{}); ok {
+				// Convert structured object to JSON string
+				if jsonBytes, err := json.Marshal(inputObj); err == nil {
+					test.Input = string(jsonBytes)
+				}
+				break
+			}
+		}
+
 		if scenario, ok := rawTest["scenario"].(string); ok {
 			test.Scenario = scenario
 		}
-
-		// Handle testinput - can be string or structured object
-		if testinput, ok := rawTest["testinput"].(string); ok {
-			test.TestInput = testinput
-		} else if testinputObj, ok := rawTest["testinput"].(map[string]interface{}); ok {
-			// Convert structured object to JSON string
-			if jsonBytes, err := json.Marshal(testinputObj); err == nil {
-				test.TestInput = string(jsonBytes)
-			}
-		} else if testInput, ok := rawTest["testInput"].(string); ok {
-			test.TestInput = testInput
-		} else if testInputObj, ok := rawTest["testInput"].(map[string]interface{}); ok {
-			// Convert structured object to JSON string
-			if jsonBytes, err := json.Marshal(testInputObj); err == nil {
-				test.TestInput = string(jsonBytes)
-			}
-		} else if input, ok := rawTest["input"].(string); ok {
-			test.TestInput = input
-		} else if inputObj, ok := rawTest["input"].(map[string]interface{}); ok {
-			// Convert structured object to JSON string
-			if jsonBytes, err := json.Marshal(inputObj); err == nil {
-				test.TestInput = string(jsonBytes)
-			}
-		}
-
 		if reasoning, ok := rawTest["reasoning"].(string); ok {
 			test.Reasoning = reasoning
+		}
+
+		if test.Input == "" && test.Scenario == "" && test.Reasoning == "" {
+			// If all fields are empty, skip this test
+			continue
+		} else if strings.TrimSpace(test.Input) == "" && (test.Scenario != "" || test.Reasoning != "") {
+			// ignore whitespace-only inputs
+			continue
 		}
 
 		tests = append(tests, test)

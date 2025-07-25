@@ -11,7 +11,7 @@ func TestParseTestsFromLLMResponse_DirectUnmarshal(t *testing.T) {
 	handler := &generateCommandHandler{}
 
 	t.Run("direct parse with testinput field succeeds", func(t *testing.T) {
-		content := `[{"scenario": "test", "testinput": "input", "reasoning": "reason"}]`
+		content := `[{"scenario": "test", "input": "input", "reasoning": "reason"}]`
 
 		result, err := handler.ParseTestsFromLLMResponse(content)
 		if err != nil {
@@ -22,8 +22,8 @@ func TestParseTestsFromLLMResponse_DirectUnmarshal(t *testing.T) {
 		}
 
 		// This should work because it uses the direct unmarshal path
-		if result[0].TestInput != "input" {
-			t.Errorf("ParseTestsFromLLMResponse() TestInput mismatch. Expected: 'input', Got: '%s'", result[0].TestInput)
+		if result[0].Input != "input" {
+			t.Errorf("ParseTestsFromLLMResponse() TestInput mismatch. Expected: 'input', Got: '%s'", result[0].Input)
 		}
 		if result[0].Scenario != "test" {
 			t.Errorf("ParseTestsFromLLMResponse() Scenario mismatch")
@@ -51,7 +51,7 @@ func TestParseTestsFromLLMResponse_FallbackUnmarshal(t *testing.T) {
 
 	t.Run("fallback parse with testInput field", func(t *testing.T) {
 		// This should fail direct unmarshal and use fallback
-		content := `[{"scenario": "test", "testInput": "input", "reasoning": "reason"}]`
+		content := `[{"scenario": "test", "input": "input", "reasoning": "reason"}]`
 
 		result, err := handler.ParseTestsFromLLMResponse(content)
 		if err != nil {
@@ -62,8 +62,8 @@ func TestParseTestsFromLLMResponse_FallbackUnmarshal(t *testing.T) {
 		}
 
 		// This should work via the fallback logic
-		if result[0].TestInput != "input" {
-			t.Errorf("ParseTestsFromLLMResponse() TestInput mismatch. Expected: 'input', Got: '%s'", result[0].TestInput)
+		if result[0].Input != "input" {
+			t.Errorf("ParseTestsFromLLMResponse() TestInput mismatch. Expected: 'input', Got: '%s'", result[0].Input)
 		}
 	})
 
@@ -81,15 +81,15 @@ func TestParseTestsFromLLMResponse_FallbackUnmarshal(t *testing.T) {
 
 		// KNOWN BUG: The function doesn't properly handle the "input" field
 		// This test documents the current (buggy) behavior
-		if result[0].TestInput == "input" {
+		if result[0].Input == "input" {
 			t.Logf("NOTE: The 'input' field parsing appears to be fixed!")
 		} else {
-			t.Logf("KNOWN BUG: 'input' field not properly parsed. TestInput='%s'", result[0].TestInput)
+			t.Logf("KNOWN BUG: 'input' field not properly parsed. TestInput='%s'", result[0].Input)
 		}
 	})
 
 	t.Run("structured object input - demonstrates bug", func(t *testing.T) {
-		content := `[{"scenario": "test", "testinput": {"key": "value"}, "reasoning": "reason"}]`
+		content := `[{"scenario": "test", "input": {"key": "value"}, "reasoning": "reason"}]`
 
 		result, err := handler.ParseTestsFromLLMResponse(content)
 		if err != nil {
@@ -97,13 +97,13 @@ func TestParseTestsFromLLMResponse_FallbackUnmarshal(t *testing.T) {
 		}
 		if len(result) >= 1 {
 			// KNOWN BUG: The function doesn't properly handle structured objects in fallback mode
-			if result[0].TestInput != "" {
+			if result[0].Input != "" {
 				// Verify it's valid JSON if not empty
 				var parsed map[string]interface{}
-				if err := json.Unmarshal([]byte(result[0].TestInput), &parsed); err != nil {
+				if err := json.Unmarshal([]byte(result[0].Input), &parsed); err != nil {
 					t.Errorf("ParseTestsFromLLMResponse() TestInput is not valid JSON: %v", err)
 				} else {
-					t.Logf("NOTE: Structured input parsing appears to be working: %s", result[0].TestInput)
+					t.Logf("NOTE: Structured input parsing appears to be working: %s", result[0].Input)
 				}
 			} else {
 				t.Logf("KNOWN BUG: Structured object not properly converted to JSON string")
@@ -122,7 +122,7 @@ func TestParseTestsFromLLMResponse_ErrorHandling(t *testing.T) {
 	}{
 		{
 			name:     "invalid JSON",
-			content:  `[{"scenario": "test" "testinput": "missing comma"}]`,
+			content:  `[{"scenario": "test" "input": "missing comma"}]`,
 			hasError: true,
 		},
 		{
@@ -163,7 +163,7 @@ func TestParseTestsFromLLMResponse_MarkdownAndConcatenation(t *testing.T) {
 	handler := &generateCommandHandler{}
 
 	t.Run("JSON wrapped in markdown", func(t *testing.T) {
-		content := "```json\n[{\"scenario\": \"test\", \"testinput\": \"input\", \"reasoning\": \"reason\"}]\n```"
+		content := "```json\n[{\"scenario\": \"test\", \"input\": \"input\", \"reasoning\": \"reason\"}]\n```"
 
 		result, err := handler.ParseTestsFromLLMResponse(content)
 		if err != nil {
@@ -173,13 +173,13 @@ func TestParseTestsFromLLMResponse_MarkdownAndConcatenation(t *testing.T) {
 			t.Errorf("ParseTestsFromLLMResponse() expected 1 test, got %d", len(result))
 		}
 
-		if result[0].TestInput != "input" {
-			t.Errorf("ParseTestsFromLLMResponse() TestInput mismatch. Expected: 'input', Got: '%s'", result[0].TestInput)
+		if result[0].Input != "input" {
+			t.Errorf("ParseTestsFromLLMResponse() TestInput mismatch. Expected: 'input', Got: '%s'", result[0].Input)
 		}
 	})
 
 	t.Run("JavaScript string concatenation", func(t *testing.T) {
-		content := `[{"scenario": "test", "testinput": "Hello" + "World", "reasoning": "reason"}]`
+		content := `[{"scenario": "test", "input": "Hello" + "World", "reasoning": "reason"}]`
 
 		result, err := handler.ParseTestsFromLLMResponse(content)
 		if err != nil {
@@ -190,8 +190,8 @@ func TestParseTestsFromLLMResponse_MarkdownAndConcatenation(t *testing.T) {
 		}
 
 		// The ExtractJSON function should handle concatenation
-		if result[0].TestInput != "HelloWorld" {
-			t.Errorf("ParseTestsFromLLMResponse() concatenation failed. Expected: 'HelloWorld', Got: '%s'", result[0].TestInput)
+		if result[0].Input != "HelloWorld" {
+			t.Errorf("ParseTestsFromLLMResponse() concatenation failed. Expected: 'HelloWorld', Got: '%s'", result[0].Input)
 		}
 	})
 }
@@ -200,7 +200,7 @@ func TestParseTestsFromLLMResponse_SpecialValues(t *testing.T) {
 	handler := &generateCommandHandler{}
 
 	t.Run("null values", func(t *testing.T) {
-		content := `[{"scenario": null, "testinput": "test", "reasoning": null}]`
+		content := `[{"scenario": null, "input": "test", "reasoning": null}]`
 
 		result, err := handler.ParseTestsFromLLMResponse(content)
 		if err != nil {
@@ -217,13 +217,13 @@ func TestParseTestsFromLLMResponse_SpecialValues(t *testing.T) {
 		if result[0].Reasoning != "" {
 			t.Errorf("ParseTestsFromLLMResponse() Reasoning should be empty for null value")
 		}
-		if result[0].TestInput != "test" {
+		if result[0].Input != "test" {
 			t.Errorf("ParseTestsFromLLMResponse() TestInput mismatch")
 		}
 	})
 
 	t.Run("empty strings", func(t *testing.T) {
-		content := `[{"scenario": "", "testinput": "", "reasoning": ""}]`
+		content := `[{"scenario": "", "input": "", "reasoning": ""}]`
 
 		result, err := handler.ParseTestsFromLLMResponse(content)
 		if err != nil {
@@ -237,7 +237,7 @@ func TestParseTestsFromLLMResponse_SpecialValues(t *testing.T) {
 		if result[0].Scenario != "" {
 			t.Errorf("ParseTestsFromLLMResponse() Scenario should be empty string")
 		}
-		if result[0].TestInput != "" {
+		if result[0].Input != "" {
 			t.Errorf("ParseTestsFromLLMResponse() TestInput should be empty string")
 		}
 		if result[0].Reasoning != "" {
@@ -246,7 +246,7 @@ func TestParseTestsFromLLMResponse_SpecialValues(t *testing.T) {
 	})
 
 	t.Run("unicode characters", func(t *testing.T) {
-		content := `[{"scenario": "unicode test 🚀", "testinput": "测试输入 with émojis 🎉", "reasoning": "тест with ñoñó characters"}]`
+		content := `[{"scenario": "unicode test 🚀", "input": "测试输入 with émojis 🎉", "reasoning": "тест with ñoñó characters"}]`
 
 		result, err := handler.ParseTestsFromLLMResponse(content)
 		if err != nil {
@@ -259,7 +259,7 @@ func TestParseTestsFromLLMResponse_SpecialValues(t *testing.T) {
 		if result[0].Scenario != "unicode test 🚀" {
 			t.Errorf("ParseTestsFromLLMResponse() unicode scenario failed")
 		}
-		if result[0].TestInput != "测试输入 with émojis 🎉" {
+		if result[0].Input != "测试输入 with émojis 🎉" {
 			t.Errorf("ParseTestsFromLLMResponse() unicode input failed")
 		}
 	})
@@ -275,12 +275,12 @@ func TestParseTestsFromLLMResponse_RealWorldExamples(t *testing.T) {
 		[
 			{
 				"scenario": "Valid user registration",
-				"testinput": "{'username': 'john_doe', 'email': 'john@example.com', 'password': 'SecurePass123!'}",
+				"input": "{'username': 'john_doe', 'email': 'john@example.com', 'password': 'SecurePass123!'}",
 				"reasoning": "Tests successful user registration with valid credentials"
 			},
 			{
 				"scenario": "Invalid email format",
-				"testinput": "{'username': 'jane_doe', 'email': 'invalid-email', 'password': 'SecurePass123!'}",
+				"input": "{'username': 'jane_doe', 'email': 'invalid-email', 'password': 'SecurePass123!'}",
 				"reasoning": "Tests validation of email format"
 			}
 		]
@@ -298,7 +298,7 @@ func TestParseTestsFromLLMResponse_RealWorldExamples(t *testing.T) {
 
 		// Check that both tests have content
 		for i, test := range result {
-			if test.TestInput == "" {
+			if test.Input == "" {
 				t.Errorf("ParseTestsFromLLMResponse() test %d has empty TestInput", i)
 			}
 			if test.Scenario == "" {
@@ -314,7 +314,7 @@ func TestParseTestsFromLLMResponse_RealWorldExamples(t *testing.T) {
 		[
 			{
 				"scenario": "API " + "request " + "validation",
-				"testinput": "test input data",
+				"input": "test input data",
 				"reasoning": "Tests " + "API " + "endpoint " + "validation"
 			}
 		]
