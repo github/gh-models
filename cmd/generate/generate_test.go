@@ -76,6 +76,20 @@ func TestParseFlags(t *testing.T) {
 			},
 		},
 		{
+			name: "valid effort low",
+			args: []string{"--effort", "low"},
+			validate: func(t *testing.T, opts *PromptPexOptions) {
+				require.Equal(t, "low", opts.Effort)
+			},
+		},
+		{
+			name: "valid effort high",
+			args: []string{"--effort", "high"},
+			validate: func(t *testing.T, opts *PromptPexOptions) {
+				require.Equal(t, "high", opts.Effort)
+			},
+		},
+		{
 			name: "groundtruth model flag",
 			args: []string{"--groundtruth-model", "openai/gpt-4o"},
 			validate: func(t *testing.T, opts *PromptPexOptions) {
@@ -153,6 +167,63 @@ func TestParseFlags(t *testing.T) {
 
 			// Validate using the test-specific validation function
 			tt.validate(t, options)
+		})
+	}
+}
+
+func TestParseFlagsInvalidEffort(t *testing.T) {
+	tests := []struct {
+		name        string
+		effort      string
+		expectedErr string
+	}{
+		{
+			name:        "invalid effort value",
+			effort:      "invalid",
+			expectedErr: "invalid effort level 'invalid': must be one of low, medium, or high",
+		},
+		{
+			name:        "empty effort value",
+			effort:      "",
+			expectedErr: "", // Empty should be allowed (no error)
+		},
+		{
+			name:        "case sensitive effort",
+			effort:      "Low",
+			expectedErr: "invalid effort level 'Low': must be one of low, medium, or high",
+		},
+		{
+			name:        "numeric effort",
+			effort:      "1",
+			expectedErr: "invalid effort level '1': must be one of low, medium, or high",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Create a temporary command to parse flags
+			cmd := NewGenerateCommand(nil)
+			args := []string{}
+			if tt.effort != "" {
+				args = append(args, "--effort", tt.effort)
+			}
+			args = append(args, "dummy.yml") // Add required positional arg
+			cmd.SetArgs(args)
+
+			// Parse flags but don't execute
+			err := cmd.ParseFlags(args[:len(args)-1]) // Exclude positional arg from flag parsing
+			require.NoError(t, err)
+
+			// Parse options from the flags
+			options := GetDefaultOptions()
+			err = ParseFlags(cmd, options)
+
+			if tt.expectedErr == "" {
+				require.NoError(t, err)
+			} else {
+				require.Error(t, err)
+				require.Contains(t, err.Error(), tt.expectedErr)
+			}
 		})
 	}
 }

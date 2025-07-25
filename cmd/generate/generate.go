@@ -119,6 +119,10 @@ func ParseFlags(cmd *cobra.Command, options *PromptPexOptions) error {
 	flags := cmd.Flags()
 	// Parse effort first so it can set defaults
 	if effort, _ := flags.GetString("effort"); effort != "" {
+		// Validate effort value
+		if effort != EffortLow && effort != EffortMedium && effort != EffortHigh {
+			return fmt.Errorf("invalid effort level '%s': must be one of %s, %s, or %s", effort, EffortLow, EffortMedium, EffortHigh)
+		}
 		options.Effort = effort
 	}
 
