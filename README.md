@@ -134,14 +134,17 @@ The `generate` command is based on [PromptPex](https://github.com/microsoft/prom
 ```mermaid
 graph TD
     PUT(["Prompt Under Test (PUT)"])
+    I["Intent (I)"]
     IS["Input Specification (IS)"]
     OR["Output Rules (OR)"]
     IOR["Inverse Output Rules (IOR)"]
     PPT["PromptPex Tests (PPT)"]
 
     PUT --> IS
+    PUT --> I
     PUT --> OR
     OR --> IOR
+    I ==> PPT
     IS ==> PPT
     OR ==> PPT
     PUT ==> PPT
