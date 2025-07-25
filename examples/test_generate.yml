@@ -2,11 +2,48 @@ name: Funny Joke Test
 description: A test prompt for analyzing jokes
 model: openai/gpt-4o-mini
 modelParameters:
-  temperature: 0.2
+    temperature: 0.2
 messages:
-  - role: system
-    content: |
-      You are an expert at telling jokes. Determine if the Joke below is funny or not funny
-  - role: user
-    content: |
-      {{input}}
+    - role: system
+      content: |
+        You are an expert at telling jokes. Determine if the Joke below is funny or not funny
+    - role: user
+      content: |
+        {{input}}
+testData:
+    - expected: Funny! It's a classic pun with a clever play on words. Skeletons literally lack "guts," and the double meaning makes it amusing.
+      input: Why don't skeletons fight each other? They don't have the guts.
+    - expected: "Funny!  \nIt's a classic pun that plays on the similarity between \"impasta\" and \"imposter.\" Simple, clever, and sure to get a chuckle!"
+      input: What do you call fake spaghetti? An impasta.
+    - expected: Funny! This joke plays on a clever double meaning. The punchline hinges on the idea that drawing eyebrows too high can make someone look perpetually surprised, and her reaction humorously matches that description. Classic and witty!
+      input: I told my wife she was drawing her eyebrows too high. She seemed surprised.
+    - expected: "Funny!  \nIt's a classic knock-knock joke with a playful twist that makes people smile. Simple and lighthearted!"
+      input: Knock, knock. Who's there? Boo. Boo who? Don't cry, it's just a joke!
+    - expected: Funny! This is a classic example of a pun, playing on the double meaning of "dying to get in." It's clever and lighthearted, making it a solid joke for most audiences.
+      input: Why don’t graveyards ever get overcrowded? Because people are dying to get in.
+    - expected: Funny! This joke is a classic pun that plays on the double meaning of "outstanding" (exceptional and literally standing out in a field). It's clever and lighthearted!
+      input: Why did the scarecrow win an award? Because he was outstanding in his field.
+    - expected: Funny! It's a classic play on words and unexpected, which makes it amusing.
+      input: What’s orange and sounds like a parrot? A carrot.
+    - expected: Funny! This joke plays cleverly with the concept of time travel and the sequence of events, creating a humorous twist that catches the listener off guard.
+      input: A man walks into a bar and orders a drink. The bartender says, 'Sorry, we don’t serve time travelers here.' A time traveler walks into a bar.
+    - expected: "Funny!  \nIt's a playful twist on the classic \"Why did the chicken cross the road?\" joke, and the wordplay with \"slide\" adds a lighthearted and unexpected punchline."
+      input: Why did the chicken cross the playground? To get to the other slide.
+    - expected: This joke is a classic! It's funny because it's so well-known and often used as a setup for unexpected or absurd punchlines. The original punchline, "To get to the other side," is amusing in its simplicity and anti-climactic nature. However, its humor can depend on the context or the twist added to it.
+      input: Why did the chicken cross the road?
+    - expected: "Not funny.  \n\nThis statement is more of an observation or fact rather than a joke. To make it funny, you could add a twist or punchline! For example:  \n\"Why is the sky so blue? Because it saw the grass on the ground and got jealous of how green it was!\""
+      input: The sky is blue.
+    - expected: "Not funny.  \n\nThis version of the classic \"Why did the chicken cross the road?\" joke lacks cleverness or a surprising twist, which are often key elements of humor. Calling the chicken \"stupid\" feels more mean-spirited than amusing, and it doesn't add much to the joke's punchline."
+      input: Why did the chicken cross the road? Because it was stupid.
+    - expected: Funny! It's a classic, lighthearted pun that plays on the double meaning of "dressing." Simple and clever!
+      input: Why did the tomato turn red? Because it saw the salad dressing.
+    - expected: Funny! This joke cleverly plays on the double meaning of "bugs" in programming and the natural world, making it relatable and witty for tech-savvy folks.
+      input: Why do programmers prefer dark mode? Because light attracts bugs.
+    - expected: "Funny!  \nThis joke is a clever play on words. The concept of \"anti-gravity\" being \"impossible to put down\" works both literally and figuratively, making it lighthearted and amusing."
+      input: I’m reading a book on anti-gravity. It’s impossible to put down.
+    - expected: Funny! This is a classic science pun that plays on the double meaning of "make up" – atoms literally make up all matter, and "make up" can also mean to fabricate or lie. It's clever and lighthearted!
+      input: Why don’t scientists trust atoms? Because they make up everything.
+    - expected: "Funny!  \nIt's a clever play on words and expectations. The joke sets up a common phrase (\"playing piano by ear\") and then humorously twists it with a literal interpretation. Classic dad-joke territory!"
+      input: I used to play piano by ear, but now I use my hands.
+    - expected: "Funny!  \nIt's a clever play on words, combining the idea of needing a \"break\" (as in rest) with the famous KitKat slogan, \"Have a break, have a KitKat.\" It's lighthearted and punny!"
+      input: I told my computer I needed a break, and now it won’t stop sending me KitKats.

@@ -467,7 +467,6 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 				continue
 			}
 			test.Groundtruth = output
-			test.GroundtruthModel = groundtruthModel
 
 			h.SaveContext(context) // Save context after generating groundtruth
 		}
