@@ -84,6 +84,57 @@ Here's a sample GitHub Action that uses the `eval` command to automatically run 
 
 Learn more about `.prompt.yml` files here: [Storing prompts in GitHub repositories](https://docs.github.com/github-models/use-github-models/storing-prompts-in-github-repositories).
 
+#### Generating tests
+
+Generate comprehensive test cases for your prompts using the PromptPex methodology:
+```shell
+gh models generate my_prompt.prompt.yml
+```
+
+The `generate` command analyzes your prompt file and automatically creates test cases to evaluate the prompt's behavior across different scenarios and edge cases. This helps ensure your prompts are robust and perform as expected.
+
+##### Advanced options
+
+You can customize the test generation process with various options:
+
+```shell
+# Specify effort level (low, medium, high)
+gh models generate --effort high my_prompt.prompt.yml
+
+# Use a specific model for groundtruth generation
+gh models generate --groundtruth-model "openai/gpt-4.1" my_prompt.prompt.yml
+
+# Disable groundtruth generation
+gh models generate --groundtruth-model "none" my_prompt.prompt.yml
+
+# Load from existing session file
+gh models generate --session-file my_prompt.session.json my_prompt.prompt.yml
+
+# Custom instructions for specific generation phases
+gh models generate --instruction-intent "Focus on edge cases" my_prompt.prompt.yml
+```
+
+The command supports custom instructions for different phases of test generation:
+- `--instruction-intent`: Custom system instruction for intent generation
+- `--instruction-inputspec`: Custom system instruction for input specification generation  
+- `--instruction-outputrules`: Custom system instruction for output rules generation
+- `--instruction-inverseoutputrules`: Custom system instruction for inverse output rules generation
+- `--instruction-tests`: Custom system instruction for tests generation
+
+##### Understanding PromptPex
+
+The `generate` command is based on [PromptPex](https://github.com/microsoft/promptpex), a Microsoft Research framework for systematic prompt testing. PromptPex follows a structured approach to generate comprehensive test cases by:
+
+1. **Intent Analysis**: Understanding what the prompt is trying to achieve
+2. **Input Specification**: Defining the expected input format and constraints
+3. **Output Rules**: Establishing what constitutes correct output
+4. **Test Generation**: Creating diverse test cases that cover various scenarios
+
+For deeper understanding of the PromptPex methodology:
+- [PromptPex Documentation](https://microsoft.github.io/promptpex)
+- [Test Generation Reference](https://microsoft.github.io/promptpex/reference/test-generation/)
+- [Microsoft Research Repository](https://github.com/microsoft/promptpex)
+
 ## Notice
 
 Remember when interacting with a model you are experimenting with AI, so content mistakes are possible. The feature is
