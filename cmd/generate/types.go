@@ -50,14 +50,13 @@ type PromptPexContext struct {
 
 // PromptPexTest represents a single test case
 type PromptPexTest struct {
-	RuleID            int    `json:"ruleid,omitempty" yaml:"ruleid,omitempty"`
-	TestID            int    `json:"testid,omitempty" yaml:"testid,omitempty"`
-	Baseline          bool   `json:"baseline,omitempty" yaml:"baseline,omitempty"`
+	RuleID            int    `json:"ruleId,omitempty" yaml:"ruleId,omitempty"`
+	TestID            int    `json:"testId,omitempty" yaml:"testId,omitempty"`
 	GroundtruthModel  string `json:"groundtruthModel,omitempty" yaml:"groundtruthModel,omitempty"`
 	Groundtruth       string `json:"groundtruth,omitempty" yaml:"groundtruth,omitempty"`
-	TestInput         string `json:"testinput" yaml:"testinput"`
-	TestInputOriginal string `json:"testinputOriginal,omitempty" yaml:"testinputOriginal,omitempty"`
-	ExpectedOutput    string `json:"expectedoutput,omitempty" yaml:"expectedoutput,omitempty"`
+	TestInput         string `json:"testInput" yaml:"testInput"`
+	TestInputOriginal string `json:"testInputOriginal,omitempty" yaml:"testInputOriginal,omitempty"`
+	ExpectedOutput    string `json:"expectedOutput,omitempty" yaml:"expectedOutput,omitempty"`
 	Reasoning         string `json:"reasoning,omitempty" yaml:"reasoning,omitempty"`
 	Scenario          string `json:"scenario,omitempty" yaml:"scenario,omitempty"`
 }

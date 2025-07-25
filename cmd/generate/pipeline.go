@@ -275,7 +275,7 @@ Return only a JSON array with this exact format:
 [
   {
     "scenario": "Description of what this test validates",
-    "testinput": "The actual input text or data",
+    "testInput": "The actual input text or data",
     "reasoning": "Why this test is important and what it validates"
   }
 ]
