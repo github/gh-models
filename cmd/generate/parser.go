@@ -54,7 +54,7 @@ func (h *generateCommandHandler) ParseTestsFromLLMResponse(content string) ([]Pr
 	for _, rawTest := range rawTests {
 		test := PromptPexTest{}
 
-		for _, key := range []string{"testInput", "testinput", "testInput"} {
+		for _, key := range []string{"testInput", "testinput", "input"} {
 			if input, ok := rawTest[key].(string); ok {
 				test.Input = input
 				break
