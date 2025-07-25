@@ -79,8 +79,7 @@ func TestParseFlags(t *testing.T) {
 			name: "groundtruth model flag",
 			args: []string{"--groundtruth-model", "openai/gpt-4o"},
 			validate: func(t *testing.T, opts *PromptPexOptions) {
-				require.NotNil(t, opts.Models.Groundtruth)
-				require.Equal(t, "openai/gpt-4o", *opts.Models.Groundtruth)
+				require.Equal(t, "openai/gpt-4o", opts.Models.Groundtruth)
 			},
 		},
 	}

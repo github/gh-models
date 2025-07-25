@@ -4,17 +4,17 @@ import "github.com/github/gh-models/pkg/prompt"
 
 // PromptPexModelAliases represents model aliases for different purposes
 type PromptPexModelAliases struct {
-	Rules       *string `yaml:"rules,omitempty" json:"rules,omitempty"`
-	Tests       *string `yaml:"tests,omitempty" json:"tests,omitempty"`
-	Groundtruth *string `yaml:"groundtruth,omitempty" json:"groundtruth,omitempty"`
+	Rules       string `yaml:"rules,omitempty" json:"rules,omitempty"`
+	Tests       string `yaml:"tests,omitempty" json:"tests,omitempty"`
+	Groundtruth string `yaml:"groundtruth,omitempty" json:"groundtruth,omitempty"`
 }
 
 // PromptPexPrompts contains custom prompts for different stages
 type PromptPexPrompts struct {
-	InputSpec          *string `yaml:"inputSpec,omitempty" json:"inputSpec,omitempty"`
-	OutputRules        *string `yaml:"outputRules,omitempty" json:"outputRules,omitempty"`
-	InverseOutputRules *string `yaml:"inverseOutputRules,omitempty" json:"inverseOutputRules,omitempty"`
-	Intent             *string `yaml:"intent,omitempty" json:"intent,omitempty"`
+	InputSpec          string `yaml:"inputSpec,omitempty" json:"inputSpec,omitempty"`
+	OutputRules        string `yaml:"outputRules,omitempty" json:"outputRules,omitempty"`
+	InverseOutputRules string `yaml:"inverseOutputRules,omitempty" json:"inverseOutputRules,omitempty"`
+	Intent             string `yaml:"intent,omitempty" json:"intent,omitempty"`
 }
 
 // PromptPexOptions contains all configuration options for PromptPex

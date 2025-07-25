@@ -52,7 +52,7 @@ func (h *generateCommandHandler) RunTestGenerationPipeline(context *PromptPexCon
 	}
 
 	// Step 8: Generate Groundtruth (if model specified)
-	if h.options.Models.Groundtruth != nil && *h.options.Models.Groundtruth != "" && *h.options.Models.Groundtruth != "none" {
+	if h.options.Models.Groundtruth != "" && h.options.Models.Groundtruth != "none" {
 		if err := h.generateGroundtruth(context); err != nil {
 			return fmt.Errorf("failed to generate groundtruth: %w", err)
 		}
@@ -93,7 +93,7 @@ Intent:`, RenderMessagesToString(context.Prompt.Messages))
 			{Role: azuremodels.ChatMessageRoleUser, Content: util.Ptr(prompt)},
 		}
 		options := azuremodels.ChatCompletionOptions{
-			Model:       *h.options.Models.Rules, // GitHub Models compatible model
+			Model:       h.options.Models.Rules, // GitHub Models compatible model
 			Messages:    messages,
 			Temperature: util.Ptr(0.0),
 			Stream:      false,
@@ -130,7 +130,7 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 		}
 
 		options := azuremodels.ChatCompletionOptions{
-			Model:       *h.options.Models.Rules,
+			Model:       h.options.Models.Rules,
 			Messages:    messages,
 			Temperature: util.Ptr(0.0),
 		}
@@ -168,7 +168,7 @@ Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 		}
 
 		options := azuremodels.ChatCompletionOptions{
-			Model:       *h.options.Models.Rules, // GitHub Models compatible model
+			Model:       h.options.Models.Rules, // GitHub Models compatible model
 			Messages:    messages,
 			Temperature: util.Ptr(0.0),
 		}
@@ -211,7 +211,7 @@ Inverse Output Rules:`, strings.Join(context.Rules, "\n"))
 		}
 
 		options := azuremodels.ChatCompletionOptions{
-			Model:       *h.options.Models.Rules, // GitHub Models compatible model
+			Model:       h.options.Models.Rules, // GitHub Models compatible model
 			Messages:    messages,
 			Temperature: util.Ptr(0.0),
 		}
@@ -294,7 +294,7 @@ Generate exactly %d diverse test cases:`, nTests,
 		}
 
 		options := azuremodels.ChatCompletionOptions{
-			Model:       *h.options.Models.Tests, // GitHub Models compatible model
+			Model:       h.options.Models.Tests, // GitHub Models compatible model
 			Messages:    messages,
 			Temperature: util.Ptr(0.3),
 		}
@@ -397,19 +397,19 @@ func (h *generateCommandHandler) runSingleTestWithContext(input string, modelNam
 // generateGroundtruth generates groundtruth outputs using the specified model
 func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) error {
 	groundtruthModel := h.options.Models.Groundtruth
-	h.WriteStartBox("Groundtruth", fmt.Sprintf("with %s", *groundtruthModel))
+	h.WriteStartBox("Groundtruth", fmt.Sprintf("with %s", groundtruthModel))
 	for i := range context.Tests {
 		test := &context.Tests[i]
 		h.WriteToLine(test.TestInput)
 		if test.Groundtruth == nil || *test.Groundtruth == "" {
 			// Generate groundtruth output
-			output, err := h.runSingleTestWithContext(test.TestInput, *groundtruthModel, context)
+			output, err := h.runSingleTestWithContext(test.TestInput, groundtruthModel, context)
 			if err != nil {
 				h.cfg.WriteToOut(fmt.Sprintf("Failed to generate groundtruth for test %d: %v", i, err))
 				continue
 			}
 			test.Groundtruth = &output
-			test.GroundtruthModel = groundtruthModel
+			test.GroundtruthModel = &groundtruthModel
 
 			h.SaveContext(context) // Save context after generating groundtruth
 		}

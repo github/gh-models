@@ -8,7 +8,7 @@ This repository implements the GitHub Models CLI extension (`gh models`), enabli
 ### Building and Testing
 
 - `make build`: Compiles the CLI binary
-- `make check`: Runs format, vet, tidy, and tests. Always run when you are done with changes.
+- `make check`: Runs format, vet, tidy, tests, golang-ci. Always run when you are done with changes. Use this command to validate that the build and the tests are still ok.
 - `make test`: Runs the tests.
 
 ### Command Structure
@@ -33,7 +33,7 @@ This repository implements the GitHub Models CLI extension (`gh models`), enabli
 - **Local build**: `make build` or `script/build` (creates `gh-models` binary)
 - **Cross-platform**: `script/build all|windows|linux|darwin` for release builds
 - **Testing**: `make check` runs format, vet, tidy, and tests. Use `go test ./...` directly for faster iteration
-- **Quality gates**: `make fmt vet tidy test` - required before commits
+- **Quality gates**: `make check` - required before commits
 
 ### Authentication & Setup
 - Extension requires `gh auth login` before use - unauthenticated clients show helpful error messages
