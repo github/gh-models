@@ -7,6 +7,7 @@ type PromptPexModelAliases struct {
 	Rules       string `yaml:"rules,omitempty" json:"rules,omitempty"`
 	Tests       string `yaml:"tests,omitempty" json:"tests,omitempty"`
 	Groundtruth string `yaml:"groundtruth,omitempty" json:"groundtruth,omitempty"`
+	Eval        string `yaml:"eval,omitempty" json:"eval,omitempty"`
 }
 
 // PromptPexPrompts contains custom prompts for different stages

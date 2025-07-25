@@ -2,6 +2,7 @@ package generate
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/github/gh-models/internal/azuremodels"
@@ -490,6 +491,16 @@ func (h *generateCommandHandler) updatePromptFile(context *PromptPexContext) err
 		testData = append(testData, item)
 	}
 	context.Prompt.TestData = testData
+
+	// insert output rule evaluator
+	if context.Prompt.Evaluators == nil {
+		context.Prompt.Evaluators = make([]prompt.Evaluator, 0)
+	}
+	evaluator := h.GenerateRulesEvaluator(context)
+	context.Prompt.Evaluators = slices.DeleteFunc(context.Prompt.Evaluators, func(e prompt.Evaluator) bool {
+		return e.Name == evaluator.Name
+	})
+	context.Prompt.Evaluators = append(context.Prompt.Evaluators, evaluator)
 
 	// Save updated prompt to file
 	if err := context.Prompt.SaveToFile(h.promptFile); err != nil {

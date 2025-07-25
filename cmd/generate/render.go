@@ -6,15 +6,7 @@ import (
 
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/prompt"
-	"github.com/mgutz/ansi"
 )
-
-var (
-	secondary = ansi.ColorFunc(ansi.LightBlack)
-)
-var BOX_START = "╭──"
-var BOX_END = "╰──"
-var PREVIEW_TEST_COUNT = 16
 
 // RenderMessagesToString converts a slice of Messages to a human-readable string representation
 func RenderMessagesToString(messages []prompt.Message) string {
@@ -50,14 +42,14 @@ func RenderMessagesToString(messages []prompt.Message) string {
 
 func (h *generateCommandHandler) WriteStartBox(title string, subtitle string) {
 	if subtitle != "" {
-		h.cfg.WriteToOut(fmt.Sprintf("%s %s %s\n", BOX_START, title, secondary(subtitle)))
+		h.cfg.WriteToOut(fmt.Sprintf("%s %s %s\n", BOX_START, title, COLOR_SECONDARY(subtitle)))
 	} else {
 		h.cfg.WriteToOut(fmt.Sprintf("%s %s\n", BOX_START, title))
 	}
 }
 
 func (h *generateCommandHandler) WriteEndBox(suffix string) {
-	h.cfg.WriteToOut(fmt.Sprintf("%s %s\n", BOX_END, secondary(suffix)))
+	h.cfg.WriteToOut(fmt.Sprintf("%s %s\n", BOX_END, COLOR_SECONDARY(suffix)))
 }
 
 func (h *generateCommandHandler) WriteBox(title string, content string) {
@@ -72,7 +64,7 @@ func (h *generateCommandHandler) WriteBox(title string, content string) {
 }
 
 func (h *generateCommandHandler) WriteToParagraph(s string) {
-	h.cfg.WriteToOut(secondary(s))
+	h.cfg.WriteToOut(COLOR_SECONDARY(s))
 	if !strings.HasSuffix(s, "\n") {
 		h.cfg.WriteToOut("\n")
 	}
@@ -83,9 +75,9 @@ func (h *generateCommandHandler) WriteToLine(item string) {
 		item = item[:h.cfg.TerminalWidth-2] + "…"
 	}
 	if strings.HasSuffix(item, "\n") {
-		h.cfg.WriteToOut(secondary(item))
+		h.cfg.WriteToOut(COLOR_SECONDARY(item))
 	} else {
-		h.cfg.WriteToOut(fmt.Sprintf("%s\n", secondary(item)))
+		h.cfg.WriteToOut(fmt.Sprintf("%s\n", COLOR_SECONDARY(item)))
 	}
 }
 

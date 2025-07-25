@@ -13,6 +13,7 @@ func GetDefaultOptions() *PromptPexOptions {
 			Rules:       "openai/gpt-4o",
 			Tests:       "openai/gpt-4o",
 			Groundtruth: "openai/gpt-4o",
+			Eval:        "openai/gpt-4o",
 		},
 	}
 }
