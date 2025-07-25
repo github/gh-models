@@ -97,6 +97,7 @@ Intent:`, RenderMessagesToString(context.Prompt.Messages))
 			Messages:    messages,
 			Temperature: util.Ptr(0.0),
 			Stream:      false,
+			MaxTokens:   util.Ptr(h.options.IntentMaxTokens),
 		}
 		intent, err := h.callModelWithRetry("intent", options)
 		if err != nil {
@@ -133,6 +134,7 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 			Model:       h.options.Models.Rules,
 			Messages:    messages,
 			Temperature: util.Ptr(0.0),
+			MaxTokens:   util.Ptr(h.options.InputSpecMaxTokens),
 		}
 
 		inputSpec, err := h.callModelWithRetry("input spec", options)

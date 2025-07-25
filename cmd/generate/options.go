@@ -7,15 +7,12 @@ func GetDefaultOptions() *PromptPexOptions {
 		RunsPerTest:        2,
 		MaxRulesPerTestGen: 3,
 		Verbose:            false,
+		IntentMaxTokens:    100,
+		InputSpecMaxTokens: 500,
 		Models: &PromptPexModelAliases{
 			Rules:       "openai/gpt-4o",
 			Tests:       "openai/gpt-4o",
 			Groundtruth: "openai/gpt-4o",
 		},
 	}
-}
-
-// GetOptions returns the current options for testing purposes
-func (h *generateCommandHandler) GetOptions() *PromptPexOptions {
-	return h.options
 }

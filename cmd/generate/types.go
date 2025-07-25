@@ -26,6 +26,8 @@ type PromptPexOptions struct {
 	RunsPerTest        int                    `yaml:"runsPerTest,omitempty" json:"runsPerTest,omitempty"`
 	MaxRules           int                    `yaml:"maxRules,omitempty" json:"maxRules,omitempty"`
 	MaxRulesPerTestGen int                    `yaml:"maxRulesPerTestGeneration,omitempty" json:"maxRulesPerTestGeneration,omitempty"`
+	IntentMaxTokens    int                    `yaml:"intentMaxTokens,omitempty" json:"intentMaxTokens,omitempty"`
+	InputSpecMaxTokens int                    `yaml:"inputSpecMaxTokens,omitempty" json:"inputSpecMaxTokens,omitempty"`
 
 	// CLI-specific options
 	Effort string `yaml:"effort,omitempty" json:"effort,omitempty"`

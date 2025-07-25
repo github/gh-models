@@ -6,3 +6,4 @@
 /gh-models-android-*
 **.http
 **.generate.json
+examples/*harm*
