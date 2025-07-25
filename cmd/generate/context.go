@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/github/gh-models/pkg/prompt"
-	"github.com/github/gh-models/pkg/util"
 )
 
 // createContext creates a new PromptPexContext from a prompt file
@@ -29,11 +28,11 @@ func (h *generateCommandHandler) CreateContextFromPrompt() (*PromptPexContext, e
 	runID := fmt.Sprintf("run_%d", time.Now().Unix())
 	context := &PromptPexContext{
 		// Unique identifier for the run
-		RunID: util.Ptr(runID),
+		RunID: runID,
 		// The prompt content and metadata
 		Prompt: prompt,
 		// Hash of the prompt messages, model, and parameters
-		PromptHash: util.Ptr(promptHash),
+		PromptHash: promptHash,
 		// The options used to generate the prompt
 		Options: h.options,
 	}
@@ -51,8 +50,7 @@ func (h *generateCommandHandler) CreateContextFromPrompt() (*PromptPexContext, e
 		} else {
 			sessionInfo = fmt.Sprintf("reloading session file at %s", *h.sessionFile)
 			// Check if prompt hashes match
-			if existingContext.PromptHash != nil && context.PromptHash != nil &&
-				*existingContext.PromptHash != *context.PromptHash {
+			if existingContext.PromptHash != context.PromptHash {
 				return nil, fmt.Errorf("prompt changed unable to reuse session file")
 			}
 

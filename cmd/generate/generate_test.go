@@ -190,7 +190,7 @@ messages:
 		require.NoError(t, err)
 		require.NotNil(t, ctx)
 		require.NotEmpty(t, ctx.RunID)
-		require.True(t, ctx.RunID != nil)
+		require.True(t, ctx.RunID != "")
 		require.Equal(t, "Test Context Creation", ctx.Prompt.Name)
 		require.Equal(t, "Test description for context", ctx.Prompt.Description)
 		require.Equal(t, options, ctx.Options)

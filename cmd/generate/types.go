@@ -37,15 +37,15 @@ type PromptPexOptions struct {
 
 // PromptPexContext represents the main context for PromptPex operations
 type PromptPexContext struct {
-	RunID        *string           `json:"runId" yaml:"runId"`
+	RunID        string            `json:"runId" yaml:"runId"`
 	Prompt       *prompt.File      `json:"prompt" yaml:"prompt"`
-	PromptHash   *string           `json:"promptHash" yaml:"promptHash"`
+	PromptHash   string            `json:"promptHash" yaml:"promptHash"`
+	Options      *PromptPexOptions `json:"options" yaml:"options"`
 	Intent       *string           `json:"intent" yaml:"intent"`
 	Rules        []string          `json:"rules" yaml:"rules"`
 	InverseRules []string          `json:"inverseRules" yaml:"inverseRules"`
 	InputSpec    *string           `json:"inputSpec" yaml:"inputSpec"`
 	Tests        []PromptPexTest   `json:"tests" yaml:"tests"`
-	Options      *PromptPexOptions `json:"options" yaml:"options"`
 }
 
 // PromptPexTest represents a single test case
