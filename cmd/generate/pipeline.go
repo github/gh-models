@@ -291,10 +291,67 @@ func (h *generateCommandHandler) generateTests(context *PromptPexContext) error 
 
 		allRules := append(context.Rules, context.InverseRules...)
 
-		nTests := testsPerRule * len(context.Rules)
-		// Build dynamic prompt based on the actual content (like TypeScript reference)
-		system := `Response in JSON format only.`
-		prompt := fmt.Sprintf(`Generate %d test cases for the following prompt based on the intent, input specification, and output rules. Generate %d tests per rule.		
+		// Generate tests iteratively for groups of rules
+		var allTests []PromptPexTest
+
+		rulesPerGen := h.options.RulesPerGen
+		// Split rules into groups
+		for start := 0; start < len(allRules); start += rulesPerGen {
+			end := start + rulesPerGen
+			if end > len(allRules) {
+				end = len(allRules)
+			}
+			ruleGroup := allRules[start:end]
+
+			// Generate tests for this group of rules
+			groupTests, err := h.generateTestsForRuleGroup(context, ruleGroup, testsPerRule, allTests)
+			if err != nil {
+				return fmt.Errorf("failed to generate tests for rule group: %w", err)
+			}
+
+			// render to terminal
+			for _, test := range groupTests {
+				h.WriteToLine(test.Input)
+				h.WriteToLine(fmt.Sprintf("    %s%s", BOX_END, test.Reasoning))
+			}
+
+			// Accumulate tests
+			allTests = append(allTests, groupTests...)
+		}
+
+		if len(allTests) == 0 {
+			return fmt.Errorf("no tests generated, please check your prompt and rules")
+		}
+		context.Tests = allTests
+	}
+
+	h.WriteEndBox(fmt.Sprintf("%d tests", len(context.Tests)))
+	return nil
+}
+
+// generateTestsForRuleGroup generates test cases for a specific group of rules
+func (h *generateCommandHandler) generateTestsForRuleGroup(context *PromptPexContext, ruleGroup []string, testsPerRule int, existingTests []PromptPexTest) ([]PromptPexTest, error) {
+	nTests := testsPerRule * len(ruleGroup)
+
+	// Build the prompt for this rule group
+	system := `Response in JSON format only.`
+
+	// Build existing tests context if there are any
+	existingTestsContext := ""
+	if len(existingTests) > 0 {
+		var testInputs []string
+		for _, test := range existingTests {
+			testInputs = append(testInputs, fmt.Sprintf("- %s", test.Input))
+		}
+		existingTestsContext = fmt.Sprintf(`
+
+The following <existing_tests> inputs have already been generated. Avoid creating duplicates:
+<existing_tests>
+%s
+</existing_tests>`, strings.Join(testInputs, "\n"))
+	}
+
+	prompt := fmt.Sprintf(`Generate %d test cases for the following prompt based on the intent, input specification, and output rules. Generate %d tests per rule.%s
 
 <intent>
 %s
@@ -318,6 +375,7 @@ Generate test cases that:
 3. Validate that outputs follow the specified rules
 4. Use realistic inputs that match the input specification
 5. Avoid whitespace only test inputs
+6. Ensure diversity and avoid duplicating existing test inputs
 
 Return only a JSON array with this exact format:
 [
@@ -329,52 +387,42 @@ Return only a JSON array with this exact format:
 ]
 
 Generate exactly %d diverse test cases:`, nTests,
-			testsPerRule,
-			*context.Intent,
-			*context.InputSpec,
-			strings.Join(allRules, "\n"),
-			RenderMessagesToString(context.Prompt.Messages),
-			nTests)
+		testsPerRule,
+		existingTestsContext,
+		*context.Intent,
+		*context.InputSpec,
+		strings.Join(ruleGroup, "\n"),
+		RenderMessagesToString(context.Prompt.Messages),
+		nTests)
 
-		messages := []azuremodels.ChatMessage{
-			{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(system)},
-		}
-
-		// Add custom instruction if provided
-		if h.options.Instructions != nil && h.options.Instructions.Tests != "" {
-			messages = append(messages, azuremodels.ChatMessage{
-				Role:    azuremodels.ChatMessageRoleSystem,
-				Content: util.Ptr(h.options.Instructions.Tests),
-			})
-		}
-
-		messages = append(messages,
-			azuremodels.ChatMessage{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
-		)
-
-		options := azuremodels.ChatCompletionOptions{
-			Model:       h.options.Models.Tests, // GitHub Models compatible model
-			Messages:    messages,
-			Temperature: util.Ptr(0.3),
-		}
-
-		tests, err := h.callModelToGenerateTests(options)
-		if err != nil {
-			return fmt.Errorf("failed to generate tests: %w", err)
-		}
-		if len(tests) == 0 {
-			return fmt.Errorf("no tests generated, please check your prompt and rules")
-		}
-		context.Tests = tests
+	messages := []azuremodels.ChatMessage{
+		{Role: azuremodels.ChatMessageRoleSystem, Content: util.Ptr(system)},
 	}
 
-	testViews := make([]string, len(context.Tests)*2)
-	for i, test := range context.Tests {
-		testViews[i*2] = test.Input
-		testViews[i*2+1] = fmt.Sprintf("    %s%s", BOX_END, test.Reasoning)
+	// Add custom instruction if provided
+	if h.options.Instructions != nil && h.options.Instructions.Tests != "" {
+		messages = append(messages, azuremodels.ChatMessage{
+			Role:    azuremodels.ChatMessageRoleSystem,
+			Content: util.Ptr(h.options.Instructions.Tests),
+		})
 	}
-	h.WriteEndListBox(testViews, PREVIEW_TEST_COUNT)
-	return nil
+
+	messages = append(messages,
+		azuremodels.ChatMessage{Role: azuremodels.ChatMessageRoleUser, Content: &prompt},
+	)
+
+	options := azuremodels.ChatCompletionOptions{
+		Model:       h.options.Models.Tests, // GitHub Models compatible model
+		Messages:    messages,
+		Temperature: util.Ptr(0.3),
+	}
+
+	tests, err := h.callModelToGenerateTests(options)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate tests for rule group: %w", err)
+	}
+
+	return tests, nil
 }
 
 func (h *generateCommandHandler) callModelToGenerateTests(options azuremodels.ChatCompletionOptions) ([]PromptPexTest, error) {
