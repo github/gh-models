@@ -477,7 +477,7 @@ func TestParseTemplateVariables(t *testing.T) {
 			flags := pflag.NewFlagSet("test", pflag.ContinueOnError)
 			flags.StringSlice("var", tt.varFlags, "test flag")
 
-			result, err := parseTemplateVariables(flags)
+			result, err := util.ParseTemplateVariables(flags)
 
 			if tt.expectErr {
 				require.Error(t, err)
