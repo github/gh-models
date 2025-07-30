@@ -76,14 +76,14 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 				sessionFile: util.Ptr(sessionFile),
 			}
 
-			// Create context
-			context, err := handler.CreateContextFromPrompt()
+			// Create prompt context
+			promptContext, err := handler.CreateContextFromPrompt()
 			if err != nil {
 				return fmt.Errorf("failed to create context: %w", err)
 			}
 
 			// Run the PromptPex pipeline
-			if err := handler.RunTestGenerationPipeline(context); err != nil {
+			if err := handler.RunTestGenerationPipeline(promptContext); err != nil {
 				// Disable usage help for pipeline failures
 				cmd.SilenceUsage = true
 				return fmt.Errorf("pipeline failed: %w", err)
