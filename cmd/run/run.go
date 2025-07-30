@@ -417,7 +417,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 	}
 
 	cmd.Flags().String("file", "", "Path to a .prompt.yml file.")
-	cmd.Flags().StringSlice("var", []string{}, "Template variables for prompt files (can be used multiple times: --var name=value)")
+	cmd.Flags().StringArray("var", []string{}, "Template variables for prompt files (can be used multiple times: --var name=value)")
 	cmd.Flags().String("max-tokens", "", "Limit the maximum tokens for the model response.")
 	cmd.Flags().String("temperature", "", "Controls randomness in the response, use lower to be more deterministic.")
 	cmd.Flags().String("top-p", "", "Controls text diversity by selecting the most probable words until a set probability is reached.")
@@ -429,7 +429,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 
 // parseTemplateVariables parses template variables from the --var flags
 func parseTemplateVariables(flags *pflag.FlagSet) (map[string]string, error) {
-	varFlags, err := flags.GetStringSlice("var")
+	varFlags, err := flags.GetStringArray("var")
 	if err != nil {
 		return nil, err
 	}
