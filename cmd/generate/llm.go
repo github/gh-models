@@ -28,11 +28,10 @@ func (h *generateCommandHandler) callModelWithRetry(step string, req azuremodels
 	for attempt := 0; attempt <= maxRetries; attempt++ {
 		sp := spinner.New(spinner.CharSets[14], 100*time.Millisecond, spinner.WithWriter(h.cfg.ErrOut))
 		sp.Start()
-		//nolint:gocritic,revive // TODO
-		defer sp.Stop()
 
 		resp, err := h.client.GetChatCompletionStream(ctx, req, h.org)
 		if err != nil {
+			sp.Stop()
 			var rateLimitErr *azuremodels.RateLimitError
 			if errors.As(err, &rateLimitErr) {
 				if attempt < maxRetries {
@@ -53,8 +52,6 @@ func (h *generateCommandHandler) callModelWithRetry(step string, req azuremodels
 			return "", err
 		}
 		reader := resp.Reader
-		//nolint:gocritic,revive // TODO
-		defer reader.Close()
 
 		var content strings.Builder
 		for {
@@ -63,6 +60,8 @@ func (h *generateCommandHandler) callModelWithRetry(step string, req azuremodels
 				if errors.Is(err, context.Canceled) || strings.Contains(err.Error(), "EOF") {
 					break
 				}
+				reader.Close()
+				sp.Stop()
 				return "", err
 			}
 			for _, choice := range completion.Choices {
@@ -73,6 +72,13 @@ func (h *generateCommandHandler) callModelWithRetry(step string, req azuremodels
 					content.WriteString(*choice.Message.Content)
 				}
 			}
+		}
+
+		// Properly close reader and stop spinner before returning success
+		err = reader.Close()
+		sp.Stop()
+		if err != nil {
+			return "", fmt.Errorf("failed to close reader: %w", err)
 		}
 
 		res := strings.TrimSpace(content.String())
