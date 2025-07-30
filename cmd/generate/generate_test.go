@@ -547,7 +547,7 @@ messages:
 		client := azuremodels.NewMockClient()
 		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
 			capturedOptions = opt
-			
+
 			// Create a proper mock response with reader
 			mockResponse := "test response"
 			mockCompletion := azuremodels.ChatCompletion{
@@ -559,7 +559,7 @@ messages:
 					},
 				},
 			}
-			
+
 			return &azuremodels.ChatCompletionResponse{
 				Reader: sse.NewMockEventReader([]azuremodels.ChatCompletion{mockCompletion}),
 			}, nil
