@@ -58,6 +58,11 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 				return err
 			}
 
+			// Check for reserved keys specific to generate command
+			if _, exists := templateVars["input"]; exists {
+				return fmt.Errorf("'input' is a reserved variable name and cannot be used with --var")
+			}
+
 			// Get organization
 			org, _ := cmd.Flags().GetString("org")
 

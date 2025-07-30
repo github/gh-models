@@ -48,11 +48,6 @@ func ParseTemplateVariables(flags *pflag.FlagSet) (map[string]string, error) {
 			return nil, fmt.Errorf("variable key cannot be empty in '%s'", varFlag)
 		}
 
-		// Check for reserved keys
-		if key == "input" {
-			return nil, fmt.Errorf("'input' is a reserved variable name and cannot be used with --var")
-		}
-
 		// Check for duplicate keys
 		if _, exists := templateVars[key]; exists {
 			return nil, fmt.Errorf("duplicate variable key '%s'", key)

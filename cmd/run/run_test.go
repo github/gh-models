@@ -470,6 +470,11 @@ func TestParseTemplateVariables(t *testing.T) {
 			varFlags:  []string{"name=John", "name=Jane"},
 			expectErr: true,
 		},
+		{
+			name:     "input variable is allowed in run command",
+			varFlags: []string{"input=test value"},
+			expected: map[string]string{"input": "test value"},
+		},
 	}
 
 	for _, tt := range tests {

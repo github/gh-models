@@ -507,4 +507,16 @@ messages:
 		require.Contains(t, *userMsg.Content, "about machine learning")
 		require.Contains(t, *userMsg.Content, "academic style")
 	})
+
+	t.Run("rejects input as template variable", func(t *testing.T) {
+		client := azuremodels.NewMockClient()
+		cfg := command.NewConfig(new(bytes.Buffer), new(bytes.Buffer), client, true, 100)
+
+		cmd := NewGenerateCommand(cfg)
+		cmd.SetArgs([]string{"--var", "input=test", "dummy.yml"})
+
+		err := cmd.Execute()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "'input' is a reserved variable name and cannot be used with --var")
+	})
 }

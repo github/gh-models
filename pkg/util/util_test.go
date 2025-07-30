@@ -91,11 +91,6 @@ func TestParseTemplateVariables(t *testing.T) {
 			varFlags:  []string{"name=Alice", "name=Bob"},
 			expectErr: true,
 		},
-		{
-			name:      "reserved input variable",
-			varFlags:  []string{"input=test"},
-			expectErr: true,
-		},
 	}
 
 	for _, tt := range tests {
