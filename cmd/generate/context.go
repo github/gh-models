@@ -26,7 +26,7 @@ func (h *generateCommandHandler) CreateContextFromPrompt() (*PromptPexContext, e
 	}
 
 	runID := fmt.Sprintf("run_%d", time.Now().Unix())
-	context := &PromptPexContext{
+	promptContext := &PromptPexContext{
 		// Unique identifier for the run
 		RunID: runID,
 		// The prompt content and metadata
@@ -50,21 +50,21 @@ func (h *generateCommandHandler) CreateContextFromPrompt() (*PromptPexContext, e
 		} else {
 			sessionInfo = fmt.Sprintf("reloading session file at %s", *h.sessionFile)
 			// Check if prompt hashes match
-			if existingContext.PromptHash != context.PromptHash {
+			if existingContext.PromptHash != promptContext.PromptHash {
 				return nil, fmt.Errorf("prompt changed unable to reuse session file")
 			}
 
 			// Merge existing context data
 			if existingContext != nil {
-				context = mergeContexts(existingContext, context)
+				promptContext = mergeContexts(existingContext, promptContext)
 			}
 		}
 	}
 
-	h.WriteToParagraph(RenderMessagesToString(context.Prompt.Messages))
+	h.WriteToParagraph(RenderMessagesToString(promptContext.Prompt.Messages))
 	h.WriteEndBox(sessionInfo)
 
-	return context, nil
+	return promptContext, nil
 }
 
 // loadContextFromFile loads a PromptPexContext from a JSON file

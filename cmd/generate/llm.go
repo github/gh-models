@@ -60,7 +60,10 @@ func (h *generateCommandHandler) callModelWithRetry(step string, req azuremodels
 				if errors.Is(err, context.Canceled) || strings.Contains(err.Error(), "EOF") {
 					break
 				}
-				reader.Close()
+				if closeErr := reader.Close(); closeErr != nil {
+					// Log close error but don't override the original error
+					h.cfg.WriteToOut(fmt.Sprintf("Warning: failed to close reader: %v\n", closeErr))
+				}
 				sp.Stop()
 				return "", err
 			}
