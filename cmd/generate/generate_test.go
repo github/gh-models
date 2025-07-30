@@ -11,7 +11,9 @@ import (
 	"testing"
 
 	"github.com/github/gh-models/internal/azuremodels"
+	"github.com/github/gh-models/internal/sse"
 	"github.com/github/gh-models/pkg/command"
+	"github.com/spf13/pflag"
 	"github.com/stretchr/testify/require"
 )
 
@@ -391,5 +393,221 @@ messages:
 		_, err := handler.CreateContextFromPrompt()
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "failed to load prompt file")
+	})
+}
+
+func TestParseTemplateVariables(t *testing.T) {
+	tests := []struct {
+		name      string
+		varFlags  []string
+		expected  map[string]string
+		expectErr bool
+	}{
+		{
+			name:     "empty flags",
+			varFlags: []string{},
+			expected: map[string]string{},
+		},
+		{
+			name:     "single variable",
+			varFlags: []string{"name=Alice"},
+			expected: map[string]string{"name": "Alice"},
+		},
+		{
+			name:     "multiple variables",
+			varFlags: []string{"name=Alice", "age=30", "city=Boston"},
+			expected: map[string]string{"name": "Alice", "age": "30", "city": "Boston"},
+		},
+		{
+			name:     "variable with spaces in value",
+			varFlags: []string{"description=Hello World"},
+			expected: map[string]string{"description": "Hello World"},
+		},
+		{
+			name:     "variable with equals in value",
+			varFlags: []string{"equation=x=y+1"},
+			expected: map[string]string{"equation": "x=y+1"},
+		},
+		{
+			name:     "variable with empty value",
+			varFlags: []string{"empty="},
+			expected: map[string]string{"empty": ""},
+		},
+		{
+			name:     "variable with whitespace around key",
+			varFlags: []string{" name =Alice"},
+			expected: map[string]string{"name": "Alice"},
+		},
+		{
+			name:     "preserve whitespace in value",
+			varFlags: []string{"message= Hello World "},
+			expected: map[string]string{"message": " Hello World "},
+		},
+		{
+			name:      "empty string flag is ignored",
+			varFlags:  []string{"", "name=Alice"},
+			expected:  map[string]string{"name": "Alice"},
+			expectErr: false,
+		},
+		{
+			name:      "whitespace only flag is ignored",
+			varFlags:  []string{"   ", "name=Alice"},
+			expected:  map[string]string{"name": "Alice"},
+			expectErr: false,
+		},
+		{
+			name:      "missing equals sign",
+			varFlags:  []string{"name"},
+			expectErr: true,
+		},
+		{
+			name:      "missing equals sign with multiple vars",
+			varFlags:  []string{"name=Alice", "age"},
+			expectErr: true,
+		},
+		{
+			name:      "empty key",
+			varFlags:  []string{"=value"},
+			expectErr: true,
+		},
+		{
+			name:      "whitespace only key",
+			varFlags:  []string{" =value"},
+			expectErr: true,
+		},
+		{
+			name:      "duplicate keys",
+			varFlags:  []string{"name=Alice", "name=Bob"},
+			expectErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			flags := pflag.NewFlagSet("test", pflag.ContinueOnError)
+			flags.StringSlice("var", tt.varFlags, "test flag")
+
+			result, err := parseTemplateVariables(flags)
+
+			if tt.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+				require.Equal(t, tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestGenerateCommandWithTemplateVariables(t *testing.T) {
+	t.Run("parse template variables in command handler", func(t *testing.T) {
+		client := azuremodels.NewMockClient()
+		cfg := command.NewConfig(new(bytes.Buffer), new(bytes.Buffer), client, true, 100)
+
+		cmd := NewGenerateCommand(cfg)
+		args := []string{
+			"--var", "name=Bob",
+			"--var", "location=Seattle",
+			"dummy.yml",
+		}
+
+		// Parse flags without executing
+		err := cmd.ParseFlags(args[:len(args)-1]) // Exclude positional arg
+		require.NoError(t, err)
+
+		// Test that the parseTemplateVariables function works correctly
+		templateVars, err := parseTemplateVariables(cmd.Flags())
+		require.NoError(t, err)
+		require.Equal(t, map[string]string{
+			"name":     "Bob",
+			"location": "Seattle",
+		}, templateVars)
+	})
+
+	t.Run("runSingleTestWithContext applies template variables", func(t *testing.T) {
+		// Create test prompt file with template variables
+		const yamlBody = `
+name: Template Variable Test
+description: Test prompt with template variables
+model: openai/gpt-4o-mini
+messages:
+  - role: system
+    content: "You are a helpful assistant for {{name}}."
+  - role: user
+    content: "Tell me about {{topic}} in {{style}} style."
+`
+
+		tmpDir := t.TempDir()
+		promptFile := filepath.Join(tmpDir, "test.prompt.yml")
+		err := os.WriteFile(promptFile, []byte(yamlBody), 0644)
+		require.NoError(t, err)
+
+		// Setup mock client to capture template-rendered messages
+		var capturedOptions azuremodels.ChatCompletionOptions
+		client := azuremodels.NewMockClient()
+		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
+			capturedOptions = opt
+			
+			// Create a proper mock response with reader
+			mockResponse := "test response"
+			mockCompletion := azuremodels.ChatCompletion{
+				Choices: []azuremodels.ChatChoice{
+					{
+						Message: &azuremodels.ChatChoiceMessage{
+							Content: &mockResponse,
+						},
+					},
+				},
+			}
+			
+			return &azuremodels.ChatCompletionResponse{
+				Reader: sse.NewMockEventReader([]azuremodels.ChatCompletion{mockCompletion}),
+			}, nil
+		}
+
+		out := new(bytes.Buffer)
+		cfg := command.NewConfig(out, out, client, true, 100)
+
+		// Create handler with template variables
+		templateVars := map[string]string{
+			"name":  "Alice",
+			"topic": "machine learning",
+			"style": "academic",
+		}
+
+		handler := &generateCommandHandler{
+			ctx:          context.Background(),
+			cfg:          cfg,
+			client:       client,
+			options:      GetDefaultOptions(),
+			promptFile:   promptFile,
+			org:          "",
+			templateVars: templateVars,
+		}
+
+		// Create context from prompt
+		promptCtx, err := handler.CreateContextFromPrompt()
+		require.NoError(t, err)
+
+		// Call runSingleTestWithContext directly
+		_, err = handler.runSingleTestWithContext("test input", "openai/gpt-4o-mini", promptCtx)
+		require.NoError(t, err)
+
+		// Verify that template variables were applied correctly
+		require.NotNil(t, capturedOptions.Messages)
+		require.Len(t, capturedOptions.Messages, 2)
+
+		// Check system message
+		systemMsg := capturedOptions.Messages[0]
+		require.Equal(t, azuremodels.ChatMessageRoleSystem, systemMsg.Role)
+		require.NotNil(t, systemMsg.Content)
+		require.Contains(t, *systemMsg.Content, "helpful assistant for Alice")
+
+		// Check user message
+		userMsg := capturedOptions.Messages[1]
+		require.Equal(t, azuremodels.ChatMessageRoleUser, userMsg.Role)
+		require.NotNil(t, userMsg.Content)
+		require.Contains(t, *userMsg.Content, "about machine learning")
+		require.Contains(t, *userMsg.Content, "academic style")
 	})
 }
