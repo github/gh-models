@@ -129,7 +129,7 @@ func AddCommandLineFlags(cmd *cobra.Command) {
 	flags.String("instruction-tests", "", "Custom system instruction for tests generation phase")
 }
 
-// parseFlags parses command-line flags and applies them to the options
+// ParseFlags parses command-line flags and applies them to the options
 func ParseFlags(cmd *cobra.Command, options *PromptPexOptions) error {
 	flags := cmd.Flags()
 	// Parse effort first so it can set defaults
