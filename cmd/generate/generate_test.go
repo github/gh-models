@@ -67,7 +67,6 @@ func TestParseFlags(t *testing.T) {
 			args: []string{},
 			validate: func(t *testing.T, opts *PromptPexOptions) {
 				require.Equal(t, 3, opts.TestsPerRule)
-				require.Equal(t, 2, opts.RunsPerTest)
 			},
 		},
 		{

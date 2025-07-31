@@ -146,6 +146,12 @@ gh models generate --session-file my_prompt.session.json my_prompt.prompt.yml
 gh models generate --instruction-intent "Focus on edge cases" my_prompt.prompt.yml
 ```
 
+The `effort` flag controls a few flags in the test generation engine and is a tradeoff
+between how much tests you want generated and how much tokens/time you are willing to spend.
+- `low` should be used to do a quick try of the test generation. It limits the number of rules to `3`.
+- `medium` provides much better coverage
+- `high` spends more token per rule to generate tests, which typically leads to longer, more complex inputs
+
 The command supports custom instructions for different phases of test generation:
 - `--instruction-intent`: Custom system instruction for intent generation
 - `--instruction-inputspec`: Custom system instruction for input specification generation  

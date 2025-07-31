@@ -3,7 +3,6 @@ package generate
 // EffortConfiguration defines the configuration for different effort levels
 type EffortConfiguration struct {
 	TestsPerRule              int
-	RunsPerTest               int
 	MaxRules                  int
 	MaxRulesPerTestGeneration int
 	RulesPerGen               int
@@ -17,7 +16,6 @@ func GetEffortConfiguration(effort string) *EffortConfiguration {
 		return &EffortConfiguration{
 			MaxRules:                  3,
 			TestsPerRule:              2,
-			RunsPerTest:               1,
 			MaxRulesPerTestGeneration: 5,
 			RulesPerGen:               10,
 		}
@@ -25,7 +23,6 @@ func GetEffortConfiguration(effort string) *EffortConfiguration {
 		return &EffortConfiguration{
 			MaxRules:                  20,
 			TestsPerRule:              3,
-			RunsPerTest:               1,
 			MaxRulesPerTestGeneration: 5,
 			RulesPerGen:               5,
 		}
@@ -54,9 +51,6 @@ func ApplyEffortConfiguration(options *PromptPexOptions, effort string) {
 	// Apply configuration settings only if not already set
 	if options.TestsPerRule == 0 {
 		options.TestsPerRule = config.TestsPerRule
-	}
-	if options.RunsPerTest == 0 {
-		options.RunsPerTest = config.RunsPerTest
 	}
 	if options.MaxRules == 0 {
 		options.MaxRules = config.MaxRules

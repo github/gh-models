@@ -4,7 +4,6 @@ package generate
 func GetDefaultOptions() *PromptPexOptions {
 	return &PromptPexOptions{
 		TestsPerRule:       3,
-		RunsPerTest:        2,
 		RulesPerGen:        3,
 		MaxRulesPerTestGen: 3,
 		Verbose:            false,
