@@ -139,7 +139,7 @@ gh models generate --groundtruth-model "openai/gpt-4.1" my_prompt.prompt.yml
 # Disable groundtruth generation
 gh models generate --groundtruth-model "none" my_prompt.prompt.yml
 
-# Load from existing session file
+# Load from an existing session file (or create a new one if needed)
 gh models generate --session-file my_prompt.session.json my_prompt.prompt.yml
 
 # Custom instructions for specific generation phases
