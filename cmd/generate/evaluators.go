@@ -7,7 +7,7 @@ import (
 	"github.com/github/gh-models/pkg/prompt"
 )
 
-// generateRulesEvaluatorSystemPrompt generates the system prompt for rules evaluation
+// GenerateRulesEvaluator generates the system prompt for rules evaluation
 func (h *generateCommandHandler) GenerateRulesEvaluator(context *PromptPexContext) prompt.Evaluator {
 	// Get the original prompt content
 	promptContent := RenderMessagesToString(context.Prompt.Messages)
