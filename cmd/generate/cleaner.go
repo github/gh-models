@@ -31,7 +31,8 @@ func SplitLines(text string) []string {
 	return lines
 }
 
-func UnBacket(text string) string {
+// Unbracket removes leading and trailing square brackets.
+func Unbracket(text string) string {
 	// Remove leading and trailing square brackets
 	if strings.HasPrefix(text, "[") && strings.HasSuffix(text, "]") {
 		text = strings.TrimPrefix(text, "[")
