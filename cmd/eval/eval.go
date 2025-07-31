@@ -126,8 +126,7 @@ func NewEvalCommand(cfg *command.Config) *cobra.Command {
 				org:        org,
 			}
 
-			ctx := cmd.Context()
-			err = handler.runEvaluation(ctx)
+			err = handler.runEvaluation(cmd.Context())
 			if err == FailedTests {
 				// Cobra by default will show the help message when an error occurs,
 				// which is not what we want for failed evaluations.
