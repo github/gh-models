@@ -2,6 +2,8 @@
 
 Use the GitHub Models service from the CLI!
 
+This repository implements the GitHub Models CLI extension (`gh models`), enabling users to interact with AI models via the `gh` CLI. The extension supports inference, prompt evaluation, model listing, and test generation.
+
 ## Using
 
 ### Prerequisites
