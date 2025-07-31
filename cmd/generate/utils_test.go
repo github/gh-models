@@ -4,47 +4,6 @@ import (
 	"testing"
 )
 
-func TestFloat32Ptr(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    float32
-		expected float32
-	}{
-		{
-			name:     "positive value",
-			input:    3.14,
-			expected: 3.14,
-		},
-		{
-			name:     "negative value",
-			input:    -2.5,
-			expected: -2.5,
-		},
-		{
-			name:     "zero value",
-			input:    0.0,
-			expected: 0.0,
-		},
-		{
-			name:     "large value",
-			input:    999999.99,
-			expected: 999999.99,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := Float32Ptr(tt.input)
-			if result == nil {
-				t.Fatalf("Float32Ptr returned nil")
-			}
-			if *result != tt.expected {
-				t.Errorf("Float32Ptr(%f) = %f, want %f", tt.input, *result, tt.expected)
-			}
-		})
-	}
-}
-
 func TestExtractJSON(t *testing.T) {
 	tests := []struct {
 		name     string

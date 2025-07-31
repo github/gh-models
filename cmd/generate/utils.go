@@ -5,11 +5,6 @@ import (
 	"strings"
 )
 
-// Float32Ptr returns a pointer to a float32 value
-func Float32Ptr(f float32) *float32 {
-	return &f
-}
-
 // ExtractJSON extracts JSON content from a string that might be wrapped in markdown
 func ExtractJSON(content string) string {
 	// Remove markdown code blocks
