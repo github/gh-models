@@ -34,7 +34,3 @@ clean:
 	@echo "==> cleaning up <=="
 	rm -rf ./gh-models
 .PHONY: clean
-
-prd:
-	@echo "==> pull request description <=="
-	npx genaiscript run prd --pull-request-description --no-run-trace
