@@ -40,7 +40,8 @@ func Unbracket(text string) string {
 	return text
 }
 
-func UnXml(text string) string {
+// Unxml removes leading and trailing XML tags, like `<foo>` and `</foo>`, from the given string.
+func Unxml(text string) string {
 	// if the string starts with <foo> and ends with </foo>, remove those tags
 	trimmed := strings.TrimSpace(text)
 
