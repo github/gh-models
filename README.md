@@ -95,34 +95,6 @@ gh models generate my_prompt.prompt.yml
 
 The `generate` command analyzes your prompt file and automatically creates test cases to evaluate the prompt's behavior across different scenarios and edge cases. This helps ensure your prompts are robust and perform as expected.
 
-##### Advanced options
-
-You can customize the test generation process with various options:
-
-```shell
-# Specify effort level (low, medium, high)
-gh models generate --effort high my_prompt.prompt.yml
-
-# Use a specific model for groundtruth generation
-gh models generate --groundtruth-model "openai/gpt-4.1" my_prompt.prompt.yml
-
-# Disable groundtruth generation
-gh models generate --groundtruth-model "none" my_prompt.prompt.yml
-
-# Load from existing session file
-gh models generate --session-file my_prompt.session.json my_prompt.prompt.yml
-
-# Custom instructions for specific generation phases
-gh models generate --instruction-intent "Focus on edge cases" my_prompt.prompt.yml
-```
-
-The command supports custom instructions for different phases of test generation:
-- `--instruction-intent`: Custom system instruction for intent generation
-- `--instruction-inputspec`: Custom system instruction for input specification generation  
-- `--instruction-outputrules`: Custom system instruction for output rules generation
-- `--instruction-inverseoutputrules`: Custom system instruction for inverse output rules generation
-- `--instruction-tests`: Custom system instruction for tests generation
-
 ##### Understanding PromptPex
 
 The `generate` command is based on [PromptPex](https://github.com/microsoft/promptpex), a Microsoft Research framework for systematic prompt testing. PromptPex follows a structured approach to generate comprehensive test cases by:
@@ -151,7 +123,36 @@ graph TD
     OR ==> PPT
     PUT ==> PPT
     IOR ==> PPT
-```  
+```
+
+##### Advanced options
+
+You can customize the test generation process with various options:
+
+```shell
+# Specify effort level (low, medium, high)
+gh models generate --effort high my_prompt.prompt.yml
+
+# Use a specific model for groundtruth generation
+gh models generate --groundtruth-model "openai/gpt-4.1" my_prompt.prompt.yml
+
+# Disable groundtruth generation
+gh models generate --groundtruth-model "none" my_prompt.prompt.yml
+
+# Load from existing session file
+gh models generate --session-file my_prompt.session.json my_prompt.prompt.yml
+
+# Custom instructions for specific generation phases
+gh models generate --instruction-intent "Focus on edge cases" my_prompt.prompt.yml
+```
+
+The command supports custom instructions for different phases of test generation:
+- `--instruction-intent`: Custom system instruction for intent generation
+- `--instruction-inputspec`: Custom system instruction for input specification generation  
+- `--instruction-outputrules`: Custom system instruction for output rules generation
+- `--instruction-inverseoutputrules`: Custom system instruction for inverse output rules generation
+- `--instruction-tests`: Custom system instruction for tests generation
+
 
 ## Notice
 
