@@ -460,7 +460,15 @@ func (h *generateCommandHandler) runSingleTestWithContext(input string, modelNam
 	openaiMessages := []azuremodels.ChatMessage{}
 	for _, msg := range messages {
 		templateData := make(map[string]interface{})
+
+		// Add the input variable (backward compatibility)
 		templateData["input"] = input
+
+		// Add custom variables
+		for key, value := range h.templateVars {
+			templateData[key] = value
+		}
+
 		// Replace template variables in content
 		content, err := prompt.TemplateString(msg.Content, templateData)
 		if err != nil {

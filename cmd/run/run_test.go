@@ -470,6 +470,11 @@ func TestParseTemplateVariables(t *testing.T) {
 			varFlags:  []string{"name=John", "name=Jane"},
 			expectErr: true,
 		},
+		{
+			name:     "input variable is allowed in run command",
+			varFlags: []string{"input=test value"},
+			expected: map[string]string{"input": "test value"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -477,7 +482,7 @@ func TestParseTemplateVariables(t *testing.T) {
 			flags := pflag.NewFlagSet("test", pflag.ContinueOnError)
 			flags.StringSlice("var", tt.varFlags, "test flag")
 
-			result, err := parseTemplateVariables(flags)
+			result, err := util.ParseTemplateVariables(flags)
 
 			if tt.expectErr {
 				require.Error(t, err)

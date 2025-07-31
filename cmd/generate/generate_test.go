@@ -11,7 +11,9 @@ import (
 	"testing"
 
 	"github.com/github/gh-models/internal/azuremodels"
+	"github.com/github/gh-models/internal/sse"
 	"github.com/github/gh-models/pkg/command"
+	"github.com/github/gh-models/pkg/util"
 	"github.com/stretchr/testify/require"
 )
 
@@ -391,5 +393,130 @@ messages:
 		_, err := handler.CreateContextFromPrompt()
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "failed to load prompt file")
+	})
+}
+
+func TestGenerateCommandWithTemplateVariables(t *testing.T) {
+	t.Run("parse template variables in command handler", func(t *testing.T) {
+		client := azuremodels.NewMockClient()
+		cfg := command.NewConfig(new(bytes.Buffer), new(bytes.Buffer), client, true, 100)
+
+		cmd := NewGenerateCommand(cfg)
+		args := []string{
+			"--var", "name=Bob",
+			"--var", "location=Seattle",
+			"dummy.yml",
+		}
+
+		// Parse flags without executing
+		err := cmd.ParseFlags(args[:len(args)-1]) // Exclude positional arg
+		require.NoError(t, err)
+
+		// Test that the util.ParseTemplateVariables function works correctly
+		templateVars, err := util.ParseTemplateVariables(cmd.Flags())
+		require.NoError(t, err)
+		require.Equal(t, map[string]string{
+			"name":     "Bob",
+			"location": "Seattle",
+		}, templateVars)
+	})
+
+	t.Run("runSingleTestWithContext applies template variables", func(t *testing.T) {
+		// Create test prompt file with template variables
+		const yamlBody = `
+name: Template Variable Test
+description: Test prompt with template variables
+model: openai/gpt-4o-mini
+messages:
+  - role: system
+    content: "You are a helpful assistant for {{name}}."
+  - role: user
+    content: "Tell me about {{topic}} in {{style}} style."
+`
+
+		tmpDir := t.TempDir()
+		promptFile := filepath.Join(tmpDir, "test.prompt.yml")
+		err := os.WriteFile(promptFile, []byte(yamlBody), 0644)
+		require.NoError(t, err)
+
+		// Setup mock client to capture template-rendered messages
+		var capturedOptions azuremodels.ChatCompletionOptions
+		client := azuremodels.NewMockClient()
+		client.MockGetChatCompletionStream = func(ctx context.Context, opt azuremodels.ChatCompletionOptions, org string) (*azuremodels.ChatCompletionResponse, error) {
+			capturedOptions = opt
+
+			// Create a proper mock response with reader
+			mockResponse := "test response"
+			mockCompletion := azuremodels.ChatCompletion{
+				Choices: []azuremodels.ChatChoice{
+					{
+						Message: &azuremodels.ChatChoiceMessage{
+							Content: &mockResponse,
+						},
+					},
+				},
+			}
+
+			return &azuremodels.ChatCompletionResponse{
+				Reader: sse.NewMockEventReader([]azuremodels.ChatCompletion{mockCompletion}),
+			}, nil
+		}
+
+		out := new(bytes.Buffer)
+		cfg := command.NewConfig(out, out, client, true, 100)
+
+		// Create handler with template variables
+		templateVars := map[string]string{
+			"name":  "Alice",
+			"topic": "machine learning",
+			"style": "academic",
+		}
+
+		handler := &generateCommandHandler{
+			ctx:          context.Background(),
+			cfg:          cfg,
+			client:       client,
+			options:      GetDefaultOptions(),
+			promptFile:   promptFile,
+			org:          "",
+			templateVars: templateVars,
+		}
+
+		// Create context from prompt
+		promptCtx, err := handler.CreateContextFromPrompt()
+		require.NoError(t, err)
+
+		// Call runSingleTestWithContext directly
+		_, err = handler.runSingleTestWithContext("test input", "openai/gpt-4o-mini", promptCtx)
+		require.NoError(t, err)
+
+		// Verify that template variables were applied correctly
+		require.NotNil(t, capturedOptions.Messages)
+		require.Len(t, capturedOptions.Messages, 2)
+
+		// Check system message
+		systemMsg := capturedOptions.Messages[0]
+		require.Equal(t, azuremodels.ChatMessageRoleSystem, systemMsg.Role)
+		require.NotNil(t, systemMsg.Content)
+		require.Contains(t, *systemMsg.Content, "helpful assistant for Alice")
+
+		// Check user message
+		userMsg := capturedOptions.Messages[1]
+		require.Equal(t, azuremodels.ChatMessageRoleUser, userMsg.Role)
+		require.NotNil(t, userMsg.Content)
+		require.Contains(t, *userMsg.Content, "about machine learning")
+		require.Contains(t, *userMsg.Content, "academic style")
+	})
+
+	t.Run("rejects input as template variable", func(t *testing.T) {
+		client := azuremodels.NewMockClient()
+		cfg := command.NewConfig(new(bytes.Buffer), new(bytes.Buffer), client, true, 100)
+
+		cmd := NewGenerateCommand(cfg)
+		cmd.SetArgs([]string{"--var", "input=test", "dummy.yml"})
+
+		err := cmd.Execute()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "'input' is a reserved variable name and cannot be used with --var")
 	})
 }

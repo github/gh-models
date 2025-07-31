@@ -13,13 +13,14 @@ import (
 )
 
 type generateCommandHandler struct {
-	ctx         context.Context
-	cfg         *command.Config
-	client      azuremodels.Client
-	options     *PromptPexOptions
-	promptFile  string
-	org         string
-	sessionFile *string
+	ctx          context.Context
+	cfg          *command.Config
+	client       azuremodels.Client
+	options      *PromptPexOptions
+	promptFile   string
+	org          string
+	sessionFile  *string
+	templateVars map[string]string
 }
 
 // NewGenerateCommand returns a new command to generate tests using PromptPex.
@@ -37,6 +38,7 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 			gh models generate prompt.yml
 			gh models generate --org my-org --groundtruth-model "openai/gpt-4.1" prompt.yml
 			gh models generate --session-file prompt.session.json prompt.yml
+			gh models generate --var name=Alice --var topic="machine learning" prompt.yml
 		`),
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -48,6 +50,17 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 			// Parse flags and apply to options
 			if err := ParseFlags(cmd, options); err != nil {
 				return fmt.Errorf("failed to parse flags: %w", err)
+			}
+
+			// Parse template variables from flags
+			templateVars, err := util.ParseTemplateVariables(cmd.Flags())
+			if err != nil {
+				return err
+			}
+
+			// Check for reserved keys specific to generate command
+			if _, exists := templateVars["input"]; exists {
+				return fmt.Errorf("'input' is a reserved variable name and cannot be used with --var")
 			}
 
 			// Get organization
@@ -67,13 +80,14 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 
 			// Create the command handler
 			handler := &generateCommandHandler{
-				ctx:         ctx,
-				cfg:         cfg,
-				client:      cfg.Client,
-				options:     options,
-				promptFile:  promptFile,
-				org:         org,
-				sessionFile: util.Ptr(sessionFile),
+				ctx:          ctx,
+				cfg:          cfg,
+				client:       cfg.Client,
+				options:      options,
+				promptFile:   promptFile,
+				org:          org,
+				sessionFile:  util.Ptr(sessionFile),
+				templateVars: templateVars,
 			}
 
 			// Create prompt context
@@ -105,6 +119,7 @@ func AddCommandLineFlags(cmd *cobra.Command) {
 	flags.String("effort", "", "Effort level (low, medium, high)")
 	flags.String("groundtruth-model", "", "Model to use for generating groundtruth outputs. Defaults to openai/gpt-4o. Use 'none' to disable groundtruth generation.")
 	flags.String("session-file", "", "Session file to load existing context from")
+	flags.StringSlice("var", []string{}, "Template variables for prompt files (can be used multiple times: --var name=value)")
 
 	// Custom instruction flags for each phase
 	flags.String("instruction-intent", "", "Custom system instruction for intent generation phase")
