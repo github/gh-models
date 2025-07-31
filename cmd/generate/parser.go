@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// parseRules removes numbering, bullets, and extraneous "Rules:" lines from a rules text block.
+// ParseRules removes numbering, bullets, and extraneous "Rules:" lines from a rules text block.
 func ParseRules(text string) []string {
 	if IsUnassistedResponse(text) {
 		return nil
