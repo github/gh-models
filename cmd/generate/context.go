@@ -82,7 +82,7 @@ func loadContextFromFile(filePath string) (*PromptPexContext, error) {
 	return &context, nil
 }
 
-// saveContext saves the context to the session file
+// SaveContext saves the context to the session file
 func (h *generateCommandHandler) SaveContext(context *PromptPexContext) error {
 	if h.sessionFile == nil || *h.sessionFile == "" {
 		return nil // No session file specified, skip saving
