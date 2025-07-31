@@ -11,7 +11,7 @@ func IsUnassistedResponse(text string) bool {
 	return re.MatchString(strings.ToLower(text))
 }
 
-// unfence removes code fences and splits text into lines.
+// Unfence removes Markdown code fences and splits text into lines.
 func Unfence(text string) string {
 	text = strings.TrimSpace(text)
 	// Remove triple backtick code fences if present
