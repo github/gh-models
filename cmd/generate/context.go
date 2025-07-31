@@ -9,7 +9,7 @@ import (
 	"github.com/github/gh-models/pkg/prompt"
 )
 
-// createContext creates a new PromptPexContext from a prompt file
+// CreateContextFromPrompt creates a new PromptPexContext from a prompt file
 func (h *generateCommandHandler) CreateContextFromPrompt() (*PromptPexContext, error) {
 
 	h.WriteStartBox("Prompt", h.promptFile)
