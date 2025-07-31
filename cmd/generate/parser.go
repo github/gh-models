@@ -12,7 +12,7 @@ func ParseRules(text string) []string {
 	if IsUnassistedResponse(text) {
 		return nil
 	}
-	lines := SplitLines(UnBacket(UnXml(Unfence(text))))
+	lines := SplitLines(Unbracket(Unxml(Unfence(text))))
 	itemsRe := regexp.MustCompile(`^\s*(\d+\.|_|-|\*)\s+`) // remove leading item numbers or bullets
 	rulesRe := regexp.MustCompile(`^\s*(Inverse\s+(Output\s+)?)?Rules:\s*$`)
 	pythonWrapRe := regexp.MustCompile(`^\["?(.*?)"?\]$`)
