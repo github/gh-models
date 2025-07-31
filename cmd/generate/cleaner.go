@@ -25,7 +25,7 @@ func Unfence(text string) string {
 	return text
 }
 
-// splits text into lines.
+// SplitLines splits text into lines.
 func SplitLines(text string) []string {
 	lines := strings.Split(text, "\n")
 	return lines
