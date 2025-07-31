@@ -119,7 +119,7 @@ func AddCommandLineFlags(cmd *cobra.Command) {
 	flags.String("effort", "", "Effort level (low, medium, high)")
 	flags.String("groundtruth-model", "", "Model to use for generating groundtruth outputs. Defaults to openai/gpt-4o. Use 'none' to disable groundtruth generation.")
 	flags.String("session-file", "", "Session file to load existing context from")
-	flags.StringSlice("var", []string{}, "Template variables for prompt files (can be used multiple times: --var name=value)")
+	flags.StringArray("var", []string{}, "Template variables for prompt files (can be used multiple times: --var name=value)")
 
 	// Custom instruction flags for each phase
 	flags.String("instruction-intent", "", "Custom system instruction for intent generation phase")

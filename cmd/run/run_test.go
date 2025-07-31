@@ -451,6 +451,11 @@ func TestParseTemplateVariables(t *testing.T) {
 			expected: map[string]string{"equation": "x = y + 2"},
 		},
 		{
+			name:     "value with commas",
+			varFlags: []string{"city=paris, milan", "countries=france, italy, spain"},
+			expected: map[string]string{"city": "paris, milan", "countries": "france, italy, spain"},
+		},
+		{
 			name:     "empty strings are skipped",
 			varFlags: []string{"", "name=John", "  "},
 			expected: map[string]string{"name": "John"},
@@ -480,7 +485,7 @@ func TestParseTemplateVariables(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			flags := pflag.NewFlagSet("test", pflag.ContinueOnError)
-			flags.StringSlice("var", tt.varFlags, "test flag")
+			flags.StringArray("var", tt.varFlags, "test flag")
 
 			result, err := util.ParseTemplateVariables(flags)
 

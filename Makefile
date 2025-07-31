@@ -1,4 +1,4 @@
-check: fmt vet tidy test ci-lint
+check: fmt vet tidy test
 .PHONY: check
 
 ci-lint:

@@ -62,7 +62,7 @@ func (h *generateCommandHandler) callModelWithRetry(step string, req azuremodels
 				}
 				if closeErr := reader.Close(); closeErr != nil {
 					// Log close error but don't override the original error
-					fmt.Fprintf(h.cfg.ErrOut, "Warning: failed to close reader: %v\n", closeErr)
+					h.cfg.WriteToOut(fmt.Sprintf("Warning: failed to close reader: %v\n", closeErr))
 				}
 				sp.Stop()
 				return "", err

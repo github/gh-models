@@ -96,7 +96,7 @@ func TestParseTemplateVariables(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			flags := pflag.NewFlagSet("test", pflag.ContinueOnError)
-			flags.StringSlice("var", tt.varFlags, "test flag")
+			flags.StringArray("var", tt.varFlags, "test flag")
 
 			result, err := ParseTemplateVariables(flags)
 

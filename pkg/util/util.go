@@ -22,9 +22,9 @@ func Ptr[T any](value T) *T {
 	return &value
 }
 
-// ParseTemplateVariables parses template variables from the --var flags
+// parseTemplateVariables parses template variables from the --var flags
 func ParseTemplateVariables(flags *pflag.FlagSet) (map[string]string, error) {
-	varFlags, err := flags.GetStringSlice("var")
+	varFlags, err := flags.GetStringArray("var")
 	if err != nil {
 		return nil, err
 	}
