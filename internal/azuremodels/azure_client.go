@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -64,6 +65,17 @@ func (c *AzureClient) GetChatCompletionStream(ctx context.Context, req ChatCompl
 		inferenceURL = fmt.Sprintf("%s/orgs/%s/%s", c.cfg.InferenceRoot, org, c.cfg.InferencePath)
 	} else {
 		inferenceURL = c.cfg.InferenceRoot + "/" + c.cfg.InferencePath
+	}
+
+	// Write request details to specified log file for debugging
+	httpLogFile := HTTPLogFileFromContext(ctx)
+	if httpLogFile != "" {
+		logFile, err := os.OpenFile(httpLogFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err == nil {
+			defer logFile.Close()
+			const logFormat = "### %s\n\nPOST %s\n\nAuthorization: Bearer {{$processEnv GITHUB_TOKEN}}\nContent-Type: application/json\nx-ms-useragent: github-cli-models\nx-ms-user-agent: github-cli-models\n\n%s\n\n"
+			fmt.Fprintf(logFile, logFormat, time.Now().Format(time.RFC3339), inferenceURL, string(bodyBytes))
+		}
 	}
 
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodPost, inferenceURL, body)

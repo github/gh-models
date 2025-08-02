@@ -1,6 +1,11 @@
 check: fmt vet tidy test
 .PHONY: check
 
+ci-lint:
+	@echo "==> running Go linter <=="
+	golangci-lint run --timeout 5m ./...
+.PHONY: ci-lint
+
 fmt:
 	@echo "==> running Go format <=="
 	gofmt -s -l -w .
@@ -20,3 +25,12 @@ test:
 	@echo "==> running Go tests <=="
 	go test -race -cover ./...
 .PHONY: test
+
+build:
+	script/build
+.PHONY: build
+
+clean:
+	@echo "==> cleaning up <=="
+	rm -rf ./gh-models
+.PHONY: clean

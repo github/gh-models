@@ -14,7 +14,7 @@ go version go1.22.x <arch>
 
 ## Building
 
-To build the project, run `script/build`. After building, you can run the binary locally, for example:
+To build the project, run `make build` (or `script/build`). After building, you can run the binary locally, for example:
 `./gh-models list`.
 
 ## Testing
