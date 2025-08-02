@@ -284,7 +284,7 @@ Inverse Output Rules:`, strings.Join(context.Rules, "\n"))
 func (h *generateCommandHandler) generateTests(context *PromptPexContext) error {
 	h.WriteStartBox("Tests", fmt.Sprintf("%d rules x %d tests per rule", len(context.Rules)+len(context.InverseRules), h.options.TestsPerRule))
 	if len(context.Tests) == 0 {
-		testsPerRule := 3
+		testsPerRule := GetDefaultOptions()
 		if h.options.TestsPerRule != 0 {
 			testsPerRule = h.options.TestsPerRule
 		}
