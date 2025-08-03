@@ -1,0 +1,33 @@
+name: "Integration Tests"
+
+on:
+  push:
+    branches:
+      - 'main'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  models: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    env:
+      GOPROXY: https://proxy.golang.org/,direct
+      GOPRIVATE: ""
+      GONOPROXY: ""
+      GONOSUMDB: github.com/github/*
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ">=1.22"
+          check-latest: true
+      
+      - name: Build and run integration tests
+        run: make integration-test
