@@ -35,10 +35,8 @@ clean:
 	rm -rf ./gh-models
 .PHONY: clean
 
-integration-test:
+integration-test: build
 	@echo "==> running integration tests <=="
-	@echo "Building binary first..."
-	@$(MAKE) build
 	@echo "Running integration tests against compiled binary..."
 	go test -tags=integration -v ./integration/...
 .PHONY: integration-test
