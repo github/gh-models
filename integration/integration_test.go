@@ -219,3 +219,29 @@ func TestIntegrationRun(t *testing.T) {
 	// which might be expensive for CI
 	require.Contains(t, stdout, "Prompts the specified model")
 }
+
+// TestIntegrationRunWithOrg tests the run command with --org flag
+func TestIntegrationRunWithOrg(t *testing.T) {
+	if !hasAuthToken() {
+		t.Skip("Skipping integration test - no GitHub authentication available")
+	}
+
+	// Test run command with --org flag (using help to avoid expensive API calls)
+	stdout, _, err := runCommand(t, "run", "--org", "test-org", "--help")
+	require.NoError(t, err, "Run help with --org should work")
+	require.Contains(t, stdout, "Prompts the specified model")
+	require.Contains(t, stdout, "--org string")
+}
+
+// TestIntegrationEvalWithOrg tests the eval command with --org flag
+func TestIntegrationEvalWithOrg(t *testing.T) {
+	if !hasAuthToken() {
+		t.Skip("Skipping integration test - no GitHub authentication available")
+	}
+
+	// Test eval command with --org flag (using help to avoid expensive API calls)
+	stdout, _, err := runCommand(t, "eval", "--org", "test-org", "--help")
+	require.NoError(t, err, "Eval help with --org should work")
+	require.Contains(t, stdout, "Runs evaluation tests against a model")
+	require.Contains(t, stdout, "--org string")
+}

@@ -6,6 +6,11 @@ build:
 	script/build
 .PHONY: build
 
+integration: build
+	@echo "==> running integration tests <=="
+	cd integration && go test -v -timeout=5m
+.PHONY: integration
+
 fmt:
 	@echo "==> running Go format <=="
 	gofmt -s -l -w .

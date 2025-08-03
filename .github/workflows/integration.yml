@@ -33,12 +33,10 @@ jobs:
       - name: Build gh-models binary
         run: make build
         
-      - name: Run integration tests (without auth)
+      - name: Run integration tests
         working-directory: integration
         run: |
           go mod tidy
           go test -v -timeout=5m
         env:
-          # Explicitly unset any GitHub tokens to test unauthenticated behavior
-          GITHUB_TOKEN: ""
-          GH_TOKEN: ""
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
