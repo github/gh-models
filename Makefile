@@ -7,10 +7,8 @@ build:
 .PHONY: build
 
 integration: build
-	@echo "==> building gh-models-test binary for integration tests <=="
-	go build -o gh-models-test main.go
 	@echo "==> running integration tests <=="
-	cd integration && go test -v -timeout=5m
+	cd integration && go mod tidy && go test -v -timeout=5m
 .PHONY: integration
 
 fmt:
