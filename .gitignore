@@ -1,6 +1,10 @@
 /gh-models
 /gh-models.exe
+/gh-models-test
 /gh-models-darwin-*
 /gh-models-linux-*
 /gh-models-windows-*
 /gh-models-android-*
+
+# Integration test dependencies
+integration/go.sum
