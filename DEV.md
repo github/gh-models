@@ -40,7 +40,7 @@ In addition to unit tests, we have integration tests that use the compiled binar
 
 ```shell
 # Build the binary first
-script/build
+make build
 
 # Run integration tests
 cd integration

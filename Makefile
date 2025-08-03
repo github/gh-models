@@ -1,6 +1,11 @@
 check: fmt vet tidy test
 .PHONY: check
 
+build:
+	@echo "==> building gh-models binary <=="
+	script/build
+.PHONY: build
+
 fmt:
 	@echo "==> running Go format <=="
 	gofmt -s -l -w .

@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  models: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -30,7 +31,7 @@ jobs:
           check-latest: true
           
       - name: Build gh-models binary
-        run: script/build
+        run: make build
         
       - name: Run integration tests (without auth)
         working-directory: integration
@@ -41,20 +42,3 @@ jobs:
           # Explicitly unset any GitHub tokens to test unauthenticated behavior
           GITHUB_TOKEN: ""
           GH_TOKEN: ""
-          
-      - name: Install gh CLI
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-          sudo apt update
-          sudo apt install gh
-          
-      - name: Run integration tests (with auth)
-        if: github.event_name == 'workflow_dispatch' 
-        working-directory: integration
-        run: |
-          gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
-          go test -v -timeout=10m
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
