@@ -1,0 +1,60 @@
+name: "Integration Tests"
+
+on:
+  push:
+    branches:
+      - 'main'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    env:
+      GOPROXY: https://proxy.golang.org/,direct
+      GOPRIVATE: ""
+      GONOPROXY: ""
+      GONOSUMDB: github.com/github/*
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ">=1.22"
+          check-latest: true
+          
+      - name: Build gh-models binary
+        run: script/build
+        
+      - name: Run integration tests (without auth)
+        working-directory: integration
+        run: |
+          go mod tidy
+          go test -v -timeout=5m
+        env:
+          # Explicitly unset any GitHub tokens to test unauthenticated behavior
+          GITHUB_TOKEN: ""
+          GH_TOKEN: ""
+          
+      - name: Install gh CLI
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+          sudo apt update
+          sudo apt install gh
+          
+      - name: Run integration tests (with auth)
+        if: github.event_name == 'workflow_dispatch' 
+        working-directory: integration
+        run: |
+          gh auth login --with-token <<< "${{ secrets.GITHUB_TOKEN }}"
+          go test -v -timeout=10m
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

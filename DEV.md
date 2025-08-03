@@ -34,6 +34,21 @@ make vet  # to find suspicious constructs
 make tidy # to keep dependencies up-to-date
 ```
 
+### Integration Tests
+
+In addition to unit tests, we have integration tests that use the compiled binary to test against live endpoints:
+
+```shell
+# Build the binary first
+script/build
+
+# Run integration tests
+cd integration
+go test -v
+```
+
+Integration tests are located in the `integration/` directory and automatically skip tests requiring authentication when no GitHub token is available. See `integration/README.md` for more details.
+
 ## Releasing
 
 When upgrading or installing the extension using `gh extension upgrade github/gh-models` or

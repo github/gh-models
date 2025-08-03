@@ -4,3 +4,6 @@
 /gh-models-linux-*
 /gh-models-windows-*
 /gh-models-android-*
+
+# Integration test dependencies
+integration/go.sum
