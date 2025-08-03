@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	binaryName      = "gh-models"
+	binaryName      = "gh-models-test"
 	timeoutDuration = 30 * time.Second
 )
 
