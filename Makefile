@@ -34,3 +34,11 @@ clean:
 	@echo "==> cleaning up <=="
 	rm -rf ./gh-models
 .PHONY: clean
+
+integration-test:
+	@echo "==> running integration tests <=="
+	@echo "Building binary first..."
+	@$(MAKE) build
+	@echo "Running integration tests against compiled binary..."
+	go test -tags=integration -v ./integration/...
+.PHONY: integration-test
