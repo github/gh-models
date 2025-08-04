@@ -181,7 +181,7 @@ func TestParseFlagsInvalidEffort(t *testing.T) {
 		{
 			name:        "invalid effort value",
 			effort:      "invalid",
-			expectedErr: "invalid effort level 'invalid': must be one of low, medium, or high",
+			expectedErr: "invalid effort level 'invalid': must be one of min, low, medium, or high",
 		},
 		{
 			name:        "empty effort value",
@@ -191,12 +191,12 @@ func TestParseFlagsInvalidEffort(t *testing.T) {
 		{
 			name:        "case sensitive effort",
 			effort:      "Low",
-			expectedErr: "invalid effort level 'Low': must be one of low, medium, or high",
+			expectedErr: "invalid effort level 'Low': must be one of min, low, medium, or high",
 		},
 		{
 			name:        "numeric effort",
 			effort:      "1",
-			expectedErr: "invalid effort level '1': must be one of low, medium, or high",
+			expectedErr: "invalid effort level '1': must be one of min, low, medium, or high",
 		},
 	}
 

@@ -176,7 +176,7 @@ Input Specification:`, RenderMessagesToString(context.Prompt.Messages))
 
 // generateOutputRules generates output rules for the prompt
 func (h *generateCommandHandler) generateOutputRules(context *PromptPexContext) error {
-	h.WriteStartBox("Output rules", "")
+	h.WriteStartBox("Output rules", fmt.Sprintf("max rules: %d", h.options.MaxRules))
 	if len(context.Rules) == 0 {
 		system := `Analyze the following prompt and generate a list of output rules.
 These rules should describe what makes a valid output from this prompt.
@@ -218,6 +218,10 @@ Output Rules:`, RenderMessagesToString(context.Prompt.Messages))
 		parsed := ParseRules(rules)
 		if parsed == nil {
 			return fmt.Errorf("failed to parse output rules: %s", rules)
+		}
+
+		if h.options.MaxRules > 0 && len(parsed) > h.options.MaxRules {
+			parsed = parsed[:h.options.MaxRules]
 		}
 
 		context.Rules = parsed
@@ -284,12 +288,7 @@ Inverse Output Rules:`, strings.Join(context.Rules, "\n"))
 func (h *generateCommandHandler) generateTests(context *PromptPexContext) error {
 	h.WriteStartBox("Tests", fmt.Sprintf("%d rules x %d tests per rule", len(context.Rules)+len(context.InverseRules), h.options.TestsPerRule))
 	if len(context.Tests) == 0 {
-		defaultOptions := GetDefaultOptions()
-		testsPerRule := defaultOptions.TestsPerRule
-		if h.options.TestsPerRule != 0 {
-			testsPerRule = h.options.TestsPerRule
-		}
-
+		testsPerRule := h.options.TestsPerRule
 		allRules := append(context.Rules, context.InverseRules...)
 
 		// Generate tests iteratively for groups of rules
@@ -313,7 +312,7 @@ func (h *generateCommandHandler) generateTests(context *PromptPexContext) error 
 			// render to terminal
 			for _, test := range groupTests {
 				h.WriteToLine(test.Input)
-				h.WriteToLine(fmt.Sprintf("    %s%s", BOX_END, test.Reasoning))
+				h.WriteToLine(fmt.Sprintf("  %s%s", BOX_END, test.Reasoning))
 			}
 
 			// Accumulate tests
@@ -531,7 +530,7 @@ func (h *generateCommandHandler) generateGroundtruth(context *PromptPexContext) 
 				h.cfg.WriteToOut(fmt.Sprintf("Saving context failed: %v", err))
 			}
 		}
-		h.WriteToLine(fmt.Sprintf("    %s%s", BOX_END, test.Expected)) // Write groundtruth output
+		h.WriteToLine(fmt.Sprintf("  %s%s", BOX_END, test.Expected)) // Write groundtruth output
 	}
 
 	h.WriteEndBox(fmt.Sprintf("%d items", len(context.Tests)))

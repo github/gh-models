@@ -130,7 +130,7 @@ graph TD
 You can customize the test generation process with various options:
 
 ```shell
-# Specify effort level (low, medium, high)
+# Specify effort level (min, low, medium, high)
 gh models generate --effort high my_prompt.prompt.yml
 
 # Use a specific model for groundtruth generation
@@ -148,6 +148,7 @@ gh models generate --instruction-intent "Focus on edge cases" my_prompt.prompt.y
 
 The `effort` flag controls a few flags in the test generation engine and is a tradeoff
 between how much tests you want generated and how much tokens/time you are willing to spend.
+- `min` is just enough to generate a few tests and make sure things are probably configured.
 - `low` should be used to do a quick try of the test generation. It limits the number of rules to `3`.
 - `medium` provides much better coverage
 - `high` spends more token per rule to generate tests, which typically leads to longer, more complex inputs

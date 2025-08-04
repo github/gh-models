@@ -116,7 +116,7 @@ func NewGenerateCommand(cfg *command.Config) *cobra.Command {
 func AddCommandLineFlags(cmd *cobra.Command) {
 	flags := cmd.Flags()
 	flags.String("org", "", "Organization to attribute usage to")
-	flags.String("effort", "", "Effort level (low, medium, high)")
+	flags.String("effort", "", "Effort level (min, low, medium, high)")
 	flags.String("groundtruth-model", "", "Model to use for generating groundtruth outputs. Defaults to openai/gpt-4o. Use 'none' to disable groundtruth generation.")
 	flags.String("session-file", "", "Session file to load existing context from")
 	flags.StringArray("var", []string{}, "Template variables for prompt files (can be used multiple times: --var name=value)")
@@ -135,8 +135,8 @@ func ParseFlags(cmd *cobra.Command, options *PromptPexOptions) error {
 	// Parse effort first so it can set defaults
 	if effort, _ := flags.GetString("effort"); effort != "" {
 		// Validate effort value
-		if effort != EffortLow && effort != EffortMedium && effort != EffortHigh {
-			return fmt.Errorf("invalid effort level '%s': must be one of %s, %s, or %s", effort, EffortLow, EffortMedium, EffortHigh)
+		if effort != EffortMin && effort != EffortLow && effort != EffortMedium && effort != EffortHigh {
+			return fmt.Errorf("invalid effort level '%s': must be one of %s, %s, %s, or %s", effort, EffortMin, EffortLow, EffortMedium, EffortHigh)
 		}
 		options.Effort = effort
 	}

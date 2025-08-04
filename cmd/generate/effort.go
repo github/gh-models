@@ -2,35 +2,37 @@ package generate
 
 // EffortConfiguration defines the configuration for different effort levels
 type EffortConfiguration struct {
-	TestsPerRule              int
-	MaxRules                  int
-	MaxRulesPerTestGeneration int
-	RulesPerGen               int
+	MaxRules     int
+	TestsPerRule int
+	RulesPerGen  int
 }
 
 // GetEffortConfiguration returns the configuration for a given effort level
 // Based on the reference TypeScript implementation in constants.mts
 func GetEffortConfiguration(effort string) *EffortConfiguration {
 	switch effort {
+	case EffortMin:
+		return &EffortConfiguration{
+			MaxRules:     3,
+			TestsPerRule: 1,
+			RulesPerGen:  100,
+		}
 	case EffortLow:
 		return &EffortConfiguration{
-			MaxRules:                  3,
-			TestsPerRule:              2,
-			MaxRulesPerTestGeneration: 5,
-			RulesPerGen:               10,
+			MaxRules:     10,
+			TestsPerRule: 1,
+			RulesPerGen:  10,
 		}
 	case EffortMedium:
 		return &EffortConfiguration{
-			MaxRules:                  20,
-			TestsPerRule:              3,
-			MaxRulesPerTestGeneration: 5,
-			RulesPerGen:               5,
+			MaxRules:     20,
+			TestsPerRule: 3,
+			RulesPerGen:  5,
 		}
 	case EffortHigh:
 		return &EffortConfiguration{
-			MaxRules:                  50,
-			MaxRulesPerTestGeneration: 2,
-			RulesPerGen:               3,
+			TestsPerRule: 4,
+			RulesPerGen:  3,
 		}
 	default:
 		return nil
@@ -43,22 +45,18 @@ func ApplyEffortConfiguration(options *PromptPexOptions, effort string) {
 		return
 	}
 
-	config := GetEffortConfiguration(effort)
-	if config == nil {
+	effortConfig := GetEffortConfiguration(effort)
+	if effortConfig == nil {
 		return
 	}
-
-	// Apply configuration settings only if not already set
-	if options.TestsPerRule == 0 {
-		options.TestsPerRule = config.TestsPerRule
+	// Apply effort if set
+	if effortConfig.TestsPerRule != 0 {
+		options.TestsPerRule = effortConfig.TestsPerRule
 	}
-	if options.MaxRules == 0 {
-		options.MaxRules = config.MaxRules
+	if effortConfig.MaxRules != 0 {
+		options.MaxRules = effortConfig.MaxRules
 	}
-	if options.MaxRulesPerTestGen == 0 {
-		options.MaxRulesPerTestGen = config.MaxRulesPerTestGeneration
-	}
-	if options.RulesPerGen == 0 {
-		options.RulesPerGen = config.RulesPerGen
+	if effortConfig.RulesPerGen != 0 {
+		options.RulesPerGen = effortConfig.RulesPerGen
 	}
 }

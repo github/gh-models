@@ -27,7 +27,6 @@ type PromptPexOptions struct {
 	TestsPerRule       int                    `yaml:"testsPerRule,omitempty" json:"testsPerRule,omitempty"`
 	RulesPerGen        int                    `yaml:"rulesPerGen,omitempty" json:"rulesPerGen,omitempty"`
 	MaxRules           int                    `yaml:"maxRules,omitempty" json:"maxRules,omitempty"`
-	MaxRulesPerTestGen int                    `yaml:"maxRulesPerTestGen,omitempty" json:"maxRulesPerTestGen,omitempty"`
 	IntentMaxTokens    int                    `yaml:"intentMaxTokens,omitempty" json:"intentMaxTokens,omitempty"`
 	InputSpecMaxTokens int                    `yaml:"inputSpecMaxTokens,omitempty" json:"inputSpecMaxTokens,omitempty"`
 
@@ -63,6 +62,7 @@ type PromptPexTest struct {
 
 // Effort levels
 const (
+	EffortMin    = "min"
 	EffortLow    = "low"
 	EffortMedium = "medium"
 	EffortHigh   = "high"
