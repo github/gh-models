@@ -6,5 +6,14 @@
 /gh-models-windows-*
 /gh-models-android-*
 
+# temporary debugging files
+**.http
+**.generate.json
+examples/*harm*
+
+# genaiscript
+.github/instructions/genaiscript.instructions.md
+genaisrc/
+
 # Integration test dependencies
 integration/go.sum

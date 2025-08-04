@@ -2,6 +2,8 @@
 
 Use the GitHub Models service from the CLI!
 
+This repository implements the GitHub Models CLI extension (`gh models`), enabling users to interact with AI models via the `gh` CLI. The extension supports inference, prompt evaluation, model listing, and test generation.
+
 ## Using
 
 ### Prerequisites
@@ -83,6 +85,81 @@ The JSON output includes detailed test results, evaluation scores, and summary s
 Here's a sample GitHub Action that uses the `eval` command to automatically run the evals in any PR that updates a prompt file: [evals_action.yml](/examples/evals_action.yml).
 
 Learn more about `.prompt.yml` files here: [Storing prompts in GitHub repositories](https://docs.github.com/github-models/use-github-models/storing-prompts-in-github-repositories).
+
+#### Generating tests
+
+Generate comprehensive test cases for your prompts using the PromptPex methodology:
+```shell
+gh models generate my_prompt.prompt.yml
+```
+
+The `generate` command analyzes your prompt file and automatically creates test cases to evaluate the prompt's behavior across different scenarios and edge cases. This helps ensure your prompts are robust and perform as expected.
+
+##### Understanding PromptPex
+
+The `generate` command is based on [PromptPex](https://github.com/microsoft/promptpex), a Microsoft Research framework for systematic prompt testing. PromptPex follows a structured approach to generate comprehensive test cases by:
+
+1. **Intent Analysis**: Understanding what the prompt is trying to achieve
+2. **Input Specification**: Defining the expected input format and constraints
+3. **Output Rules**: Establishing what constitutes correct output
+4. **Inverse Output Rules**: Force generating _negated_ output rules to test the prompt with invalid inputs
+5. **Test Generation**: Creating diverse test cases that cover various scenarios using the prompt, the intent, input specification and output rules
+
+```mermaid
+graph TD
+    PUT(["Prompt Under Test (PUT)"])
+    I["Intent (I)"]
+    IS["Input Specification (IS)"]
+    OR["Output Rules (OR)"]
+    IOR["Inverse Output Rules (IOR)"]
+    PPT["PromptPex Tests (PPT)"]
+
+    PUT --> IS
+    PUT --> I
+    PUT --> OR
+    OR --> IOR
+    I ==> PPT
+    IS ==> PPT
+    OR ==> PPT
+    PUT ==> PPT
+    IOR ==> PPT
+```
+
+##### Advanced options
+
+You can customize the test generation process with various options:
+
+```shell
+# Specify effort level (min, low, medium, high)
+gh models generate --effort high my_prompt.prompt.yml
+
+# Use a specific model for groundtruth generation
+gh models generate --groundtruth-model "openai/gpt-4.1" my_prompt.prompt.yml
+
+# Disable groundtruth generation
+gh models generate --groundtruth-model "none" my_prompt.prompt.yml
+
+# Load from an existing session file (or create a new one if needed)
+gh models generate --session-file my_prompt.session.json my_prompt.prompt.yml
+
+# Custom instructions for specific generation phases
+gh models generate --instruction-intent "Focus on edge cases" my_prompt.prompt.yml
+```
+
+The `effort` flag controls a few flags in the test generation engine and is a tradeoff
+between how much tests you want generated and how much tokens/time you are willing to spend.
+- `min` is just enough to generate a few tests and make sure things are probably configured.
+- `low` should be used to do a quick try of the test generation. It limits the number of rules to `3`.
+- `medium` provides much better coverage
+- `high` spends more token per rule to generate tests, which typically leads to longer, more complex inputs
+
+The command supports custom instructions for different phases of test generation:
+- `--instruction-intent`: Custom system instruction for intent generation
+- `--instruction-inputspec`: Custom system instruction for input specification generation  
+- `--instruction-outputrules`: Custom system instruction for output rules generation
+- `--instruction-inverseoutputrules`: Custom system instruction for inverse output rules generation
+- `--instruction-tests`: Custom system instruction for tests generation
+
 
 ## Notice
 

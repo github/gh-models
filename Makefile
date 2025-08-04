@@ -1,10 +1,20 @@
 check: fmt vet tidy test
 .PHONY: check
 
+clean:
+	@echo "==> cleaning up <=="
+	rm -rf ./gh-models
+.PHONY: clean
+
 build:
 	@echo "==> building gh-models binary <=="
 	script/build
 .PHONY: build
+
+ci-lint:
+	@echo "==> running Go linter <=="
+	golangci-lint run --timeout 5m ./...
+.PHONY: ci-lint
 
 integration: build
 	@echo "==> running integration tests <=="

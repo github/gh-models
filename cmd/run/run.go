@@ -236,7 +236,7 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 			}
 
 			// Parse template variables from flags
-			templateVars, err := parseTemplateVariables(cmd.Flags())
+			templateVars, err := util.ParseTemplateVariables(cmd.Flags())
 			if err != nil {
 				return err
 			}
@@ -427,43 +427,6 @@ func NewRunCommand(cfg *command.Config) *cobra.Command {
 	return cmd
 }
 
-// parseTemplateVariables parses template variables from the --var flags
-func parseTemplateVariables(flags *pflag.FlagSet) (map[string]string, error) {
-	varFlags, err := flags.GetStringArray("var")
-	if err != nil {
-		return nil, err
-	}
-
-	templateVars := make(map[string]string)
-	for _, varFlag := range varFlags {
-		// Handle empty strings
-		if strings.TrimSpace(varFlag) == "" {
-			continue
-		}
-
-		parts := strings.SplitN(varFlag, "=", 2)
-		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid variable format '%s', expected 'key=value'", varFlag)
-		}
-
-		key := strings.TrimSpace(parts[0])
-		value := parts[1] // Don't trim value to preserve intentional whitespace
-
-		if key == "" {
-			return nil, fmt.Errorf("variable key cannot be empty in '%s'", varFlag)
-		}
-
-		// Check for duplicate keys
-		if _, exists := templateVars[key]; exists {
-			return nil, fmt.Errorf("duplicate variable key '%s'", key)
-		}
-
-		templateVars[key] = value
-	}
-
-	return templateVars, nil
-}
-
 type runCommandHandler struct {
 	ctx    context.Context
 	cfg    *command.Config
@@ -472,7 +435,8 @@ type runCommandHandler struct {
 }
 
 func newRunCommandHandler(cmd *cobra.Command, cfg *command.Config, args []string) *runCommandHandler {
-	return &runCommandHandler{ctx: cmd.Context(), cfg: cfg, client: cfg.Client, args: args}
+	ctx := cmd.Context()
+	return &runCommandHandler{ctx: ctx, cfg: cfg, client: cfg.Client, args: args}
 }
 
 func (h *runCommandHandler) loadModels() ([]*azuremodels.ModelSummary, error) {

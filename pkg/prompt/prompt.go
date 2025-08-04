@@ -16,20 +16,20 @@ type File struct {
 	Name            string          `yaml:"name"`
 	Description     string          `yaml:"description"`
 	Model           string          `yaml:"model"`
-	ModelParameters ModelParameters `yaml:"modelParameters"`
+	ModelParameters ModelParameters `yaml:"modelParameters,omitempty"`
 	ResponseFormat  *string         `yaml:"responseFormat,omitempty"`
 	JsonSchema      *JsonSchema     `yaml:"jsonSchema,omitempty"`
 	Messages        []Message       `yaml:"messages"`
 	// TestData and Evaluators are only used by eval command
-	TestData   []map[string]interface{} `yaml:"testData,omitempty"`
-	Evaluators []Evaluator              `yaml:"evaluators,omitempty"`
+	TestData   []TestDataItem `yaml:"testData,omitempty"`
+	Evaluators []Evaluator    `yaml:"evaluators,omitempty"`
 }
 
 // ModelParameters represents model configuration parameters
 type ModelParameters struct {
-	MaxTokens   *int     `yaml:"maxTokens"`
-	Temperature *float64 `yaml:"temperature"`
-	TopP        *float64 `yaml:"topP"`
+	MaxTokens   *int     `yaml:"maxTokens,omitempty"`
+	Temperature *float64 `yaml:"temperature,omitempty"`
+	TopP        *float64 `yaml:"topP,omitempty"`
 }
 
 // Message represents a conversation message
@@ -37,6 +37,9 @@ type Message struct {
 	Role    string `yaml:"role"`
 	Content string `yaml:"content"`
 }
+
+// TestDataItem represents a single test data item for evaluation
+type TestDataItem map[string]interface{}
 
 // Evaluator represents an evaluation method (only used by eval command)
 type Evaluator struct {
@@ -115,6 +118,21 @@ func LoadFromFile(filePath string) (*File, error) {
 	}
 
 	return &promptFile, nil
+}
+
+// SaveToFile saves the prompt file to the specified path
+func (f *File) SaveToFile(filePath string) error {
+	data, err := yaml.Marshal(f)
+	if err != nil {
+		return fmt.Errorf("failed to marshal prompt file: %w", err)
+	}
+
+	err = os.WriteFile(filePath, data, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to write prompt file: %w", err)
+	}
+
+	return nil
 }
 
 // validateResponseFormat validates the responseFormat field
