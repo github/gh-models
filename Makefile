@@ -16,7 +16,7 @@ ci-lint:
 	golangci-lint run --timeout 5m ./...
 .PHONY: ci-lint
 
-integration: build
+integration: check build
 	@echo "==> running integration tests <=="
 	cd integration && go mod tidy && go test -v -timeout=5m
 .PHONY: integration
