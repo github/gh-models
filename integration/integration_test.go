@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	binaryName      = "gh-models-test"
+	binaryName      = "gh-models"
 	timeoutDuration = 30 * time.Second
 )
 
@@ -26,7 +26,7 @@ func getBinaryPath(t *testing.T) string {
 
 	// Check if binary exists
 	if _, err := os.Stat(binaryPath); os.IsNotExist(err) {
-		t.Skipf("Binary %s not found. Run 'script/build' first.", binaryPath)
+		t.Fatalf("Binary %s not found. Run 'script/build' first.", binaryPath)
 	}
 
 	return binaryPath
@@ -87,7 +87,7 @@ func TestList(t *testing.T) {
 // TestRun tests the run command with a simple prompt
 // This test is more limited since it requires actual model inference
 func TestRun(t *testing.T) {
-	stdout, _, err := runCommand(t, "run", "openai/gpt-4.1-nano", "say 'pain' in french")
+	stdout, _, err := runCommand(t, "run", "openai/gpt-4.1-nano", "say 'bread' in french")
 	require.NoError(t, err, "Run should work")
 	require.Contains(t, strings.ToLower(stdout), "pain")
 }
@@ -95,7 +95,7 @@ func TestRun(t *testing.T) {
 // TestIntegrationRunWithOrg tests the run command with --org flag
 func TestRunWithOrg(t *testing.T) {
 	// Test run command with --org flag (using help to avoid expensive API calls)
-	stdout, _, err := runCommand(t, "run", "openai/gpt-4.1-nano", "say 'pain' in french", "--org", "github")
+	stdout, _, err := runCommand(t, "run", "openai/gpt-4.1-nano", "say 'bread' in french", "--org", "github")
 	require.NoError(t, err, "Run should work")
 	require.Contains(t, strings.ToLower(stdout), "pain")
 }
