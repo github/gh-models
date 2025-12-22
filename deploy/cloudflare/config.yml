@@ -1,0 +1,38 @@
+# Cloudflare Tunnel Configuration for BrainSait
+# This file configures how traffic routes through the tunnel
+
+tunnel: brainsait-tunnel
+credentials-file: /etc/cloudflared/credentials.json
+
+# Route traffic to local services
+ingress:
+  # API Gateway - main endpoint
+  - hostname: api.brainsait.com
+    service: http://localhost:8080
+    originRequest:
+      connectTimeout: 30s
+      noTLSVerify: false
+      
+  # Documentation site
+  - hostname: docs.brainsait.com
+    service: http://localhost:8081
+    
+  # Monitoring dashboards (internal access only)
+  - hostname: metrics.brainsait.com
+    service: http://localhost:3000
+    originRequest:
+      # Require Cloudflare Access authentication
+      access:
+        required: true
+        teamName: brainsait
+        
+  # Grafana dashboards
+  - hostname: grafana.brainsait.com
+    service: http://localhost:3001
+    originRequest:
+      access:
+        required: true
+        teamName: brainsait
+        
+  # Catch-all rule (required)
+  - service: http_status:404

@@ -1,0 +1,58 @@
+# BrainSait Healthcare Insurance Analyst
+# Multi-agent system for healthcare claims processing
+
+services:
+  healthcare-agent:
+    build:
+      context: .
+    ports:
+      - 8080:8080
+    environment:
+      - MCP_SERVER_URL=http://mcp-gateway:8811/sse
+      - HIPAA_COMPLIANT=true
+    depends_on:
+      - mcp-gateway
+      - database
+    models:
+      qwen3:
+        endpoint_var: MODEL_RUNNER_URL
+        model_var: MODEL_RUNNER_MODEL
+
+  database:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: healthcare
+      POSTGRES_PASSWORD: secure_password
+      POSTGRES_DB: claims
+    volumes:
+      - healthcare_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U healthcare -d claims]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mcp-gateway:
+    image: docker/mcp-gateway:latest
+    use_api_socket: true
+    command:
+      - --transport=sse
+      - --secrets=/run/secrets/database-url
+      - --servers=postgres,duckduckgo
+      - --tools=query,search
+    secrets:
+      - database-url
+
+models:
+  qwen3:
+    model: ai/qwen3:14B-Q6_K
+    context_size: 16384
+    runtime_flags:
+      - --no-prefill-assistant
+
+secrets:
+  database-url:
+    file: ./postgres_url
+
+volumes:
+  healthcare_data:

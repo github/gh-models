@@ -1,0 +1,165 @@
+# BrainSait Production Docker Compose
+# For deployment on remote VM with Cloudflare Tunnel
+
+version: '3.8'
+
+services:
+  # Main API Server
+  api:
+    image: ${DOCKER_REGISTRY:-docker.io}/${DOCKER_USERNAME:-brainsait}/brainsait-ai:${VERSION:-latest}
+    container_name: brainsait-api
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - BRAINSAIT_ENV=production
+      - BRAINSAIT_PORT=8080
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - DATABASE_URL=postgres://brainsait:${DB_PASSWORD}@postgres:5432/brainsait?sslmode=disable
+      - REDIS_URL=redis://redis:6379
+      - CORS_ORIGINS=${CORS_ORIGINS:-https://brainsait.ai,https://app.brainsait.ai}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - brainsait-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: brainsait-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=brainsait
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=brainsait
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U brainsait"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - brainsait-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: brainsait-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - brainsait-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Cloudflare Tunnel (for exposing services)
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: brainsait-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
+    networks:
+      - brainsait-network
+    depends_on:
+      - api
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Documentation Server
+  docs:
+    image: nginx:alpine
+    container_name: brainsait-docs
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    volumes:
+      - ./docs/public:/usr/share/nginx/html:ro
+    networks:
+      - brainsait-network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Prometheus Metrics
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: brainsait-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+    networks:
+      - brainsait-network
+
+  # Grafana Dashboard
+  grafana:
+    image: grafana/grafana:latest
+    container_name: brainsait-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./deploy/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+    networks:
+      - brainsait-network
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+
+networks:
+  brainsait-network:
+    driver: bridge

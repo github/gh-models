@@ -1,0 +1,34 @@
+# BrainSait Arabic Language Assistant
+# Multi-agent system for Arabic speakers using Docker Model Runner
+
+services:
+  arabic-agent:
+    build:
+      context: .
+    ports:
+      - 8080:8080
+    environment:
+      - MCP_SERVER_URL=http://mcp-gateway:8811/sse
+      - LANGUAGE=ar
+      - CULTURE=arab
+    depends_on:
+      - mcp-gateway
+    models:
+      qwen3:
+        endpoint_var: MODEL_RUNNER_URL
+        model_var: MODEL_RUNNER_MODEL
+
+  mcp-gateway:
+    image: docker/mcp-gateway:latest
+    use_api_socket: true
+    command:
+      - --transport=sse
+      - --servers=duckduckgo,wikipedia-mcp
+      - --tools=search,fetch_content
+
+models:
+  qwen3:
+    model: ai/qwen3:14B-Q6_K
+    context_size: 8192
+    runtime_flags:
+      - --no-prefill-assistant

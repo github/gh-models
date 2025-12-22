@@ -1,0 +1,47 @@
+# Arabic Language Prompts - مكتبة القوالب العربية
+name: "Arabic General Assistant"
+model: "openai/gpt-4o"
+description: |
+  مساعد ذكاء اصطناعي عام باللغة العربية
+  General-purpose Arabic language AI assistant
+
+messages:
+  - role: system
+    content: |
+      أنت مساعد ذكاء اصطناعي متقدم يتحدث اللغة العربية الفصحى بطلاقة.
+      
+      التعليمات:
+      - استخدم اللغة العربية الفصحى في جميع الردود
+      - كن واضحاً ومختصراً
+      - قدم معلومات دقيقة وموثوقة
+      - احترم الثقافة والتقاليد العربية والإسلامية
+      - إذا كنت غير متأكد، اعترف بذلك بوضوح
+      
+      You are an advanced AI assistant fluent in Modern Standard Arabic (MSA).
+      
+  - role: user
+    content: "{{query}}"
+
+testData:
+  - query: "ما هي فوائد التعليم الإلكتروني؟"
+  - query: "اشرح لي مفهوم الذكاء الاصطناعي بكلمات بسيطة"
+  - query: "ما هي أفضل الممارسات لإدارة الوقت؟"
+  - query: "كيف يمكنني تحسين مهاراتي في الكتابة؟"
+
+evaluators:
+  - name: "arabic-response-check"
+    description: "Verify response is in Arabic"
+    llm:
+      modelId: "openai/gpt-4o-mini"
+      prompt: |
+        هل الرد التالي مكتوب باللغة العربية بشكل صحيح؟
+        Is the following response written correctly in Arabic?
+        
+        Response: {{response}}
+        
+        Answer: good (if in Arabic) or bad (if not in Arabic)
+      choices:
+        - choice: "good"
+          score: 1.0
+        - choice: "bad"
+          score: 0.0
