@@ -1,0 +1,148 @@
+# BrainSait AI Platform - Docker Compose
+# Complete stack for development and production
+
+version: '3.8'
+
+services:
+  # ============================================
+  # Core API Service
+  # ============================================
+  brainsait-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: brainsait-api
+    ports:
+      - "8080:8080"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - BRAINSAIT_API_KEY=${BRAINSAIT_API_KEY}
+      - DATABASE_URL=postgres://admin:${DB_PASSWORD}@postgres:5432/brainsait
+      - REDIS_URL=redis://redis:6379
+      - LOG_LEVEL=info
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - brainsait-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================
+  # Database (PostgreSQL)
+  # ============================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: brainsait-db
+    environment:
+      POSTGRES_DB: brainsait
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+    networks:
+      - brainsait-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d brainsait"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Cache (Redis)
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: brainsait-cache
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+    networks:
+      - brainsait-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
+  # Admin Dashboard (optional)
+  # ============================================
+  admin-ui:
+    image: nginx:alpine
+    container_name: brainsait-admin
+    ports:
+      - "3000:80"
+    volumes:
+      - ./admin-ui/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - brainsait-api
+    restart: unless-stopped
+    networks:
+      - brainsait-network
+
+  # ============================================
+  # Monitoring: Prometheus
+  # ============================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: brainsait-prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - brainsait-network
+
+  # ============================================
+  # Monitoring: Grafana
+  # ============================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: brainsait-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - brainsait-network
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  brainsait-network:
+    driver: bridge
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local

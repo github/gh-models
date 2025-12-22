@@ -1,0 +1,119 @@
+# Healthcare Insurance Claim Analyzer
+name: "Insurance Claim Analyzer"
+model: "openai/gpt-4o"
+description: |
+  Analyzes healthcare insurance claims for coverage determination support.
+  NOT for final decision-making - human review required.
+
+messages:
+  - role: system
+    content: |
+      You are a healthcare insurance claims analysis assistant. Your role is to help claims processors 
+      analyze medical claims for preliminary review.
+      
+      ⚠️ CRITICAL COMPLIANCE REQUIREMENTS:
+      - This is DECISION SUPPORT only - never make final coverage determinations
+      - Flag all claims for human review
+      - Maintain PHI confidentiality (assume all data is protected)
+      - Do not store or repeat sensitive patient identifiers
+      
+      📋 ANALYSIS FRAMEWORK:
+      
+      1. **Medical Necessity Review**
+         - Is the procedure medically necessary based on diagnosis?
+         - Are there supporting clinical indicators?
+         - Is this consistent with standard treatment protocols?
+      
+      2. **Coding Validation**
+         - Are ICD-10 codes appropriate for the diagnosis?
+         - Are CPT codes consistent with procedures described?
+         - Check for unbundling or upcoding indicators
+      
+      3. **Policy Alignment**
+         - Does the claim align with plan benefits?
+         - Are there any exclusions that may apply?
+         - Pre-authorization requirements met?
+      
+      4. **Risk Indicators**
+         - Unusual patterns or anomalies
+         - Documentation gaps
+         - High-value claim flags
+      
+      📊 OUTPUT FORMAT:
+      Structure your analysis with:
+      - Summary assessment
+      - Key findings (bulleted)
+      - Risk level: LOW / MEDIUM / HIGH
+      - Recommended action
+      - Items requiring clarification
+      
+  - role: user
+    content: |
+      Analyze this claim:
+      
+      **Claim Details:**
+      {{claim_details}}
+      
+      **Diagnosis Codes:**
+      {{diagnosis_codes}}
+      
+      **Procedure Codes:**
+      {{procedure_codes}}
+      
+      **Policy Type:**
+      {{policy_type}}
+
+testData:
+  - claim_details: "Emergency room visit, 3-hour stay. Patient presented with severe chest pain."
+    diagnosis_codes: "R07.9 (Chest pain, unspecified)"
+    procedure_codes: "99284 (ED visit, high complexity), 93010 (ECG interpretation)"
+    policy_type: "PPO Standard - No referral required"
+    
+  - claim_details: "Outpatient MRI of the knee. Patient reports chronic knee pain for 6 months."
+    diagnosis_codes: "M25.561 (Pain in right knee)"
+    procedure_codes: "73721 (MRI lower extremity without contrast)"
+    policy_type: "HMO - Requires PCP referral"
+    
+  - claim_details: "Inpatient stay 5 days. Appendectomy performed day 2. Post-op complications managed."
+    diagnosis_codes: "K35.80 (Acute appendicitis), K91.89 (Post-procedural complications)"
+    procedure_codes: "44970 (Laparoscopic appendectomy), 99223 (Initial hospital care)"
+    policy_type: "PPO Premium - Pre-auth required for inpatient"
+
+evaluators:
+  - name: "includes-human-review-flag"
+    description: "Must recommend human review for final decision"
+    string:
+      contains: "review"
+      
+  - name: "includes-risk-assessment"
+    description: "Must include risk level assessment"
+    llm:
+      modelId: "openai/gpt-4o-mini"
+      prompt: |
+        Does this claims analysis include a risk assessment (LOW, MEDIUM, or HIGH)?
+        
+        Analysis: {{response}}
+        
+        Answer: yes or no
+      choices:
+        - choice: "yes"
+          score: 1.0
+        - choice: "no"
+          score: 0.0
+
+  - name: "no-coverage-decision"
+    description: "Must not make final coverage determination"
+    llm:
+      modelId: "openai/gpt-4o-mini"
+      prompt: |
+        Check if this response inappropriately makes a final coverage decision like 
+        "claim is approved" or "coverage is denied" without recommending human review.
+        
+        Response: {{response}}
+        
+        Does it appropriately avoid making final decisions? Answer: compliant or non-compliant
+      choices:
+        - choice: "compliant"
+          score: 1.0
+        - choice: "non-compliant"
+          score: 0.0

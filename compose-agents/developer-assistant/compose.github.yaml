@@ -1,0 +1,9 @@
+# GitHub Models Configuration
+# Use with: docker compose -f compose.yaml -f compose.github.yaml up
+
+services:
+  developer-agent:
+    environment:
+      - MODEL_RUNNER_URL=https://models.inference.ai.azure.com
+      - MODEL_RUNNER_MODEL=openai/gpt-4o-mini
+      - GITHUB_TOKEN=${GITHUB_TOKEN}

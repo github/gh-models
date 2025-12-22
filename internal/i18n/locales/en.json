@@ -1,0 +1,54 @@
+{
+  "code": "en",
+  "name": "English",
+  "native_name": "English",
+  "direction": "ltr",
+  "messages": {
+    "app.name": "BrainSait AI Platform",
+    "app.description": "Interact with AI models via GitHub Models",
+    
+    "cmd.run.short": "Run inference with a language model",
+    "cmd.run.long": "Run inference with a language model using a prompt file or direct input",
+    "cmd.run.example": "gh models run openai/gpt-4o -p \"Explain quantum computing\"",
+    
+    "cmd.list.short": "List available models",
+    "cmd.list.long": "List all available AI models from GitHub Models",
+    
+    "cmd.view.short": "View model details",
+    "cmd.view.long": "View detailed information about a specific model",
+    
+    "cmd.eval.short": "Evaluate prompts",
+    "cmd.eval.long": "Evaluate prompts against test cases and evaluators",
+    
+    "cmd.generate.short": "Generate test cases",
+    "cmd.generate.long": "Generate test cases for prompts using PromptPex methodology",
+    
+    "error.auth_required": "Authentication required. Please run 'gh auth login' first.",
+    "error.model_not_found": "Model '%s' not found",
+    "error.invalid_prompt": "Invalid prompt file: %s",
+    "error.rate_limited": "Rate limit exceeded. Please try again later.",
+    "error.api_error": "API error: %s",
+    
+    "success.inference_complete": "Inference completed successfully",
+    "success.eval_complete": "Evaluation completed: %d passed, %d failed",
+    "success.generate_complete": "Generated %d test cases",
+    
+    "prompt.enter_message": "Enter your message:",
+    "prompt.select_model": "Select a model:",
+    "prompt.confirm_action": "Are you sure? (y/n)",
+    
+    "output.model_name": "Model",
+    "output.publisher": "Publisher",
+    "output.description": "Description",
+    "output.context_window": "Context Window",
+    "output.max_tokens": "Max Output Tokens",
+    "output.response": "Response",
+    "output.tokens_used": "Tokens Used",
+    "output.latency": "Latency",
+    
+    "billing.current_plan": "Current Plan",
+    "billing.usage_this_month": "Usage This Month",
+    "billing.credits_remaining": "Credits Remaining",
+    "billing.upgrade_prompt": "Upgrade to get more features"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "code": "ar",
+  "name": "Arabic",
+  "native_name": "العربية",
+  "direction": "rtl",
+  "messages": {
+    "app.name": "منصة برين سايت للذكاء الاصطناعي",
+    "app.description": "تفاعل مع نماذج الذكاء الاصطناعي عبر GitHub Models",
+    
+    "cmd.run.short": "تشغيل الاستدلال مع نموذج لغوي",
+    "cmd.run.long": "تشغيل الاستدلال مع نموذج لغوي باستخدام ملف موجه أو إدخال مباشر",
+    "cmd.run.example": "gh models run openai/gpt-4o -p \"اشرح الحوسبة الكمية\"",
+    
+    "cmd.list.short": "عرض النماذج المتاحة",
+    "cmd.list.long": "عرض جميع نماذج الذكاء الاصطناعي المتاحة من GitHub Models",
+    
+    "cmd.view.short": "عرض تفاصيل النموذج",
+    "cmd.view.long": "عرض معلومات مفصلة حول نموذج معين",
+    
+    "cmd.eval.short": "تقييم الموجهات",
+    "cmd.eval.long": "تقييم الموجهات مقابل حالات الاختبار والمقيمين",
+    
+    "cmd.generate.short": "توليد حالات الاختبار",
+    "cmd.generate.long": "توليد حالات اختبار للموجهات باستخدام منهجية PromptPex",
+    
+    "error.auth_required": "المصادقة مطلوبة. يرجى تشغيل 'gh auth login' أولاً.",
+    "error.model_not_found": "النموذج '%s' غير موجود",
+    "error.invalid_prompt": "ملف موجه غير صالح: %s",
+    "error.rate_limited": "تم تجاوز حد الطلبات. يرجى المحاولة لاحقاً.",
+    "error.api_error": "خطأ في API: %s",
+    
+    "success.inference_complete": "تم الاستدلال بنجاح",
+    "success.eval_complete": "اكتمل التقييم: %d نجح، %d فشل",
+    "success.generate_complete": "تم توليد %d حالة اختبار",
+    
+    "prompt.enter_message": "أدخل رسالتك:",
+    "prompt.select_model": "اختر نموذجاً:",
+    "prompt.confirm_action": "هل أنت متأكد؟ (نعم/لا)",
+    
+    "output.model_name": "النموذج",
+    "output.publisher": "الناشر",
+    "output.description": "الوصف",
+    "output.context_window": "نافذة السياق",
+    "output.max_tokens": "الحد الأقصى للرموز",
+    "output.response": "الرد",
+    "output.tokens_used": "الرموز المستخدمة",
+    "output.latency": "زمن الاستجابة",
+    
+    "billing.current_plan": "الخطة الحالية",
+    "billing.usage_this_month": "الاستخدام هذا الشهر",
+    "billing.credits_remaining": "الرصيد المتبقي",
+    "billing.upgrade_prompt": "قم بالترقية للحصول على المزيد من الميزات"
+  }
+}

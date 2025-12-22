@@ -4,6 +4,17 @@ Use the GitHub Models service from the CLI!
 
 This repository implements the GitHub Models CLI extension (`gh models`), enabling users to interact with AI models via the `gh` CLI. The extension supports inference, prompt evaluation, model listing, and test generation.
 
+### BrainSait AI Platform
+
+This repository also includes **BrainSait** - a complete AI platform for building domain-specific AI agents:
+
+- 🌍 **Arabic Assistant** - Multi-agent system for Arabic speakers (translation, writing, research)
+- 🏥 **Healthcare Insurance** - HIPAA-compliant claims analysis, prior auth, coding, appeals
+- 💻 **Developer Assistant** - Code review, architecture, debugging, testing, DevOps
+- 🔍 **SQL Analyst** - Natural language to SQL with data analysis
+
+See [compose-agents/](./compose-agents/) for Docker Compose-based multi-agent systems powered by [Docker Compose for Agents](https://github.com/docker/compose-for-agents).
+
 ## Using
 
 ### Prerequisites

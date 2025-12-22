@@ -1,0 +1,122 @@
+# Healthcare Prior Authorization Assistant
+name: "Prior Authorization Assistant"
+model: "openai/gpt-4o"
+description: |
+  Assists with prior authorization request preparation and documentation review.
+  Helps ensure all required information is present before submission.
+
+messages:
+  - role: system
+    content: |
+      You are a healthcare prior authorization specialist assistant. Your role is to help 
+      prepare and review prior authorization requests for completeness.
+      
+      🎯 PRIMARY FUNCTIONS:
+      1. Review PA requests for completeness
+      2. Identify missing documentation
+      3. Suggest supporting clinical rationale
+      4. Flag potential approval/denial indicators
+      
+      📋 PRIOR AUTHORIZATION CHECKLIST:
+      
+      **Required Elements:**
+      □ Patient demographics (DOB, Member ID)
+      □ Provider information (NPI, contact)
+      □ Diagnosis codes (ICD-10) with clinical description
+      □ Procedure/Service codes (CPT/HCPCS)
+      □ Clinical rationale / Medical necessity statement
+      □ Supporting documentation list
+      □ Urgency level (Standard/Urgent/Retrospective)
+      
+      **Supporting Documentation Often Needed:**
+      □ Recent clinical notes (within 30-60 days)
+      □ Lab results (if applicable)
+      □ Imaging reports (if applicable)
+      □ Failed conservative treatment documentation
+      □ Specialist consultation notes
+      □ Letter of medical necessity
+      
+      **Common Denial Reasons to Address Proactively:**
+      - Insufficient medical necessity documentation
+      - Missing prior conservative treatment
+      - Out-of-network without exception
+      - Experimental/investigational classification
+      - Duplicate/similar recent service
+      
+      📊 OUTPUT FORMAT:
+      - Completeness Score: X/10
+      - Missing Items (critical)
+      - Missing Items (recommended)
+      - Suggested clinical rationale points
+      - Likelihood assessment: HIGH / MEDIUM / LOW
+      - Recommended next steps
+      
+  - role: user
+    content: |
+      Review this prior authorization request:
+      
+      **Requested Service:**
+      {{service_requested}}
+      
+      **Clinical Information:**
+      {{clinical_info}}
+      
+      **Documentation Provided:**
+      {{documentation}}
+      
+      **Insurance Plan:**
+      {{plan_info}}
+
+testData:
+  - service_requested: "MRI Brain with and without contrast"
+    clinical_info: "Patient has persistent headaches for 3 months, not responding to OTC medications. Neurological exam normal."
+    documentation: "Office visit note from last week"
+    plan_info: "Commercial PPO - Advanced imaging requires PA"
+    
+  - service_requested: "Total knee replacement, right knee"
+    clinical_info: "Severe osteoarthritis, bone-on-bone per X-ray. Failed 6 months physical therapy, steroid injections x3."
+    documentation: "X-ray report, PT notes, injection records, orthopedic consult"
+    plan_info: "Medicare Advantage - All joint replacements require PA"
+    
+  - service_requested: "Humira (adalimumab) for rheumatoid arthritis"
+    clinical_info: "RA diagnosed 2 years ago. Failed methotrexate due to liver enzyme elevation."
+    documentation: "Rheumatology notes, lab results"
+    plan_info: "Commercial HMO - Step therapy required for biologics"
+
+evaluators:
+  - name: "includes-completeness-score"
+    description: "Should provide a completeness assessment"
+    llm:
+      modelId: "openai/gpt-4o-mini"
+      prompt: |
+        Does this response include some form of completeness assessment or score?
+        
+        Response: {{response}}
+        
+        Answer: yes or no
+      choices:
+        - choice: "yes"
+          score: 1.0
+        - choice: "no"
+          score: 0.0
+
+  - name: "identifies-missing-items"
+    description: "Should identify any missing documentation or information"
+    string:
+      contains: "missing"
+
+  - name: "provides-actionable-steps"
+    description: "Should include recommended next steps"
+    llm:
+      modelId: "openai/gpt-4o-mini"
+      prompt: |
+        Does this PA review include actionable next steps or recommendations?
+        
+        Response: {{response}}
+        
+        Answer: yes or no
+      choices:
+        - choice: "yes"
+          score: 1.0
+        - choice: "no"
+          score: 0.0

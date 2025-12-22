@@ -1,0 +1,72 @@
+# BrainSait API Server Dockerfile
+# Multi-stage build for optimized production image
+
+# ================================
+# Stage 1: Build
+# ================================
+FROM golang:1.22-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache git ca-certificates tzdata
+
+WORKDIR /app
+
+# Copy go mod files
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy source code
+COPY . .
+
+# Build CLI binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-w -s" -o /app/bin/gh-models .
+
+# Build API server binary
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
+    go build -ldflags="-w -s" -o /app/bin/brainsait-api ./cmd/api
+
+# ================================
+# Stage 2: Production
+# ================================
+FROM alpine:3.19
+
+# Install runtime dependencies
+RUN apk add --no-cache ca-certificates tzdata curl wget
+
+# Create non-root user
+RUN addgroup -g 1000 brainsait && \
+    adduser -u 1000 -G brainsait -s /bin/sh -D brainsait
+
+WORKDIR /app
+
+# Copy binaries from builder
+COPY --from=builder /app/bin/gh-models /usr/local/bin/
+COPY --from=builder /app/bin/brainsait-api /usr/local/bin/
+
+# Copy example prompts
+COPY --from=builder /app/examples /app/examples
+
+# Copy i18n locales
+COPY --from=builder /app/internal/i18n/locales /app/locales
+
+# Set ownership
+RUN chown -R brainsait:brainsait /app
+
+# Switch to non-root user
+USER brainsait
+
+# Environment variables
+ENV PORT=8080
+ENV LOG_LEVEL=info
+ENV ENVIRONMENT=production
+
+# Expose API port
+EXPOSE 8080
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD wget -q --spider http://localhost:8080/health || exit 1
+
+# Default command - run API server
+CMD ["brainsait-api"]

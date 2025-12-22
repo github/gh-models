@@ -27,17 +27,34 @@ This repository implements the GitHub Models CLI extension (`gh models`), enabli
 3. Azure client converts to `azuremodels.ChatCompletionOptions` and makes API calls
 4. Results are formatted using terminal-aware table printers from `command.Config`
 
+### Generate Command (PromptPex)
+- **Location**: `cmd/generate/` - self-contained implementation of test generation
+- **Key files**: `pipeline.go` (orchestration), `prompts.go` (phase prompts), `evaluators.go` (test evaluation)
+- **Flow**: Intent → InputSpec → OutputRules → InverseOutputRules → Tests → Evaluation
+- **Session state**: `types.go` defines `PromptPexContext` - serialized to JSON for resumability
+- **Cleanup**: `cleaner.go` handles post-generation test refinement and deduplication
+
 ## Developer Workflows
 
 ### Building & Testing
 - **Local build**: `make build` or `script/build` (creates `gh-models` binary)
 - **Cross-platform**: `script/build all|windows|linux|darwin` for release builds
+  - Builds for windows/amd64, linux/amd64, android/arm64, android/amd64, darwin/amd64, darwin/arm64
 - **Testing**: `make check` runs format, vet, tidy, and tests. Use `go test ./...` directly for faster iteration
 - **Quality gates**: `make check` - required before commits
+- **Integration tests**: `make integration` - builds binary and runs tests against live endpoints (requires `gh auth login`)
+  - Located in `integration/` directory with separate go.mod
+  - Tests gracefully skip when authentication unavailable
+  - CI runs these via `.github/workflows/integration.yml`
 
 ### Authentication & Setup
 - Extension requires `gh auth login` before use - unauthenticated clients show helpful error messages
 - Client initialization pattern in `cmd/root.go`: check token, create appropriate client (authenticated vs unauthenticated)
+
+### Release Process
+- Create git tag: `git tag v0.0.x main && git push origin tag v0.0.x`
+- This triggers `.github/workflows/release.yml` for production builds
+- Users install with `gh extension install github/gh-models` (pulls latest release, not latest commit)
 
 ## Prompt File Conventions
 
@@ -62,19 +79,35 @@ evaluators:
 - **JSON Schema**: Use `responseFormat: json_schema` with `jsonSchema` field containing strict JSON schema
 - **Templates**: All message content supports `{{variable}}` substitution from `testData` entries
 
+### PromptPex Test Generation
+- **Command**: `gh models generate` - implements [PromptPex](https://github.com/microsoft/promptpex) methodology
+- **Effort levels**: `min` (quick validation), `low` (limits to 3 rules), `medium` (better coverage), `high` (complex inputs, more tokens)
+- **Custom instructions**: Use `--instruction-{phase}` flags for intent, inputspec, outputrules, inverseoutputrules, tests
+- **Session persistence**: `--session-file` to save/load generation state
+- **Documentation**: See `cmd/generate/README.md` and https://microsoft.github.io/promptpex/reference/test-generation/
+
 ## Testing Patterns
 
-### Command Tests
+### Unit Tests (Command Tests)
 - **Location**: `cmd/{command}/{command}_test.go` 
 - **Pattern**: Create mock client via `azuremodels.NewMockClient()`, inject into `command.Config`
 - **Structure**: Table-driven tests with subtests using `t.Run()`
 - **Assertions**: Use `testify/require` for cleaner error messages
+- **Run**: `make test` or `go test -race -cover ./...`
 
 ### Mock Usage
 ```go
 client := azuremodels.NewMockClient()
 cfg := command.NewConfig(new(bytes.Buffer), new(bytes.Buffer), client, true, 80)
 ```
+
+### Integration Tests
+- **Location**: `integration/integration_test.go` (separate go.mod)
+- **Pattern**: Execute compiled binary via `exec.Command()` with timeout protection
+- **Prerequisites**: Binary must exist (`make build` first)
+- **Authentication**: Tests skip gracefully when `gh auth` unavailable
+- **Focus**: Verify basic functionality, command execution, output format - not full feature testing
+- **Run**: `make integration` (combines `make check`, `make build`, and integration tests)
 
 ## Integration Points
 
