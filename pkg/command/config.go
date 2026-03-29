@@ -18,6 +18,8 @@ type Config struct {
 	ErrOut io.Writer
 	// Client is the client for interacting with the models service.
 	Client azuremodels.Client
+	// Token is the GitHub authentication token.
+	Token string
 	// IsTerminalOutput is true if the output should be formatted for a terminal.
 	IsTerminalOutput bool
 	// TerminalWidth is the width of the terminal.
@@ -29,13 +31,19 @@ func NewConfig(out, errOut io.Writer, client azuremodels.Client, isTerminalOutpu
 	return &Config{Out: out, ErrOut: errOut, Client: client, IsTerminalOutput: isTerminalOutput, TerminalWidth: width}
 }
 
+// NewConfigWithToken returns a new command configuration with a GitHub token.
+func NewConfigWithToken(out, errOut io.Writer, client azuremodels.Client, token string, isTerminalOutput bool, width int) *Config {
+	return &Config{Out: out, ErrOut: errOut, Client: client, Token: token, IsTerminalOutput: isTerminalOutput, TerminalWidth: width}
+}
+
 // NewConfigWithTerminal returns a new command configuration using the given terminal.
-func NewConfigWithTerminal(terminal term.Term, client azuremodels.Client) *Config {
+func NewConfigWithTerminal(terminal term.Term, client azuremodels.Client, token string) *Config {
 	width, _, _ := terminal.Size()
 	return &Config{
 		Out:              terminal.Out(),
 		ErrOut:           terminal.ErrOut(),
 		Client:           client,
+		Token:            token,
 		IsTerminalOutput: terminal.IsTerminalOutput(),
 		TerminalWidth:    width,
 	}

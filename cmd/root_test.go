@@ -22,6 +22,7 @@ func TestRoot(t *testing.T) {
 		require.Regexp(t, regexp.MustCompile(`eval\s+Evaluate prompts using test data and evaluators`), output)
 		require.Regexp(t, regexp.MustCompile(`list\s+List available models`), output)
 		require.Regexp(t, regexp.MustCompile(`run\s+Run inference with the specified model`), output)
+		require.Regexp(t, regexp.MustCompile(`usage\s+Show premium request usage and costs`), output)
 		require.Regexp(t, regexp.MustCompile(`view\s+View details about a model`), output)
 		require.Regexp(t, regexp.MustCompile(`generate\s+Generate tests and evaluations for prompts`), output)
 	})

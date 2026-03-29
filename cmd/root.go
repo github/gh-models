@@ -12,6 +12,7 @@ import (
 	"github.com/github/gh-models/cmd/generate"
 	"github.com/github/gh-models/cmd/list"
 	"github.com/github/gh-models/cmd/run"
+	"github.com/github/gh-models/cmd/usage"
 	"github.com/github/gh-models/cmd/view"
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/command"
@@ -54,11 +55,12 @@ func NewRootCommand() *cobra.Command {
 		}
 	}
 
-	cfg := command.NewConfigWithTerminal(terminal, client)
+	cfg := command.NewConfigWithTerminal(terminal, client, token)
 
 	cmd.AddCommand(eval.NewEvalCommand(cfg))
 	cmd.AddCommand(list.NewListCommand(cfg))
 	cmd.AddCommand(run.NewRunCommand(cfg))
+	cmd.AddCommand(usage.NewUsageCommand(cfg))
 	cmd.AddCommand(view.NewViewCommand(cfg))
 	cmd.AddCommand(generate.NewGenerateCommand(cfg))
 
