@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/github/gh-models/internal/azuremodels"
@@ -16,11 +15,14 @@ import (
 func newTestServer(t *testing.T, userResp map[string]string, usageResp *premiumRequestUsageResponse, usageStatus int) *httptest.Server {
 	t.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Match exact paths so tests fail loudly if the command starts
+		// hitting an unexpected endpoint, instead of silently returning
+		// canned responses for any matching prefix/suffix.
 		switch {
 		case r.URL.Path == "/user":
 			w.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(w).Encode(userResp)
-		case strings.HasPrefix(r.URL.Path, "/users/") && strings.HasSuffix(r.URL.Path, "/settings/billing/premium_request/usage"):
+		case r.URL.Path == "/users/testuser/settings/billing/premium_request/usage":
 			w.Header().Set("Content-Type", "application/json")
 			if usageStatus != 0 && usageStatus != http.StatusOK {
 				w.WriteHeader(usageStatus)
@@ -30,7 +32,7 @@ func newTestServer(t *testing.T, userResp map[string]string, usageResp *premiumR
 			_ = json.NewEncoder(w).Encode(usageResp)
 		default:
 			w.WriteHeader(http.StatusNotFound)
-			_, _ = w.Write([]byte(`{"message":"unknown path"}`))
+			_, _ = w.Write([]byte(`{"message":"unknown path: ` + r.URL.Path + `"}`))
 		}
 	}))
 }
@@ -267,6 +269,86 @@ func TestUsageCommand(t *testing.T) {
 		output := buf.String()
 		opusIdx := bytes.Index([]byte(output), []byte("Claude Opus"))
 		gptIdx := bytes.Index([]byte(output), []byte("GPT-5.2"))
+		require.GreaterOrEqual(t, opusIdx, 0, "Claude Opus should be present in the output")
+		require.GreaterOrEqual(t, gptIdx, 0, "GPT-5.2 should be present in the output")
 		require.True(t, opusIdx < gptIdx, "Claude Opus 4.6 should appear before GPT-5.2 (sorted by gross amount)")
+	})
+
+	t.Run("net cost with zero gross does not produce NaN/Inf", func(t *testing.T) {
+		usageResp := &premiumRequestUsageResponse{
+			TimePeriod: timePeriod{Year: 2026, Month: 3},
+			User:       "testuser",
+			UsageItems: []usageItem{
+				{
+					Product:       "Copilot",
+					Model:         "Edge case model",
+					GrossQuantity: 1,
+					GrossAmount:   0.0,
+					NetAmount:     1.50,
+				},
+			},
+		}
+
+		server := newTestServer(t, map[string]string{"login": "testuser"}, usageResp, 0)
+		defer server.Close()
+
+		buf := new(bytes.Buffer)
+		client := azuremodels.NewMockClient()
+		cfg := command.NewConfig(buf, buf, client, true, 120)
+		cfg.Token = "test-token"
+
+		cmd := newUsageCommand(cfg, newTestOpts(server.URL))
+		cmd.SetArgs([]string{"--year", "2026", "--month", "3"})
+
+		_, err := cmd.ExecuteC()
+		require.NoError(t, err)
+
+		output := buf.String()
+		require.NotContains(t, output, "NaN")
+		require.NotContains(t, output, "+Inf")
+		require.NotContains(t, output, "-Inf")
+		require.Contains(t, output, "gross amount unavailable")
+	})
+
+	t.Run("--today is mutually exclusive with date flags", func(t *testing.T) {
+		buf := new(bytes.Buffer)
+		client := azuremodels.NewMockClient()
+		cfg := command.NewConfig(buf, buf, client, true, 120)
+		cfg.Token = "test-token"
+
+		cmd := newUsageCommand(cfg, nil)
+		cmd.SetArgs([]string{"--today", "--year", "2026"})
+
+		_, err := cmd.ExecuteC()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "none of the others can be")
+	})
+
+	t.Run("rejects invalid month", func(t *testing.T) {
+		buf := new(bytes.Buffer)
+		client := azuremodels.NewMockClient()
+		cfg := command.NewConfig(buf, buf, client, true, 120)
+		cfg.Token = "test-token"
+
+		cmd := newUsageCommand(cfg, nil)
+		cmd.SetArgs([]string{"--year", "2026", "--month", "13"})
+
+		_, err := cmd.ExecuteC()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid value for --month")
+	})
+
+	t.Run("rejects invalid day", func(t *testing.T) {
+		buf := new(bytes.Buffer)
+		client := azuremodels.NewMockClient()
+		cfg := command.NewConfig(buf, buf, client, true, 120)
+		cfg.Token = "test-token"
+
+		cmd := newUsageCommand(cfg, nil)
+		cmd.SetArgs([]string{"--year", "2026", "--month", "3", "--day", "99"})
+
+		_, err := cmd.ExecuteC()
+		require.Error(t, err)
+		require.Contains(t, err.Error(), "invalid value for --day")
 	})
 }

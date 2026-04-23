@@ -141,6 +141,19 @@ func newUsageCommand(cfg *command.Config, opts *usageOptions) *cobra.Command {
 				month = int(now.Month())
 			}
 
+			// Validate date arguments to fail fast with a clear message
+			// instead of letting the API return a confusing error.
+			if year < 1 {
+				return fmt.Errorf("invalid value for --year: %d (must be >= 1)", year)
+			}
+			if month < 1 || month > 12 {
+				return fmt.Errorf("invalid value for --month: %d (must be between 1 and 12)", month)
+			}
+			// day == 0 means "not specified" and is allowed; validate only if non-zero.
+			if day < 0 || day > 31 {
+				return fmt.Errorf("invalid value for --day: %d (must be between 1 and 31)", day)
+			}
+
 			// Get username
 			username, err := getUsername(ctx, opts, token)
 			if err != nil {
@@ -176,9 +189,14 @@ func newUsageCommand(cfg *command.Config, opts *usageOptions) *cobra.Command {
 				return items[i].GrossAmount > items[j].GrossAmount
 			})
 
-			// Calculate totals
+			// Calculate totals across the rows that will actually be rendered
+			// (matching the GrossQuantity > 0 filter applied below) so the
+			// printed totals agree with the visible rows.
 			var totalReqs, totalGross, totalNet float64
 			for _, item := range items {
+				if item.GrossQuantity == 0 {
+					continue
+				}
 				totalReqs += item.GrossQuantity
 				totalGross += item.GrossAmount
 				totalNet += item.NetAmount
@@ -224,9 +242,13 @@ func newUsageCommand(cfg *command.Config, opts *usageOptions) *cobra.Command {
 
 				if totalGross > 0 && totalNet == 0 {
 					cfg.WriteToOut(greenColor("All usage included in your plan (100% discount)") + "\n")
-				} else if totalNet > 0 {
+				} else if totalGross > 0 && totalNet > 0 {
 					pct := (totalNet / totalGross) * 100
 					cfg.WriteToOut(yellowColor(fmt.Sprintf("Net cost: $%.2f (%.0f%% of gross)", totalNet, pct)) + "\n")
+				} else if totalNet > 0 {
+					// Defensive: avoid divide-by-zero / Inf / NaN if the API
+					// reports net cost without a gross amount.
+					cfg.WriteToOut(yellowColor(fmt.Sprintf("Net cost: $%.2f (gross amount unavailable; percentage not shown)", totalNet)) + "\n")
 				}
 				cfg.WriteToOut("\n")
 			}
@@ -239,6 +261,13 @@ func newUsageCommand(cfg *command.Config, opts *usageOptions) *cobra.Command {
 	cmd.Flags().IntVar(&flagMonth, "month", 0, "Filter by month (default: current month)")
 	cmd.Flags().IntVar(&flagDay, "day", 0, "Filter by specific day")
 	cmd.Flags().BoolVar(&flagToday, "today", false, "Show only today's usage")
+
+	// --today is shorthand for the current Y/M/D, so it conflicts with
+	// any explicit date flag; refuse the combination instead of silently
+	// overriding the user's input.
+	cmd.MarkFlagsMutuallyExclusive("today", "year")
+	cmd.MarkFlagsMutuallyExclusive("today", "month")
+	cmd.MarkFlagsMutuallyExclusive("today", "day")
 
 	return cmd
 }
