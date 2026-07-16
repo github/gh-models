@@ -143,8 +143,8 @@ func newUsageCommand(cfg *command.Config, opts *usageOptions) *cobra.Command {
 
 			// Validate date arguments to fail fast with a clear message
 			// instead of letting the API return a confusing error.
-			if year < 1 {
-				return fmt.Errorf("invalid value for --year: %d (must be >= 1)", year)
+			if year < 1000 || year > 9999 {
+				return fmt.Errorf("invalid value for --year: %d (must be a four-digit year)", year)
 			}
 			if month < 1 || month > 12 {
 				return fmt.Errorf("invalid value for --month: %d (must be between 1 and 12)", month)

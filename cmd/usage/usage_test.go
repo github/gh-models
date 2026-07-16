@@ -3,16 +3,18 @@ package usage
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/github/gh-models/internal/azuremodels"
 	"github.com/github/gh-models/pkg/command"
 	"github.com/stretchr/testify/require"
 )
 
-func newTestServer(t *testing.T, userResp map[string]string, usageResp *premiumRequestUsageResponse, usageStatus int) *httptest.Server {
+func newTestServer(t *testing.T, userResp map[string]string, usageResp *premiumRequestUsageResponse, usageStatus int, assertUsageRequest ...func(*http.Request)) *httptest.Server {
 	t.Helper()
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Match exact paths so tests fail loudly if the command starts
@@ -23,6 +25,9 @@ func newTestServer(t *testing.T, userResp map[string]string, usageResp *premiumR
 			w.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(w).Encode(userResp)
 		case r.URL.Path == "/users/testuser/settings/billing/premium_request/usage":
+			if len(assertUsageRequest) > 0 {
+				assertUsageRequest[0](r)
+			}
 			w.Header().Set("Content-Type", "application/json")
 			if usageStatus != 0 && usageStatus != http.StatusOK {
 				w.WriteHeader(usageStatus)
@@ -67,7 +72,18 @@ func TestUsageCommand(t *testing.T) {
 			},
 		}
 
-		server := newTestServer(t, map[string]string{"login": "testuser"}, usageResp, 0)
+		server := newTestServer(
+			t,
+			map[string]string{"login": "testuser"},
+			usageResp,
+			0,
+			func(r *http.Request) {
+				query := r.URL.Query()
+				require.Equal(t, "2026", query.Get("year"))
+				require.Equal(t, "3", query.Get("month"))
+				require.Empty(t, query.Get("day"))
+			},
+		)
 		defer server.Close()
 
 		buf := new(bytes.Buffer)
@@ -197,7 +213,19 @@ func TestUsageCommand(t *testing.T) {
 			},
 		}
 
-		server := newTestServer(t, map[string]string{"login": "testuser"}, usageResp, 0)
+		server := newTestServer(
+			t,
+			map[string]string{"login": "testuser"},
+			usageResp,
+			0,
+			func(r *http.Request) {
+				now := time.Now().UTC()
+				query := r.URL.Query()
+				require.Equal(t, fmt.Sprintf("%d", now.Year()), query.Get("year"))
+				require.Equal(t, fmt.Sprintf("%d", now.Month()), query.Get("month"))
+				require.Equal(t, fmt.Sprintf("%d", now.Day()), query.Get("day"))
+			},
+		)
 		defer server.Close()
 
 		buf := new(bytes.Buffer)
@@ -213,6 +241,39 @@ func TestUsageCommand(t *testing.T) {
 
 		output := buf.String()
 		require.Contains(t, output, "today")
+	})
+
+	t.Run("sends explicit day query", func(t *testing.T) {
+		usageResp := &premiumRequestUsageResponse{
+			TimePeriod: timePeriod{Year: 2026, Month: 3, Day: 15},
+			User:       "testuser",
+			UsageItems: []usageItem{},
+		}
+
+		server := newTestServer(
+			t,
+			map[string]string{"login": "testuser"},
+			usageResp,
+			0,
+			func(r *http.Request) {
+				query := r.URL.Query()
+				require.Equal(t, "2026", query.Get("year"))
+				require.Equal(t, "3", query.Get("month"))
+				require.Equal(t, "15", query.Get("day"))
+			},
+		)
+		defer server.Close()
+
+		buf := new(bytes.Buffer)
+		client := azuremodels.NewMockClient()
+		cfg := command.NewConfig(buf, buf, client, true, 120)
+		cfg.Token = "test-token"
+
+		cmd := newUsageCommand(cfg, newTestOpts(server.URL))
+		cmd.SetArgs([]string{"--year", "2026", "--month", "3", "--day", "15"})
+
+		_, err := cmd.ExecuteC()
+		require.NoError(t, err)
 	})
 
 	t.Run("--help prints usage info", func(t *testing.T) {
@@ -336,6 +397,22 @@ func TestUsageCommand(t *testing.T) {
 		_, err := cmd.ExecuteC()
 		require.Error(t, err)
 		require.Contains(t, err.Error(), "invalid value for --month")
+	})
+
+	t.Run("rejects non-four-digit year", func(t *testing.T) {
+		for _, year := range []string{"1", "10000"} {
+			buf := new(bytes.Buffer)
+			client := azuremodels.NewMockClient()
+			cfg := command.NewConfig(buf, buf, client, true, 120)
+			cfg.Token = "test-token"
+
+			cmd := newUsageCommand(cfg, nil)
+			cmd.SetArgs([]string{"--year", year, "--month", "3"})
+
+			_, err := cmd.ExecuteC()
+			require.Error(t, err)
+			require.Contains(t, err.Error(), "must be a four-digit year")
+		}
 	})
 
 	t.Run("rejects invalid day", func(t *testing.T) {
