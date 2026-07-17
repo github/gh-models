@@ -8,6 +8,7 @@ import (
 	"io"
 	"net/http"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/MakeNowJust/heredoc"
@@ -29,6 +30,7 @@ var (
 type usageOptions struct {
 	apiBase    string
 	httpClient *http.Client
+	now        func() time.Time
 }
 
 // premiumRequestUsageResponse represents the API response for premium request usage.
@@ -64,6 +66,7 @@ func defaultOptions() *usageOptions {
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
+		now: time.Now,
 	}
 }
 
@@ -123,7 +126,7 @@ func newUsageCommand(cfg *command.Config, opts *usageOptions) *cobra.Command {
 			ctx := cmd.Context()
 
 			// Resolve time period
-			now := time.Now().UTC()
+			now := opts.now().UTC()
 			year := flagYear
 			month := flagMonth
 			day := flagDay
@@ -225,7 +228,7 @@ func newUsageCommand(cfg *command.Config, opts *usageOptions) *cobra.Command {
 				}
 				printer.AddField(item.Product)
 				printer.AddField(item.Model)
-				printer.AddField(fmt.Sprintf("%.1f", item.GrossQuantity))
+				printer.AddField(strconv.FormatFloat(item.GrossQuantity, 'f', -1, 64))
 				printer.AddField(fmt.Sprintf("$%.2f", item.GrossAmount))
 				printer.AddField(fmt.Sprintf("$%.2f", item.NetAmount))
 				printer.EndRow()
@@ -238,7 +241,7 @@ func newUsageCommand(cfg *command.Config, opts *usageOptions) *cobra.Command {
 			// Print summary
 			if cfg.IsTerminalOutput {
 				cfg.WriteToOut("\n")
-				cfg.WriteToOut(fmt.Sprintf("Total: %.0f requests, $%.2f gross, $%.2f net\n", totalReqs, totalGross, totalNet))
+				cfg.WriteToOut(fmt.Sprintf("Total: %s requests, $%.2f gross, $%.2f net\n", strconv.FormatFloat(totalReqs, 'f', -1, 64), totalGross, totalNet))
 
 				if totalGross > 0 && totalNet == 0 {
 					cfg.WriteToOut(greenColor("All usage included in your plan (100% discount)") + "\n")

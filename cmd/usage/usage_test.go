@@ -46,6 +46,7 @@ func newTestOpts(serverURL string) *usageOptions {
 	return &usageOptions{
 		apiBase:    serverURL,
 		httpClient: http.DefaultClient,
+		now:        time.Now,
 	}
 }
 
@@ -102,7 +103,7 @@ func TestUsageCommand(t *testing.T) {
 		require.Contains(t, output, "2026-03")
 		require.Contains(t, output, "Claude Opus 4.6")
 		require.Contains(t, output, "GPT-5.2")
-		require.Contains(t, output, "100.0")
+		require.Contains(t, output, "100")
 		require.Contains(t, output, "$4.00")
 		require.Contains(t, output, "Total: 150 requests")
 		require.Contains(t, output, "100% discount")
@@ -139,6 +140,39 @@ func TestUsageCommand(t *testing.T) {
 
 		output := buf.String()
 		require.Contains(t, output, "Net cost: $2.00")
+	})
+
+	t.Run("preserves fractional request quantities", func(t *testing.T) {
+		usageResp := &premiumRequestUsageResponse{
+			TimePeriod: timePeriod{Year: 2026, Month: 3},
+			User:       "testuser",
+			UsageItems: []usageItem{
+				{
+					Product:       "Copilot",
+					Model:         "Fractional model",
+					GrossQuantity: 0.25,
+					GrossAmount:   0.01,
+				},
+			},
+		}
+
+		server := newTestServer(t, map[string]string{"login": "testuser"}, usageResp, 0)
+		defer server.Close()
+
+		buf := new(bytes.Buffer)
+		client := azuremodels.NewMockClient()
+		cfg := command.NewConfig(buf, buf, client, true, 120)
+		cfg.Token = "test-token"
+
+		cmd := newUsageCommand(cfg, newTestOpts(server.URL))
+		cmd.SetArgs([]string{"--year", "2026", "--month", "3"})
+
+		_, err := cmd.ExecuteC()
+		require.NoError(t, err)
+
+		output := buf.String()
+		require.Contains(t, output, "0.25")
+		require.Contains(t, output, "Total: 0.25 requests")
 	})
 
 	t.Run("shows no usage message when empty", func(t *testing.T) {
@@ -199,6 +233,7 @@ func TestUsageCommand(t *testing.T) {
 	})
 
 	t.Run("--today flag works", func(t *testing.T) {
+		fixedNow := time.Date(2026, time.March, 29, 23, 59, 59, 0, time.UTC)
 		usageResp := &premiumRequestUsageResponse{
 			TimePeriod: timePeriod{Year: 2026, Month: 3, Day: 29},
 			User:       "testuser",
@@ -219,11 +254,10 @@ func TestUsageCommand(t *testing.T) {
 			usageResp,
 			0,
 			func(r *http.Request) {
-				now := time.Now().UTC()
 				query := r.URL.Query()
-				require.Equal(t, fmt.Sprintf("%d", now.Year()), query.Get("year"))
-				require.Equal(t, fmt.Sprintf("%d", now.Month()), query.Get("month"))
-				require.Equal(t, fmt.Sprintf("%d", now.Day()), query.Get("day"))
+				require.Equal(t, fmt.Sprintf("%d", fixedNow.Year()), query.Get("year"))
+				require.Equal(t, fmt.Sprintf("%d", fixedNow.Month()), query.Get("month"))
+				require.Equal(t, fmt.Sprintf("%d", fixedNow.Day()), query.Get("day"))
 			},
 		)
 		defer server.Close()
@@ -233,7 +267,9 @@ func TestUsageCommand(t *testing.T) {
 		cfg := command.NewConfig(buf, buf, client, true, 120)
 		cfg.Token = "test-token"
 
-		cmd := newUsageCommand(cfg, newTestOpts(server.URL))
+		opts := newTestOpts(server.URL)
+		opts.now = func() time.Time { return fixedNow }
+		cmd := newUsageCommand(cfg, opts)
 		cmd.SetArgs([]string{"--today"})
 
 		_, err := cmd.ExecuteC()
